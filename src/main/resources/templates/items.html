@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Items · Ore & Basalt</title>
+<link rel="stylesheet" href="/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>⛏️ Items</h1>
+<nav>
+<a href="/perfil">Perfil</a>
+<form method="post" action="/logout"><button class="btn-ghost btn">Salir</button></form>
+</nav>
+
+<div class="card">
+<form method="get" action="/items">
+  <input type="text" name="q" th:value="${q}" placeholder="Buscar por nombre">
+  <button class="btn-info btn" type="submit">Buscar</button>
+</form>
+</div>
+
+<div class="card">
+<h2>Crear item</h2>
+<form method="post" action="/items">
+  Nombre: <input name="nombre" required>
+  Tipo: <input name="tipo" value="BLOQUE">
+  Cantidad: <input type="number" name="cantidad" value="0">
+  <button type="submit">Crear</button>
+</form>
+</div>
+
+<table>
+  <tr><th>Nombre</th><th>Tipo</th><th>Cantidad</th><th>Acciones</th></tr>
+  <tr th:each="i : ${items}">
+    <td th:text="${i.nombre}"></td>
+    <td><span class="badge badge-pendiente" th:text="${i.tipo}"></span></td>
+    <td class="mono" th:text="${i.cantidad}"></td>
+    <td>
+      <a th:href="@{/items/{id}/edit(id=${i.id})}">Editar</a>
+      <form method="post" th:action="@{/items/{id}/delete(id=${i.id})}" style="display:inline">
+        <button class="btn-danger btn">Eliminar</button>
+      </form>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

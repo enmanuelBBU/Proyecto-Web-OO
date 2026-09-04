@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Registro · Ore & Basalt</title>
+<link rel="stylesheet" href="/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>⛏️ Registro</h1>
+<nav><a href="/login">Volver al login</a></nav>
+<p class="error" th:if="${error}" th:text="${error}"></p>
+<div class="card">
+<form method="post" action="/register">
+  Email:<br><input type="email" name="email" required><br><br>
+  Password:<br><input type="password" name="password" required minlength="6"><br><br>
+  <button type="submit">Crear cuenta</button>
+</form>
+</div>
+</body>
+</html>

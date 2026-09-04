@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Perfil · Ore & Basalt</title>
+<link rel="stylesheet" href="/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>Perfil</h1>
+<nav>
+<a href="/items">Items</a>
+<form method="post" action="/logout"><button class="btn-ghost btn">Salir</button></form>
+</nav>
+<div class="card">
+<form method="post" action="/perfil">
+  Nombre:<br><input name="nombre" th:value="${p.nombre}" required><br><br>
+  Email:<br><input type="email" name="email" th:value="${p.email}" required><br><br>
+  Rol:<br><input name="rol" th:value="${p.rol}"><br><br>
+  <button type="submit">Guardar</button>
+</form>
+</div>
+</body>
+</html>

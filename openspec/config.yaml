@@ -1,0 +1,43 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Java 17, Gradle (wrapper, win32), Spring Boot 4.1.1 (spring-boot-starter-webmvc + validation), Lombok
+  Architecture: Standard Spring Boot layered bootstrap; base package cl.grupo5.proyectominecraft; no controllers/services yet
+  Testing: JUnit 5 (JUnit Platform) via Spring Boot test starters
+  Style: Lombok annotations, conventional Spring Boot layout, Gradle toolchain Java 17, group cl.grupo5
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Funcionalidades.md (workspace root) is a source of upcoming requirements; reference it when relevant
+  specs:
+    - Write specs in English
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    - Follow existing Spring Boot + Lombok conventions
+    tdd: true
+    test_command: "gradlew.bat test"
+  verify:
+    test_command: "gradlew.bat test"
+    build_command: "gradlew.bat build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
+
+testing:
+  strict_tdd: true
+  framework: JUnit 5 (JUnit Platform)
+  command: "gradlew.bat test"
+  unit: true
+  integration: true
+  e2e: false
+  coverage: false
+  linter: false
+  formatter: false
