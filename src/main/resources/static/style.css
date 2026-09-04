@@ -69,3 +69,132 @@ table { width: 100%; border-collapse: collapse; background: var(--card); border-
 th, td { padding: 10px; text-align: left; border-bottom: 1px solid color-mix(in srgb, var(--fg) 10%, transparent); }
 th { font-family: "IBM Plex Mono", monospace; font-size: 12px; text-transform: uppercase; }
 code, .mono { font-family: "IBM Plex Mono", monospace; }
+
+/* --- focus & motion baseline --- */
+a:focus-visible, button:focus-visible, .btn:focus-visible,
+input:focus-visible, select:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+button, .btn, a { cursor: pointer; }
+
+/* --- auth screens (login / register) --- */
+.auth-shell {
+  max-width: 860px;
+  margin: 8vh auto 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 480px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--basalt) 18%, transparent);
+}
+.auth-brand {
+  background: var(--basalt);
+  color: var(--ash);
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+.auth-brand::before {
+  content: "";
+  position: absolute;
+  inset: -40% -20% auto auto;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--amber) 35%, transparent), transparent 70%);
+}
+.auth-brand .crest { display: flex; align-items: center; gap: 10px; }
+.auth-brand .crest svg { width: 32px; height: 32px; color: var(--amber); flex: none; }
+.auth-brand h1 {
+  font-size: 26px;
+  margin: 0;
+  color: var(--ash);
+}
+.auth-brand .tagline {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  color: color-mix(in srgb, var(--ash) 70%, transparent);
+  margin-top: 8px;
+  max-width: 30ch;
+}
+.auth-brand .stock {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--ash) 55%, transparent);
+  display: flex;
+  gap: 16px;
+  z-index: 1;
+}
+.auth-brand .stock b { color: var(--emerald, var(--green)); font-weight: 700; }
+.auth-form-panel {
+  background: var(--card);
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.auth-form-panel h2 {
+  font-family: "Big Shoulders Display", Karla, sans-serif;
+  font-size: 22px;
+  margin: 0 0 4px;
+}
+.auth-form-panel .sub {
+  color: color-mix(in srgb, var(--fg) 60%, transparent);
+  font-size: 14px;
+  margin: 0 0 20px;
+}
+.field { margin-bottom: 16px; }
+.field label {
+  display: block;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: color-mix(in srgb, var(--fg) 65%, transparent);
+  margin-bottom: 6px;
+}
+.field input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 16px;
+}
+.auth-form-panel button[type="submit"] {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  margin-top: 4px;
+}
+.auth-form-panel button[type="submit"]:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+.auth-switch {
+  margin-top: 18px;
+  font-size: 14px;
+  text-align: center;
+}
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: -2px;
+  margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 640px) {
+  .auth-shell { grid-template-columns: 1fr; margin-top: 0; border-radius: 0; box-shadow: none; }
+  .auth-brand { padding: 28px 20px; }
+  .auth-form-panel { padding: 28px 20px; }
+}
