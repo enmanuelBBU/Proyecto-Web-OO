@@ -8,7 +8,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/items")
 public class ItemController {
   private final ItemService service;
-  public ItemController(ItemService service) { this.service = service; }
+  private final IconSuggestionService iconSuggestionService;
+
+  public ItemController(ItemService service, IconSuggestionService iconSuggestionService) {
+    this.service = service;
+    this.iconSuggestionService = iconSuggestionService;
+  }
 
   @GetMapping
   public ResponseEntity<?> list(@RequestParam(required = false) String q,
@@ -42,5 +47,10 @@ public class ItemController {
   public ResponseEntity<?> delete(@PathVariable String id) throws Exception {
     if (!service.delete(id)) return ResponseEntity.notFound().build();
     return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/sugerencias-icono")
+  public ResponseEntity<?> sugerenciasIcono(@RequestParam String nombre) {
+    return ResponseEntity.ok(iconSuggestionService.suggest(nombre));
   }
 }

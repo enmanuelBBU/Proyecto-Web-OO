@@ -25,6 +25,9 @@ class ItemApiAuthTest {
   @MockitoBean
   private ItemService itemService;
 
+  @MockitoBean
+  private IconSuggestionService iconSuggestionService;
+
   @Test
   void listWithoutSessionIsUnauthorized() throws Exception {
     mvc.perform(MockMvcRequestBuilders.get("/api/items"))
