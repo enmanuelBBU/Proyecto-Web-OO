@@ -9,6 +9,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -109,5 +111,47 @@ class WebItemControllerTest {
     mvc.perform(get("/items").session(session))
         .andExpect(status().isOk())
         .andExpect(model().attribute("isAdmin", false));
+  }
+
+  @Test
+  void createDuplicateSlugRerendersItemsWithError() throws Exception {
+    when(itemService.list(null, null)).thenReturn(List.of());
+    doThrow(new ItemAlreadyExistsException("arcilla")).when(itemService).create(any());
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "someuid");
+
+    mvc.perform(post("/items").session(session).param("nombre", "Arcilla"))
+        .andExpect(status().isOk())
+        .andExpect(view().name("items"))
+        .andExpect(model().attributeExists("error"));
+  }
+
+  @Test
+  void createInvalidRecipeRerendersItemsWithError() throws Exception {
+    when(itemService.list(null, null)).thenReturn(List.of());
+    doThrow(new RecipeValidationException("La receta debe tener exactamente 9 casillas."))
+        .when(itemService).create(any());
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "someuid");
+
+    mvc.perform(post("/items").session(session).param("nombre", "Cama").param("slot", "lana"))
+        .andExpect(status().isOk())
+        .andExpect(view().name("items"))
+        .andExpect(model().attributeExists("error"));
+  }
+
+  @Test
+  void editExposesNineSlotRecetaMatrizPaddedWithNulls() throws Exception {
+    var existing = new Item();
+    existing.setNombre("Cama");
+    existing.setRecetaMatriz(List.of("lana", "lana"));
+    when(itemService.get("cama")).thenReturn(existing);
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "someuid");
+
+    mvc.perform(get("/items/cama/edit").session(session))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("recetaMatriz", java.util.Arrays.asList(
+            "lana", "lana", null, null, null, null, null, null, null)));
   }
 }
