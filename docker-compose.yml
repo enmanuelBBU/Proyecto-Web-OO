@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/firebase-adminsdk.json
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-enmanuel.barrera2201@alumnos.ubiobio.cl}
+    volumes:
+      - ./proyecto-weboo-firebase-adminsdk-fbsvc-ff60dbc800.json:/run/secrets/firebase-adminsdk.json:ro
