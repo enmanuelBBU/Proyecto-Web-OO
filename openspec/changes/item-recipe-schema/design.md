@@ -167,26 +167,40 @@ error, and no write happens.
 
 ## Testing
 
+This codebase's existing practice (see `ItemServiceTest`, which only
+covers the static `filter` method, never `create`/`update`/`delete`
+against real Firestore) is to unit-test pure logic and leave
+Firestore/HTTP orchestration to manual verification plus the full
+`gradlew.bat test`/`build` run. This change follows the same split:
+
 - `Slugs`: unit tests for lowercasing, accent stripping, space-to-`_`,
   and multiple/leading/trailing spaces.
-- `ItemService`: id derivation on create; duplicate-slug rejection;
-  `recetaMatriz` shape validation (wrong size, non-empty with
-  `esMateriaPrima=true`); `ingredientesParaCalculo` correctly counts
-  repeated ids in `recetaMatriz` (including the all-`null` and
-  fully-populated cases).
-- `ItemController`/`WebItemController`: 400/re-render for each new
-  validation failure; happy-path test confirming `fullId`,
-  `recetaMatriz`, and the server-computed `ingredientesParaCalculo` all
-  persist and round-trip through a create+get.
-- `MinecraftEsEn`: unit tests translating known multi-word names (e.g.
-  `"Tablones de Roble"` → contains `oak` and `planks`, stopword `de`
-  dropped) and an untranslatable token passing through unchanged.
-- `IconSuggestionService`: unit tests with a mocked `RestTemplate` —
-  namespace prioritization (a `minecraft:` result ranks above a modded
-  one for the same query), top-5 truncation, and the empty-translated-
-  result fallback to the raw `nombre`.
-- `ItemController`'s new endpoint: returns the service's candidates as
-  JSON; 401 without a session (same as the rest of `/api/items`).
+- `ItemService.validateRecetaMatriz` and `ItemService.computeIngredientes`
+  (package-private static methods, same style as `filter`): unit tests
+  for wrong-size rejection, materia-prima-with-recipe rejection,
+  ingredient counting over a populated `recetaMatriz`, and the empty/null
+  case. The Firestore orchestration inside `create`/`update` (slug id
+  generation, duplicate-check read, the write itself) is exercised via
+  manual verification (curl/browser against the real Firestore project)
+  plus the controller tests below, consistent with this class's existing
+  untested `create`/`update`/`delete` Firestore calls.
+- `ItemController`/`WebItemController`: 400/409/re-render for each new
+  validation failure, using a mocked `ItemService` (existing
+  `@WebMvcTest` + `@MockitoBean` pattern) — these don't touch Firestore.
+- `MinecraftEsEn.translate`: unit tests translating known multi-word
+  names (e.g. `"Tablones de Roble"` → contains `oak` and `planks`,
+  stopword `de` dropped) and an untranslatable token passing through
+  unchanged. Pure function, no HTTP.
+- `IconSuggestionService.rank` (package-private static method, same
+  style as `ItemService.filter`): unit tests over hand-built candidate
+  data — namespace prioritization (a `minecraft:` result ranks above a
+  modded one for the same query) and top-5 truncation. The live call to
+  `blocksitems.com` is verified manually (already done during design:
+  `search=clay`, `search=oak planks` confirmed working), consistent with
+  `FirebaseIdentityService`'s HTTP call also being untested.
+- `ItemController`'s new endpoint: 401 without a session (existing
+  `ApiAuthInterceptor` behavior); 200 with the mocked service's
+  candidates when authenticated.
 
 No new test framework or dependency; `gradlew.bat test` remains the
 verify command.

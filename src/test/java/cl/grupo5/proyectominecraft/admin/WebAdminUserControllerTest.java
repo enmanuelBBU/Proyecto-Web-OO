@@ -66,6 +66,15 @@ class WebAdminUserControllerTest {
   }
 
   @Test
+  void listExposesIsAdminTrue() throws Exception {
+    when(profileService.list()).thenReturn(List.of());
+
+    mvc.perform(get("/admin/usuarios").session(adminSession()))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("isAdmin", true));
+  }
+
+  @Test
   void editOwnAccountRedirectsToList() throws Exception {
     mvc.perform(get("/admin/usuarios/admin-1/edit").session(adminSession()))
         .andExpect(status().is3xxRedirection())

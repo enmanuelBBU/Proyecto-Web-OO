@@ -27,6 +27,7 @@ public class WebAdminUserController {
     var guard = guardAdmin(s);
     if (guard != null) return guard;
     m.addAttribute("usuarios", service.list());
+    m.addAttribute("isAdmin", true);
     return "admin-usuarios";
   }
 

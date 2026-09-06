@@ -23,7 +23,7 @@ public class WebAuthController {
 
   @GetMapping("/login")
   public String login(HttpSession s) {
-    if (s.getAttribute("uid") != null) return "redirect:/items";
+    if (s.getAttribute("uid") != null) return "redirect:/inicio";
     return "login";
   }
 
@@ -36,7 +36,7 @@ public class WebAuthController {
       s.setAttribute("uid", uid);
       s.setAttribute("email", email);
       s.setAttribute("rol", profile != null ? profile.getRol() : "USUARIO");
-      return "redirect:/items";
+      return "redirect:/inicio";
     } catch (Exception e) {
       m.addAttribute("error", "Login: " + causa(e));
       return "login";
@@ -54,7 +54,7 @@ public class WebAuthController {
 
   @GetMapping("/register")
   public String register(HttpSession s) {
-    if (s.getAttribute("uid") != null) return "redirect:/items";
+    if (s.getAttribute("uid") != null) return "redirect:/inicio";
     return "register";
   }
 
@@ -71,7 +71,7 @@ public class WebAuthController {
       s.setAttribute("uid", uid);
       s.setAttribute("email", email);
       s.setAttribute("rol", p.getRol());
-      return "redirect:/items";
+      return "redirect:/inicio";
     } catch (Exception e) {
       m.addAttribute("error", "Registro: " + causa(e));
       return "register";

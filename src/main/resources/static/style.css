@@ -198,3 +198,67 @@ button, .btn, a { cursor: pointer; }
   .auth-brand { padding: 28px 20px; }
   .auth-form-panel { padding: 28px 20px; }
 }
+
+/* --- main nav (Inicio / Items / Proyectos / Usuario) --- */
+.main-nav { flex-wrap: wrap; }
+.nav-home { font-weight: 700; }
+.nav-group { position: relative; }
+.nav-group summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  font-weight: 700;
+  color: var(--fg);
+}
+.nav-group summary::-webkit-details-marker { display: none; }
+.nav-group summary::after { content: "▾"; margin-left: 6px; color: var(--amber); }
+.nav-group[open] summary::after { content: "▴"; }
+.nav-group summary:hover, .nav-group summary:focus-visible { background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.nav-group ul {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 8px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 240px;
+  background: var(--card);
+  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--basalt) 18%, transparent);
+  z-index: 10;
+}
+.nav-group li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  min-height: 44px;
+}
+.nav-group li a { display: inline-block; }
+@media (max-width: 640px) {
+  .nav-group ul { position: static; box-shadow: none; border: 0; padding: 4px 0 4px 12px; }
+}
+
+/* --- inicio (home) --- */
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+.home-card {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+.home-card h2 { margin-top: 0; }
+.home-card:hover, .home-card:focus-visible { border-color: var(--amber); }
+.home-card-disabled { opacity: 0.75; cursor: default; }
+@media (max-width: 768px) {
+  .home-grid { grid-template-columns: 1fr; }
+}

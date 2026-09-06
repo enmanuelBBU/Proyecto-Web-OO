@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Inicio · SGI Minecraft</title>
+<link rel="stylesheet" href="/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>Inicio</h1>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<div class="home-grid">
+  <a href="/items" class="card home-card">
+    <h2>Items</h2>
+    <p>Catálogo de items, materiales y recetas de crafteo.</p>
+  </a>
+
+  <div class="card home-card home-card-disabled">
+    <h2>Proyectos</h2>
+    <p>Gestión de proyectos de construcción.</p>
+    <span class="badge badge-pendiente">En construcción</span>
+  </div>
+
+  <a href="/perfil" class="card home-card">
+    <h2>Usuario</h2>
+    <p>Tu perfil, inventario y cuenta.</p>
+  </a>
+</div>
+</body>
+</html>

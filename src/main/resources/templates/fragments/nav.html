@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="nav" class="main-nav">
+  <a href="/inicio" class="nav-home">Inicio</a>
+
+  <details class="nav-group">
+    <summary>Items</summary>
+    <ul>
+      <li><a href="/items">Catálogo de Items</a></li>
+      <li><span class="badge badge-pendiente">En construcción</span> Gestión de Materiales</li>
+      <li><span class="badge badge-pendiente">En construcción</span> Calculadora de Crafteo</li>
+      <li><span class="badge badge-pendiente">En construcción</span> Grilla de Crafteo</li>
+      <li><span class="badge badge-pendiente">En construcción</span> Modelo 3D</li>
+    </ul>
+  </details>
+
+  <details class="nav-group">
+    <summary>Proyectos</summary>
+    <ul>
+      <li><span class="badge badge-pendiente">En construcción</span> Mis Proyectos</li>
+      <li><span class="badge badge-pendiente">En construcción</span> Estados de Proyecto</li>
+      <li><span class="badge badge-pendiente">En construcción</span> Generar Documento (PDF)</li>
+    </ul>
+  </details>
+
+  <details class="nav-group">
+    <summary>Usuario</summary>
+    <ul>
+      <li><a href="/perfil">Mi Perfil</a></li>
+      <li><span class="badge badge-pendiente">En construcción</span> Gestión de Inventario</li>
+      <li th:if="${isAdmin}"><a href="/admin/usuarios">Administrar Usuarios</a></li>
+      <li><form method="post" action="/logout"><button class="btn-ghost btn">Salir</button></form></li>
+    </ul>
+  </details>
+</nav>
+</body>
+</html>

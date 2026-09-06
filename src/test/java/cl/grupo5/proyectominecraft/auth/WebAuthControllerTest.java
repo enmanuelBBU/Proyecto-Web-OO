@@ -42,23 +42,23 @@ class WebAuthControllerTest {
   }
 
   @Test
-  void loginRedirectsToItemsWhenAlreadyAuthenticated() throws Exception {
+  void loginRedirectsToInicioWhenAlreadyAuthenticated() throws Exception {
     var session = new MockHttpSession();
     session.setAttribute("uid", "uid-1");
 
     mvc.perform(get("/login").session(session))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/items"));
+        .andExpect(redirectedUrl("/inicio"));
   }
 
   @Test
-  void registerRedirectsToItemsWhenAlreadyAuthenticated() throws Exception {
+  void registerRedirectsToInicioWhenAlreadyAuthenticated() throws Exception {
     var session = new MockHttpSession();
     session.setAttribute("uid", "uid-1");
 
     mvc.perform(get("/register").session(session))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/items"));
+        .andExpect(redirectedUrl("/inicio"));
   }
 
   @Test
@@ -69,7 +69,7 @@ class WebAuthControllerTest {
     var session = new MockHttpSession();
     mvc.perform(post("/register").session(session).param("email", "root@example.com").param("password", "secret1"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/items"));
+        .andExpect(redirectedUrl("/inicio"));
 
     var captor = org.mockito.ArgumentCaptor.forClass(UserProfile.class);
     verify(profiles).save(eq("uid-9"), captor.capture());
@@ -90,7 +90,7 @@ class WebAuthControllerTest {
     var session = new MockHttpSession();
     mvc.perform(post("/login").session(session).param("email", "root@example.com").param("password", "secret1"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/items"));
+        .andExpect(redirectedUrl("/inicio"));
 
     var captor = org.mockito.ArgumentCaptor.forClass(UserProfile.class);
     verify(profiles).save(eq("uid-9"), captor.capture());

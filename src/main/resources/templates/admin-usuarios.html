@@ -6,11 +6,7 @@
 </head>
 <body>
 <h1>Administrar usuarios</h1>
-<nav>
-<a href="/items">Items</a>
-<a href="/perfil">Perfil</a>
-<form method="post" action="/logout"><button class="btn-ghost btn">Salir</button></form>
-</nav>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
 
 <table>
   <tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Acciones</th></tr>
