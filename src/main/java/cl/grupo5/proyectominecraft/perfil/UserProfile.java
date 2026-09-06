@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class UserProfile {
+  private String uid;
   @NotBlank
   private String nombre;
   @Email

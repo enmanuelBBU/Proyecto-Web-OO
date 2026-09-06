@@ -27,6 +27,7 @@ public class WebProfileController {
       p.setEmail(String.valueOf(s.getAttribute("email")));
     }
     m.addAttribute("p", p);
+    m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
     return "perfil";
   }
 

@@ -1,5 +1,6 @@
 package cl.grupo5.proyectominecraft.items;
 
+import cl.grupo5.proyectominecraft.config.AdminAuthInterceptor;
 import cl.grupo5.proyectominecraft.config.ApiAuthInterceptor;
 import cl.grupo5.proyectominecraft.config.CorsConfig;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,7 @@ import java.util.List;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = ItemController.class)
-@Import({ApiAuthInterceptor.class, CorsConfig.class})
+@Import({ApiAuthInterceptor.class, AdminAuthInterceptor.class, CorsConfig.class})
 class ItemApiAuthTest {
 
   @Autowired

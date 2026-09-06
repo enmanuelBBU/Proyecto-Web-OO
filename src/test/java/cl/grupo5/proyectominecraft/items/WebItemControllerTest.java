@@ -39,6 +39,19 @@ class WebItemControllerTest {
   }
 
   @Test
+  void createWithBlankNombreForAdminSessionKeepsIsAdminTrue() throws Exception {
+    when(itemService.list(null, null)).thenReturn(List.of());
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "admin-1");
+    session.setAttribute("rol", "ADMIN");
+
+    mvc.perform(post("/items").session(session).param("nombre", ""))
+        .andExpect(status().isOk())
+        .andExpect(view().name("items"))
+        .andExpect(model().attribute("isAdmin", true));
+  }
+
+  @Test
   void updateWithBlankNombreRerendersItemEditWithError() throws Exception {
     var existing = new Item();
     existing.setNombre("Piedra");
@@ -72,5 +85,29 @@ class WebItemControllerTest {
     mvc.perform(get("/items/missing-1/edit").session(session))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl("/items"));
+  }
+
+  @Test
+  void listExposesIsAdminTrueForAdminSession() throws Exception {
+    when(itemService.list(null, null)).thenReturn(List.of());
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "admin-1");
+    session.setAttribute("rol", "ADMIN");
+
+    mvc.perform(get("/items").session(session))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("isAdmin", true));
+  }
+
+  @Test
+  void listExposesIsAdminFalseForRegularSession() throws Exception {
+    when(itemService.list(null, null)).thenReturn(List.of());
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "user-1");
+    session.setAttribute("rol", "USUARIO");
+
+    mvc.perform(get("/items").session(session))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("isAdmin", false));
   }
 }

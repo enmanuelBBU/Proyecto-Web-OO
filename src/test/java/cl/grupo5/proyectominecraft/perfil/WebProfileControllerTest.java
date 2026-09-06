@@ -12,7 +12,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -55,5 +58,17 @@ class WebProfileControllerTest {
 
     verify(profileService, never()).delete(any());
     verify(authService, never()).deleteUser(any());
+  }
+
+  @Test
+  void showExposesIsAdminTrueForAdminSession() throws Exception {
+    when(profileService.get("admin-1")).thenReturn(null);
+    var session = authenticated("admin-1");
+    session.setAttribute("email", "admin@x.com");
+    session.setAttribute("rol", "ADMIN");
+
+    mvc.perform(get("/perfil").session(session))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("isAdmin", true));
   }
 }

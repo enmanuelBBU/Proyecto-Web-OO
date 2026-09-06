@@ -21,6 +21,7 @@ public class WebItemController {
     m.addAttribute("items", items.list(q, esMateriaPrima));
     m.addAttribute("q", q);
     m.addAttribute("esMateriaPrima", esMateriaPrima);
+    m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
     return "items";
   }
 
@@ -32,6 +33,7 @@ public class WebItemController {
     if (nombre == null || nombre.isBlank()) {
       m.addAttribute("error", "El nombre del ítem es obligatorio.");
       m.addAttribute("items", items.list(null, null));
+      m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
       return "items";
     }
     var it = new Item();

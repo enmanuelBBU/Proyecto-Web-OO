@@ -1,21 +1,24 @@
 package cl.grupo5.proyectominecraft.auth;
 
+import cl.grupo5.proyectominecraft.config.AdminEmails;
+import cl.grupo5.proyectominecraft.perfil.UserProfile;
+import cl.grupo5.proyectominecraft.perfil.UserProfileService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
-import cl.grupo5.proyectominecraft.perfil.UserProfile;
-import cl.grupo5.proyectominecraft.perfil.UserProfileService;
 
 @Controller
 public class WebAuthController {
   private final FirebaseIdentityService identity;
   private final UserProfileService profiles;
+  private final AdminEmails adminEmails;
 
-  public WebAuthController(FirebaseIdentityService identity, UserProfileService profiles) {
+  public WebAuthController(FirebaseIdentityService identity, UserProfileService profiles, AdminEmails adminEmails) {
     this.identity = identity;
     this.profiles = profiles;
+    this.adminEmails = adminEmails;
   }
 
   @GetMapping("/login")
@@ -28,13 +31,25 @@ public class WebAuthController {
   public String doLogin(@RequestParam String email, @RequestParam String password, HttpSession s, Model m) {
     try {
       var r = identity.signIn(email, password);
-      s.setAttribute("uid", r.get("localId"));
+      String uid = String.valueOf(r.get("localId"));
+      var profile = resolveRoleOnLogin(uid, email);
+      s.setAttribute("uid", uid);
       s.setAttribute("email", email);
+      s.setAttribute("rol", profile != null ? profile.getRol() : "USUARIO");
       return "redirect:/items";
     } catch (Exception e) {
       m.addAttribute("error", "Login: " + causa(e));
       return "login";
     }
+  }
+
+  private UserProfile resolveRoleOnLogin(String uid, String email) throws Exception {
+    var profile = profiles.get(uid);
+    if (profile != null && adminEmails.isAdmin(email) && !"ADMIN".equals(profile.getRol())) {
+      profile.setRol("ADMIN");
+      profiles.save(uid, profile);
+    }
+    return profile;
   }
 
   @GetMapping("/register")
@@ -51,9 +66,11 @@ public class WebAuthController {
       var p = new UserProfile();
       p.setNombre(email.split("@")[0]);
       p.setEmail(email);
+      if (adminEmails.isAdmin(email)) p.setRol("ADMIN");
       profiles.save(uid, p);
       s.setAttribute("uid", uid);
       s.setAttribute("email", email);
+      s.setAttribute("rol", p.getRol());
       return "redirect:/items";
     } catch (Exception e) {
       m.addAttribute("error", "Registro: " + causa(e));

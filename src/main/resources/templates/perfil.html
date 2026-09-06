@@ -8,6 +8,7 @@
 <h1>Perfil</h1>
 <nav>
 <a href="/items">Items</a>
+<a th:if="${isAdmin}" href="/admin/usuarios">Admin</a>
 <form method="post" action="/logout"><button class="btn-ghost btn">Salir</button></form>
 </nav>
 <div class="card">
