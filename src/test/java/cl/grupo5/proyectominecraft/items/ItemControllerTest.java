@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -60,5 +61,28 @@ class ItemControllerTest {
 
     mvc.perform(delete("/api/items/missing-1").session(authenticated()))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void createDuplicateSlugIsConflict() throws Exception {
+    doThrow(new ItemAlreadyExistsException("arcilla")).when(itemService).create(any());
+
+    mvc.perform(post("/api/items")
+            .session(authenticated())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"nombre\":\"Arcilla\"}"))
+        .andExpect(status().isConflict());
+  }
+
+  @Test
+  void createInvalidRecipeIsBadRequest() throws Exception {
+    doThrow(new RecipeValidationException("La receta debe tener exactamente 9 casillas."))
+        .when(itemService).create(any());
+
+    mvc.perform(post("/api/items")
+            .session(authenticated())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"nombre\":\"Cama\",\"recetaMatriz\":[\"lana\"]}"))
+        .andExpect(status().isBadRequest());
   }
 }

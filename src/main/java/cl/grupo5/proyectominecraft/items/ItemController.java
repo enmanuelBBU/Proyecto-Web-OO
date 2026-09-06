@@ -18,14 +18,24 @@ public class ItemController {
 
   @PostMapping
   public ResponseEntity<?> create(@Valid @RequestBody Item item) throws Exception {
-    return ResponseEntity.ok(service.create(item));
+    try {
+      return ResponseEntity.ok(service.create(item));
+    } catch (ItemAlreadyExistsException e) {
+      return ResponseEntity.status(409).body(e.getMessage());
+    } catch (RecipeValidationException e) {
+      return ResponseEntity.badRequest().body(e.getMessage());
+    }
   }
 
   @PutMapping("/{id}")
   public ResponseEntity<?> update(@PathVariable String id, @Valid @RequestBody Item item) throws Exception {
-    var updated = service.update(id, item);
-    if (updated == null) return ResponseEntity.notFound().build();
-    return ResponseEntity.ok(updated);
+    try {
+      var updated = service.update(id, item);
+      if (updated == null) return ResponseEntity.notFound().build();
+      return ResponseEntity.ok(updated);
+    } catch (RecipeValidationException e) {
+      return ResponseEntity.badRequest().body(e.getMessage());
+    }
   }
 
   @DeleteMapping("/{id}")
