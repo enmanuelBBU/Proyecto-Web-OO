@@ -17,4 +17,8 @@ public class UserProfileService {
     db.collection("users").document(uid).set(p).get();
     return p;
   }
+
+  public void delete(String uid) throws Exception {
+    db.collection("users").document(uid).delete().get();
+  }
 }

@@ -11,8 +11,9 @@ public class ItemController {
   public ItemController(ItemService service) { this.service = service; }
 
   @GetMapping
-  public ResponseEntity<?> list(@RequestParam(required = false) String q) throws Exception {
-    return ResponseEntity.ok(service.list(q));
+  public ResponseEntity<?> list(@RequestParam(required = false) String q,
+                                 @RequestParam(required = false) Boolean esMateriaPrima) throws Exception {
+    return ResponseEntity.ok(service.list(q, esMateriaPrima));
   }
 
   @PostMapping
@@ -22,12 +23,14 @@ public class ItemController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> update(@PathVariable String id, @Valid @RequestBody Item item) throws Exception {
-    return ResponseEntity.ok(service.update(id, item));
+    var updated = service.update(id, item);
+    if (updated == null) return ResponseEntity.notFound().build();
+    return ResponseEntity.ok(updated);
   }
 
   @DeleteMapping("/{id}")
   public ResponseEntity<?> delete(@PathVariable String id) throws Exception {
-    service.delete(id);
+    if (!service.delete(id)) return ResponseEntity.notFound().build();
     return ResponseEntity.noContent().build();
   }
 }

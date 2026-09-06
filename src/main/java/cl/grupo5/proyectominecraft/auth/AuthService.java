@@ -11,4 +11,8 @@ public class AuthService {
     FirebaseToken t = FirebaseAuth.getInstance().verifyIdToken(idToken);
     return Map.of("uid", t.getUid(), "email", String.valueOf(t.getClaims().getOrDefault("email", "")), "name", String.valueOf(t.getClaims().getOrDefault("name", "")));
   }
+
+  public void deleteUser(String uid) throws Exception {
+    com.google.firebase.auth.FirebaseAuth.getInstance().deleteUser(uid);
+  }
 }

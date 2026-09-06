@@ -32,10 +32,32 @@ class ItemApiAuthTest {
 
   @Test
   void listWithSessionIsOk() throws Exception {
-    org.mockito.Mockito.when(itemService.list(null)).thenReturn(List.of());
+    org.mockito.Mockito.when(itemService.list(null, null)).thenReturn(List.of());
     var session = new org.springframework.mock.web.MockHttpSession();
     session.setAttribute("uid", "someuid");
     mvc.perform(MockMvcRequestBuilders.get("/api/items").session(session))
         .andExpect(status().isOk());
+  }
+
+  @Test
+  void createWithoutSessionIsUnauthorized() throws Exception {
+    mvc.perform(MockMvcRequestBuilders.post("/api/items")
+            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            .content("{\"nombre\":\"Piedra\"}"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void updateWithoutSessionIsUnauthorized() throws Exception {
+    mvc.perform(MockMvcRequestBuilders.put("/api/items/abc")
+            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            .content("{\"nombre\":\"Piedra\"}"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void deleteWithoutSessionIsUnauthorized() throws Exception {
+    mvc.perform(MockMvcRequestBuilders.delete("/api/items/abc"))
+        .andExpect(status().isUnauthorized());
   }
 }

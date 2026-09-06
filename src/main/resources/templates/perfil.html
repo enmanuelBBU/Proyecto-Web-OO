@@ -14,8 +14,15 @@
 <form method="post" action="/perfil">
   Nombre:<br><input name="nombre" th:value="${p.nombre}" required><br><br>
   Email:<br><input type="email" name="email" th:value="${p.email}" required><br><br>
-  Rol:<br><input name="rol" th:value="${p.rol}"><br><br>
+  Rol:<br><span class="badge" th:text="${p.rol}"></span><br><br>
   <button type="submit">Guardar</button>
+</form>
+</div>
+<div class="card">
+<h2>Eliminar cuenta</h2>
+<p>Esta acción borra tu perfil y tu cuenta de acceso de forma permanente.</p>
+<form method="post" action="/perfil/eliminar" onsubmit="return confirm('¿Eliminar tu cuenta de forma permanente? Esta acción no se puede deshacer.');">
+  <button class="btn-danger btn" type="submit">Eliminar cuenta</button>
 </form>
 </div>
 </body>

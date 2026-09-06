@@ -19,7 +19,10 @@ public class WebAuthController {
   }
 
   @GetMapping("/login")
-  public String login() { return "login"; }
+  public String login(HttpSession s) {
+    if (s.getAttribute("uid") != null) return "redirect:/items";
+    return "login";
+  }
 
   @PostMapping("/login")
   public String doLogin(@RequestParam String email, @RequestParam String password, HttpSession s, Model m) {
@@ -35,7 +38,10 @@ public class WebAuthController {
   }
 
   @GetMapping("/register")
-  public String register() { return "register"; }
+  public String register(HttpSession s) {
+    if (s.getAttribute("uid") != null) return "redirect:/items";
+    return "register";
+  }
 
   @PostMapping("/register")
   public String doRegister(@RequestParam String email, @RequestParam String password, HttpSession s, Model m) {

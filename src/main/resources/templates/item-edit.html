@@ -8,10 +8,11 @@
 <h1>Editar item</h1>
 <nav><a href="/items">Volver</a></nav>
 <div class="card">
+<p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
 <form method="post" th:action="@{/items/{id}/update(id=${item.id})}">
   Nombre:<br><input name="nombre" th:value="${item.nombre}" required><br><br>
-  Tipo:<br><input name="tipo" th:value="${item.tipo}"><br><br>
-  Cantidad:<br><input type="number" name="cantidad" th:value="${item.cantidad}"><br><br>
+  Categoría:<br><input name="categoria" th:value="${item.categoria}"><br><br>
+  <label><input type="checkbox" name="esMateriaPrima" value="true" th:checked="${item.esMateriaPrima}"> Es materia prima</label><br><br>
   <button type="submit">Guardar</button>
 </form>
 </div>

@@ -14,21 +14,30 @@ public class WebItemController {
   }
 
   @GetMapping("/items")
-  public String list(@RequestParam(required = false) String q, Model m, HttpSession s) throws Exception {
+  public String list(@RequestParam(required = false) String q,
+                      @RequestParam(required = false) Boolean esMateriaPrima,
+                      Model m, HttpSession s) throws Exception {
     if (s.getAttribute("uid") == null) return "redirect:/login";
-    m.addAttribute("items", items.list(q));
+    m.addAttribute("items", items.list(q, esMateriaPrima));
     m.addAttribute("q", q);
+    m.addAttribute("esMateriaPrima", esMateriaPrima);
     return "items";
   }
 
   @PostMapping("/items")
-  public String create(@RequestParam String nombre, @RequestParam(defaultValue = "BLOQUE") String tipo,
-                       @RequestParam(defaultValue = "0") int cantidad, HttpSession s) throws Exception {
+  public String create(@RequestParam(required = false) String nombre, @RequestParam(required = false) String categoria,
+                       @RequestParam(defaultValue = "false") boolean esMateriaPrima,
+                       Model m, HttpSession s) throws Exception {
     if (s.getAttribute("uid") == null) return "redirect:/login";
+    if (nombre == null || nombre.isBlank()) {
+      m.addAttribute("error", "El nombre del ítem es obligatorio.");
+      m.addAttribute("items", items.list(null, null));
+      return "items";
+    }
     var it = new Item();
     it.setNombre(nombre);
-    it.setTipo(tipo);
-    it.setCantidad(cantidad);
+    it.setCategoria(categoria);
+    it.setEsMateriaPrima(esMateriaPrima);
     items.create(it);
     return "redirect:/items";
   }
@@ -36,19 +45,28 @@ public class WebItemController {
   @GetMapping("/items/{id}/edit")
   public String edit(@PathVariable String id, Model m, HttpSession s) throws Exception {
     if (s.getAttribute("uid") == null) return "redirect:/login";
-    m.addAttribute("item", items.get(id));
+    var it = items.get(id);
+    if (it == null) return "redirect:/items";
+    m.addAttribute("item", it);
     return "item-edit";
   }
 
   @PostMapping("/items/{id}/update")
-  public String update(@PathVariable String id, @RequestParam String nombre,
-                       @RequestParam(defaultValue = "BLOQUE") String tipo,
-                       @RequestParam(defaultValue = "0") int cantidad, HttpSession s) throws Exception {
+  public String update(@PathVariable String id, @RequestParam(required = false) String nombre,
+                       @RequestParam(required = false) String categoria,
+                       @RequestParam(defaultValue = "false") boolean esMateriaPrima,
+                       Model m, HttpSession s) throws Exception {
     if (s.getAttribute("uid") == null) return "redirect:/login";
     var it = items.get(id);
+    if (it == null) return "redirect:/items";
+    if (nombre == null || nombre.isBlank()) {
+      m.addAttribute("item", it);
+      m.addAttribute("error", "El nombre del ítem es obligatorio.");
+      return "item-edit";
+    }
     it.setNombre(nombre);
-    it.setTipo(tipo);
-    it.setCantidad(cantidad);
+    it.setCategoria(categoria);
+    it.setEsMateriaPrima(esMateriaPrima);
     items.update(id, it);
     return "redirect:/items";
   }
