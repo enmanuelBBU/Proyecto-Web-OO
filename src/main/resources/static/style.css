@@ -262,3 +262,35 @@ button, .btn, a { cursor: pointer; }
 @media (max-width: 768px) {
   .home-grid { grid-template-columns: 1fr; }
 }
+
+/* --- item recipe grid + icon suggestions --- */
+.recipe-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 48px);
+  gap: 4px;
+  margin: 8px 0;
+}
+.recipe-grid input { width: 48px; padding: 8px 4px; text-align: center; }
+.icon-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.icon-suggestions .icon-candidate {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--fg) 20%, transparent);
+  border-radius: 6px;
+  background: var(--card);
+  cursor: pointer;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+}
+.icon-suggestions .icon-candidate:hover, .icon-suggestions .icon-candidate:focus-visible {
+  border-color: var(--amber);
+}
+.icon-suggestions .icon-candidate img { width: 24px; height: 24px; }

@@ -10,11 +10,31 @@
 <div class="card">
 <p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
 <form method="post" th:action="@{/items/{id}/update(id=${item.id})}">
-  Nombre:<br><input name="nombre" th:value="${item.nombre}" required><br><br>
-  Categoría:<br><input name="categoria" th:value="${item.categoria}"><br><br>
+  <label for="editar-nombre">Nombre</label><br>
+  <input id="editar-nombre" name="nombre" th:value="${item.nombre}" required><br><br>
+  <label for="editar-categoria">Categoría</label><br>
+  <input id="editar-categoria" name="categoria" th:value="${item.categoria}"><br><br>
   <label><input type="checkbox" name="esMateriaPrima" value="true" th:checked="${item.esMateriaPrima}"> Es materia prima</label><br><br>
+  <label for="editar-fullId">Full ID (Minecraft)</label><br>
+  <input id="editar-fullId" name="fullId" th:value="${item.fullId}" placeholder="minecraft:clay_ball">
+  <button type="button" class="btn-info btn sugerir-icono-btn" data-nombre="editar-nombre" data-fullid="editar-fullId" data-target="editar-sugerencias">Sugerir ícono</button>
+  <div class="icon-suggestions" id="editar-sugerencias"></div>
+  <br>
+  <span>Receta (grilla 3x3 — id de otro item, o vacío):</span>
+  <div class="recipe-grid">
+    <input name="slot" th:value="${recetaMatriz[0]} ?: ''" placeholder="1">
+    <input name="slot" th:value="${recetaMatriz[1]} ?: ''" placeholder="2">
+    <input name="slot" th:value="${recetaMatriz[2]} ?: ''" placeholder="3">
+    <input name="slot" th:value="${recetaMatriz[3]} ?: ''" placeholder="4">
+    <input name="slot" th:value="${recetaMatriz[4]} ?: ''" placeholder="5">
+    <input name="slot" th:value="${recetaMatriz[5]} ?: ''" placeholder="6">
+    <input name="slot" th:value="${recetaMatriz[6]} ?: ''" placeholder="7">
+    <input name="slot" th:value="${recetaMatriz[7]} ?: ''" placeholder="8">
+    <input name="slot" th:value="${recetaMatriz[8]} ?: ''" placeholder="9">
+  </div>
   <button type="submit">Guardar</button>
 </form>
+<script src="/item-icon-suggest.js"></script>
 </div>
 </body>
 </html>

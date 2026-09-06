@@ -20,16 +20,33 @@
 <h2>Crear item</h2>
 <p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
 <form method="post" action="/items">
-  Nombre: <input name="nombre" required>
-  Categoría: <input name="categoria">
-  <label><input type="checkbox" name="esMateriaPrima" value="true"> Es materia prima</label>
+  <label for="crear-nombre">Nombre</label><br>
+  <input id="crear-nombre" name="nombre" required><br><br>
+  <label for="crear-categoria">Categoría</label><br>
+  <input id="crear-categoria" name="categoria"><br><br>
+  <label><input type="checkbox" name="esMateriaPrima" value="true"> Es materia prima</label><br><br>
+  <label for="crear-fullId">Full ID (Minecraft)</label><br>
+  <input id="crear-fullId" name="fullId" placeholder="minecraft:clay_ball">
+  <button type="button" class="btn-info btn sugerir-icono-btn" data-nombre="crear-nombre" data-fullid="crear-fullId" data-target="crear-sugerencias">Sugerir ícono</button>
+  <div class="icon-suggestions" id="crear-sugerencias"></div>
+  <br>
+  <span>Receta (grilla 3x3 — id de otro item, o vacío):</span>
+  <div class="recipe-grid">
+    <input name="slot" placeholder="1"><input name="slot" placeholder="2"><input name="slot" placeholder="3">
+    <input name="slot" placeholder="4"><input name="slot" placeholder="5"><input name="slot" placeholder="6">
+    <input name="slot" placeholder="7"><input name="slot" placeholder="8"><input name="slot" placeholder="9">
+  </div>
   <button type="submit">Crear</button>
 </form>
 </div>
 
 <table>
-  <tr><th>Nombre</th><th>Categoría</th><th>Materia prima</th><th>Acciones</th></tr>
+  <tr><th>Ícono</th><th>Nombre</th><th>Categoría</th><th>Materia prima</th><th>Acciones</th></tr>
   <tr th:each="i : ${items}">
+    <td>
+      <img th:if="${i.fullId}" th:src="${'https://blocksitems.com/api/v1/items/' + i.fullId + '/icon?size=32'}"
+           width="32" height="32" alt="" onerror="this.style.display='none'">
+    </td>
     <td th:text="${i.nombre}"></td>
     <td><span class="badge badge-pendiente" th:text="${i.categoria}"></span></td>
     <td class="mono" th:text="${i.esMateriaPrima} ? 'Sí' : 'No'"></td>
@@ -41,5 +58,6 @@
     </td>
   </tr>
 </table>
+<script src="/item-icon-suggest.js"></script>
 </body>
 </html>
