@@ -91,11 +91,26 @@ class ItemServiceTest {
   @Test
   void validateRecetaMatrizRejectsRecipeOnMateriaPrima() {
     var item = item("Arcilla", "Materia prima", true);
-    item.setRecetaMatriz(new ArrayList<>(Collections.nCopies(9, null)));
+    var receta = new ArrayList<String>(Collections.nCopies(9, null));
+    receta.set(0, "lana");
+    item.setRecetaMatriz(receta);
 
     assertThatThrownBy(() -> ItemService.validateRecetaMatriz(item))
         .isInstanceOf(RecipeValidationException.class)
         .hasMessage("Una materia prima no puede tener receta.");
+  }
+
+  @Test
+  void validateRecetaMatrizAcceptsAllNullNineSlotRecetaOnMateriaPrima() {
+    var item = item("Arcilla", "Materia prima", true);
+    item.setRecetaMatriz(new ArrayList<>(Collections.nCopies(9, null)));
+
+    ItemService.validateRecetaMatriz(item); // should not throw
+  }
+
+  @Test
+  void computeIngredientesOnAllNullNineSlotRecetaReturnsEmptyList() {
+    assertThat(ItemService.computeIngredientes(new ArrayList<>(Collections.nCopies(9, null)))).isEmpty();
   }
 
   @Test

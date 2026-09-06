@@ -10,28 +10,41 @@ import java.util.stream.Collectors;
 public class IconSuggestionService {
   private static final String SEARCH_URL = "https://blocksitems.com/api/v1/items?search={q}";
 
-  private final RestTemplate rt = new RestTemplate();
+  private final RestTemplate rt = buildRestTemplate();
   private final MinecraftEsEn dictionary;
 
   public IconSuggestionService(MinecraftEsEn dictionary) {
     this.dictionary = dictionary;
   }
 
+  private static RestTemplate buildRestTemplate() {
+    var factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+    factory.setConnectTimeout(3000);
+    factory.setReadTimeout(3000);
+    return new RestTemplate(factory);
+  }
+
   public List<IconCandidate> suggest(String nombre) {
     var translated = dictionary.translate(nombre);
+    var query = translated;
     var results = search(translated);
     if (results.isEmpty()) {
+      query = nombre;
       results = search(nombre);
     }
-    return rank(results, translated.isBlank() ? nombre : translated);
+    return rank(results, query);
   }
 
   @SuppressWarnings("unchecked")
   private List<Map<String, Object>> search(String query) {
     if (query == null || query.isBlank()) return List.of();
-    var response = rt.getForObject(SEARCH_URL, Map.class, query);
-    if (response == null || !(response.get("data") instanceof List<?> data)) return List.of();
-    return (List<Map<String, Object>>) (List<?>) data;
+    try {
+      var response = rt.getForObject(SEARCH_URL, Map.class, query);
+      if (response == null || !(response.get("data") instanceof List<?> data)) return List.of();
+      return (List<Map<String, Object>>) (List<?>) data;
+    } catch (org.springframework.web.client.RestClientException e) {
+      return List.of();
+    }
   }
 
   static List<IconCandidate> rank(List<Map<String, Object>> candidates, String query) {

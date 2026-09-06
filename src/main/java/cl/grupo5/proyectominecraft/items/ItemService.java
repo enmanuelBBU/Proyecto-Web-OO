@@ -77,6 +77,8 @@ public class ItemService {
   static void validateRecetaMatriz(Item item) {
     var receta = item.getRecetaMatriz();
     if (receta == null || receta.isEmpty()) return;
+    boolean allBlank = receta.stream().allMatch(s -> s == null || s.isBlank());
+    if (allBlank) return;
     if (receta.size() != 9) {
       throw new RecipeValidationException("La receta debe tener exactamente 9 casillas.");
     }
@@ -90,7 +92,7 @@ public class ItemService {
     var counts = new LinkedHashMap<String, Integer>();
     for (String slot : recetaMatriz) {
       if (slot == null || slot.isBlank()) continue;
-      counts.merge(slot, 1, Integer::sum);
+      counts.merge(slot.trim(), 1, Integer::sum);
     }
     return counts.entrySet().stream().map(e -> {
       var ing = new Ingrediente();

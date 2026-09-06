@@ -110,7 +110,8 @@ public class WebItemController {
 
   private static List<String> normalizeSlots(List<String> slot) {
     if (slot == null) return List.of();
-    return slot.stream().map(v -> (v == null || v.isBlank()) ? null : v.trim()).toList();
+    var normalized = slot.stream().map(v -> (v == null || v.isBlank()) ? null : v.trim()).toList();
+    return normalized.stream().allMatch(s -> s == null) ? List.of() : normalized;
   }
 
   private static List<String> nineSlots(List<String> receta) {

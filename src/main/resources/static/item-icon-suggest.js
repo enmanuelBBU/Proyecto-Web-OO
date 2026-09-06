@@ -26,7 +26,14 @@ document.addEventListener('click', function (e) {
         var card = document.createElement('button');
         card.type = 'button';
         card.className = 'icon-candidate';
-        card.innerHTML = '<img src="' + c.iconUrl + '" alt="" onerror="this.style.display=\'none\'"><span>' + c.displayName + '</span>';
+        var img = document.createElement('img');
+        img.src = c.iconUrl;
+        img.alt = '';
+        img.onerror = function () { this.style.display = 'none'; };
+        var span = document.createElement('span');
+        span.textContent = c.displayName;
+        card.appendChild(img);
+        card.appendChild(span);
         card.addEventListener('click', function () {
           fullIdInput.value = c.fullId;
         });

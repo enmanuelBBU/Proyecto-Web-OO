@@ -24,4 +24,21 @@ class SlugsTest {
   void slugifyCollapsesMultipleSpacesAndTrims() {
     assertThat(Slugs.slugify("  Lingote   de   Hierro  ")).isEqualTo("lingote_de_hierro");
   }
+
+  @Test
+  void slugifyStripsSlashes() {
+    assertThat(Slugs.slugify("Bloque/Piedra")).matches("[a-z0-9_]+");
+    assertThat(Slugs.slugify("Bloque/Piedra")).isEqualTo("bloquepiedra");
+  }
+
+  @Test
+  void slugifyStripsHashAndOtherPunctuation() {
+    assertThat(Slugs.slugify("Item #1 (raro)?")).matches("[a-z0-9_]+");
+    assertThat(Slugs.slugify("Item #1 (raro)?")).isEqualTo("item_1_raro");
+  }
+
+  @Test
+  void slugifyStripsDotsFromAllPunctuationName() {
+    assertThat(Slugs.slugify("...")).isEmpty();
+  }
 }
