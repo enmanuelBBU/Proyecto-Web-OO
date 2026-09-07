@@ -9,6 +9,7 @@
 <nav th:replace="~{fragments/nav :: nav}"></nav>
 
 <div class="card">
+<h2>Buscar item</h2>
 <form method="get" action="/items">
   <input type="text" id="items-buscar-q" name="q" th:value="${q}" placeholder="Buscar por nombre o categoría" autocomplete="off">
   <label><input type="checkbox" id="items-buscar-materia-prima" name="esMateriaPrima" value="true" th:checked="${esMateriaPrima != null and esMateriaPrima}"> Solo materiales</label>
@@ -16,7 +17,8 @@
 </form>
 </div>
 
-<table>
+<table id="items-resultados-tabla"
+       th:style="${(q != null and !q.isEmpty()) or (esMateriaPrima != null and esMateriaPrima)} ? '' : 'display:none'">
   <tr><th>Ícono</th><th>Nombre</th><th>Categoría</th><th>Materia prima</th><th>Acciones</th></tr>
   <tbody id="items-resultados">
   <tr th:each="i : ${items}">

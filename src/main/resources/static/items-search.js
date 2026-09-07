@@ -1,14 +1,22 @@
 (function () {
   var q = document.getElementById('items-buscar-q');
   var esMateriaPrima = document.getElementById('items-buscar-materia-prima');
+  var tabla = document.getElementById('items-resultados-tabla');
   var tbody = document.getElementById('items-resultados');
-  if (!q || !tbody) return;
+  if (!q || !tbody || !tabla) return;
 
   var timer = null;
 
   function buscar() {
+    var texto = q.value.trim();
+    if (!texto && !esMateriaPrima.checked) {
+      tabla.style.display = 'none';
+      return;
+    }
+    tabla.style.display = '';
+
     var params = new URLSearchParams();
-    if (q.value.trim()) params.set('q', q.value.trim());
+    if (texto) params.set('q', texto);
     if (esMateriaPrima.checked) params.set('esMateriaPrima', 'true');
 
     fetch('/api/items?' + params.toString())

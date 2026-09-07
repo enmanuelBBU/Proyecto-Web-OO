@@ -263,6 +263,43 @@ button, .btn, a { cursor: pointer; }
   .home-grid { grid-template-columns: 1fr; }
 }
 
+.home-card-group summary {
+  cursor: pointer;
+  list-style: none;
+}
+.home-card-group summary::-webkit-details-marker { display: none; }
+.home-card-group summary h2 { margin-top: 0; margin-bottom: 4px; }
+.home-card-group summary p { margin: 0; }
+.home-card-group summary::after {
+  content: "Ver opciones ▾";
+  display: block;
+  margin-top: 10px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  color: var(--amber);
+}
+.home-card-group[open] summary::after { content: "Ocultar ▴"; }
+.home-card-group:hover, .home-card-group:focus-within { border-color: var(--amber); }
+.home-card-group ul {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.home-card-group li { display: block; }
+.home-card-group li .btn { width: 100%; text-align: center; }
+.home-card-group li .btn[disabled] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 /* --- item recipe grid + icon suggestions --- */
 .recipe-grid {
   display: grid;
