@@ -3,6 +3,8 @@ package cl.grupo5.proyectominecraft.items;
 import com.google.cloud.firestore.Firestore;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -51,6 +53,7 @@ public class ItemService {
       throw new ItemAlreadyExistsException(id);
     }
     validateRecetaMatriz(item);
+    validarReferenciasYCiclos(id, item.getRecetaMatriz());
     item.setIngredientesParaCalculo(computeIngredientes(item.getRecetaMatriz()));
     item.setId(id);
     db.collection("items").document(id).set(item).get();
@@ -61,6 +64,7 @@ public class ItemService {
     var snap = db.collection("items").document(id).get().get();
     if (!snap.exists()) return null;
     validateRecetaMatriz(item);
+    validarReferenciasYCiclos(id, item.getRecetaMatriz());
     item.setIngredientesParaCalculo(computeIngredientes(item.getRecetaMatriz()));
     item.setId(id);
     db.collection("items").document(id).set(item).get();
@@ -84,6 +88,45 @@ public class ItemService {
     }
     if (item.isEsMateriaPrima()) {
       throw new RecipeValidationException("Una materia prima no puede tener receta.");
+    }
+  }
+
+  private void validarReferenciasYCiclos(String id, List<String> recetaMatriz) throws Exception {
+    if (recetaMatriz == null || recetaMatriz.isEmpty()) return;
+    var referenciados = recetaMatriz.stream().filter(s -> s != null && !s.isBlank()).distinct().toList();
+    if (referenciados.isEmpty()) return;
+    validarExistencia(referenciados, refId -> db.collection("items").document(refId).get().get().exists());
+    validarCiclos(id, referenciados, refId -> {
+      var snap = db.collection("items").document(refId).get().get();
+      if (!snap.exists()) return List.of();
+      var it = snap.toObject(Item.class);
+      return it.getRecetaMatriz();
+    });
+  }
+
+  static void validarExistencia(List<String> referenciados, ExistenceChecker existe) throws Exception {
+    for (var id : referenciados) {
+      if (!existe.existe(id)) {
+        throw new RecipeValidationException("El ingrediente '" + id + "' no existe en el catálogo.");
+      }
+    }
+  }
+
+  static void validarCiclos(String idPropio, List<String> referenciados, RecetaLookup obtenerReceta) throws Exception {
+    var visitados = new HashSet<String>();
+    var pila = new ArrayDeque<>(referenciados);
+    while (!pila.isEmpty()) {
+      var actual = pila.pop();
+      if (actual.equals(idPropio)) {
+        throw new RecipeValidationException("La receta genera una dependencia circular con '" + idPropio + "'.");
+      }
+      if (!visitados.add(actual)) continue;
+      var receta = obtenerReceta.receta(actual);
+      if (receta != null) {
+        for (var r : receta) {
+          if (r != null && !r.isBlank()) pila.push(r);
+        }
+      }
     }
   }
 

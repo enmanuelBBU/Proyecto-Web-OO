@@ -310,6 +310,7 @@ button, .btn, a { cursor: pointer; }
   margin: 8px 0;
 }
 .recipe-slot {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -322,6 +323,23 @@ button, .btn, a { cursor: pointer; }
   overflow: hidden;
 }
 .recipe-slot-icon { width: 32px; height: 32px; }
+.recipe-slot-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  padding: 0;
+  line-height: 1;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.recipe-slot-remove:hover { background: color-mix(in srgb, var(--red) 85%, black); }
 .recipe-slot-name {
   font-family: "IBM Plex Mono", monospace;
   font-size: 10px;

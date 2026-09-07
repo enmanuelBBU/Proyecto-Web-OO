@@ -67,6 +67,7 @@
   <div class="recipe-editor">
     <div class="recipe-grid">
       <div class="recipe-slot" th:each="i : ${#numbers.sequence(1, 9)}">
+        <button type="button" class="recipe-slot-remove" style="display:none" title="Quitar" aria-label="Quitar item de la casilla">×</button>
         <img class="recipe-slot-icon" alt="" style="display:none">
         <span class="recipe-slot-name"></span>
         <input type="hidden" name="slot" value="">

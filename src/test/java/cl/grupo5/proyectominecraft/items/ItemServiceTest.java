@@ -131,4 +131,51 @@ class ItemServiceTest {
     assertThat(ItemService.computeIngredientes(null)).isEmpty();
     assertThat(ItemService.computeIngredientes(List.of())).isEmpty();
   }
+
+  @Test
+  void validarExistenciaAcceptsWhenAllReferencedIdsExist() throws Exception {
+    ItemService.validarExistencia(List.of("lana", "tablones_de_roble"), id -> true);
+  }
+
+  @Test
+  void validarExistenciaRejectsWhenAReferencedIdDoesNotExist() {
+    assertThatThrownBy(() -> ItemService.validarExistencia(List.of("lana", "fantasma"), "lana"::equals))
+        .isInstanceOf(RecipeValidationException.class)
+        .hasMessage("El ingrediente 'fantasma' no existe en el catálogo.");
+  }
+
+  @Test
+  void validarCiclosAcceptsAcyclicGraph() throws Exception {
+    ItemService.validarCiclos("cama", List.of("lana", "tablones_de_roble"), id -> List.of());
+  }
+
+  @Test
+  void validarCiclosRejectsDirectSelfReference() {
+    assertThatThrownBy(() -> ItemService.validarCiclos("torta", List.of("torta"), id -> List.of()))
+        .isInstanceOf(RecipeValidationException.class)
+        .hasMessage("La receta genera una dependencia circular con 'torta'.");
+  }
+
+  @Test
+  void validarCiclosRejectsTransitiveCycle() {
+    java.util.Map<String, List<String>> recetas = java.util.Map.of(
+        "b", List.of("c"),
+        "c", List.of("a")
+    );
+
+    assertThatThrownBy(() -> ItemService.validarCiclos("a", List.of("b"), id -> recetas.getOrDefault(id, List.of())))
+        .isInstanceOf(RecipeValidationException.class)
+        .hasMessage("La receta genera una dependencia circular con 'a'.");
+  }
+
+  @Test
+  void validarCiclosAllowsSharedDependencyWithoutFalsePositive() throws Exception {
+    java.util.Map<String, List<String>> recetas = java.util.Map.of(
+        "b", List.of("d"),
+        "c", List.of("d"),
+        "d", List.of()
+    );
+
+    ItemService.validarCiclos("a", List.of("b", "c"), id -> recetas.getOrDefault(id, List.of()));
+  }
 }

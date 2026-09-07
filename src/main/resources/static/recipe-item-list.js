@@ -2,6 +2,7 @@ function fillSlotVisual(slot, item) {
   var icon = slot.querySelector('.recipe-slot-icon');
   var name = slot.querySelector('.recipe-slot-name');
   var input = slot.querySelector('input[name="slot"]');
+  var remove = slot.querySelector('.recipe-slot-remove');
   input.value = item.id;
   name.textContent = item.nombre;
   icon.src = item.fullId
@@ -9,6 +10,19 @@ function fillSlotVisual(slot, item) {
     : '/img/item-generico.svg';
   icon.style.display = 'block';
   icon.onerror = function () { this.src = '/img/item-generico.svg'; };
+  if (remove) remove.style.display = 'flex';
+}
+
+function clearSlotVisual(slot) {
+  var icon = slot.querySelector('.recipe-slot-icon');
+  var name = slot.querySelector('.recipe-slot-name');
+  var input = slot.querySelector('input[name="slot"]');
+  var remove = slot.querySelector('.recipe-slot-remove');
+  input.value = '';
+  name.textContent = '';
+  icon.removeAttribute('src');
+  icon.style.display = 'none';
+  if (remove) remove.style.display = 'none';
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -88,4 +102,11 @@ document.addEventListener('drop', function (e) {
   } catch (err) {
     // ignore drops that don't carry a valid item payload
   }
+});
+
+document.addEventListener('click', function (e) {
+  var remove = e.target.closest('.recipe-slot-remove');
+  if (!remove) return;
+  var slot = remove.closest('.recipe-slot');
+  if (slot) clearSlotVisual(slot);
 });
