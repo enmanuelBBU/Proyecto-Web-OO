@@ -31,18 +31,14 @@
   <button type="button" class="btn-info btn sugerir-icono-btn" data-nombre="editar-nombre" data-fullid="editar-fullId" data-target="editar-sugerencias">Sugerir ícono</button>
   <div class="icon-suggestions" id="editar-sugerencias"></div>
   <br>
-  <span>Receta (grilla 3x3 — arrastra un item desde la lista, o escribe su id):</span>
+  <span>Receta (grilla 3x3 — arrastra un item desde la lista):</span>
   <div class="recipe-editor">
     <div class="recipe-grid">
-      <input name="slot" th:value="${recetaMatriz[0]} ?: ''" placeholder="1">
-      <input name="slot" th:value="${recetaMatriz[1]} ?: ''" placeholder="2">
-      <input name="slot" th:value="${recetaMatriz[2]} ?: ''" placeholder="3">
-      <input name="slot" th:value="${recetaMatriz[3]} ?: ''" placeholder="4">
-      <input name="slot" th:value="${recetaMatriz[4]} ?: ''" placeholder="5">
-      <input name="slot" th:value="${recetaMatriz[5]} ?: ''" placeholder="6">
-      <input name="slot" th:value="${recetaMatriz[6]} ?: ''" placeholder="7">
-      <input name="slot" th:value="${recetaMatriz[7]} ?: ''" placeholder="8">
-      <input name="slot" th:value="${recetaMatriz[8]} ?: ''" placeholder="9">
+      <div class="recipe-slot" th:each="valor : ${recetaMatriz}">
+        <img class="recipe-slot-icon" alt="" style="display:none">
+        <span class="recipe-slot-name"></span>
+        <input type="hidden" name="slot" th:value="${valor} ?: ''">
+      </div>
     </div>
     <div class="recipe-item-list"><p class="recipe-item-list-hint">Cargando items...</p></div>
   </div>

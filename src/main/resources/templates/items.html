@@ -40,12 +40,14 @@
   <button type="button" class="btn-info btn sugerir-icono-btn" data-nombre="crear-nombre" data-fullid="crear-fullId" data-target="crear-sugerencias">Sugerir ícono</button>
   <div class="icon-suggestions" id="crear-sugerencias"></div>
   <br>
-  <span>Receta (grilla 3x3 — arrastra un item desde la lista, o escribe su id):</span>
+  <span>Receta (grilla 3x3 — arrastra un item desde la lista):</span>
   <div class="recipe-editor">
     <div class="recipe-grid">
-      <input name="slot" placeholder="1"><input name="slot" placeholder="2"><input name="slot" placeholder="3">
-      <input name="slot" placeholder="4"><input name="slot" placeholder="5"><input name="slot" placeholder="6">
-      <input name="slot" placeholder="7"><input name="slot" placeholder="8"><input name="slot" placeholder="9">
+      <div class="recipe-slot" th:each="i : ${#numbers.sequence(1, 9)}">
+        <img class="recipe-slot-icon" alt="" style="display:none">
+        <span class="recipe-slot-name"></span>
+        <input type="hidden" name="slot" value="">
+      </div>
     </div>
     <div class="recipe-item-list"><p class="recipe-item-list-hint">Cargando items...</p></div>
   </div>

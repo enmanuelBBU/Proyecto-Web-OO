@@ -266,11 +266,35 @@ button, .btn, a { cursor: pointer; }
 /* --- item recipe grid + icon suggestions --- */
 .recipe-grid {
   display: grid;
-  grid-template-columns: repeat(3, 48px);
+  grid-template-columns: repeat(3, 76px);
+  grid-auto-rows: 76px;
   gap: 4px;
   margin: 8px 0;
 }
-.recipe-grid input { width: 48px; padding: 8px 4px; text-align: center; }
+.recipe-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px;
+  border: 1px dashed color-mix(in srgb, var(--fg) 25%, transparent);
+  border-radius: 6px;
+  background: var(--card);
+  overflow: hidden;
+}
+.recipe-slot-icon { width: 32px; height: 32px; }
+.recipe-slot-name {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+  color: color-mix(in srgb, var(--fg) 75%, transparent);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .icon-suggestions {
   display: flex;
   flex-wrap: wrap;
@@ -304,7 +328,7 @@ button, .btn, a { cursor: pointer; }
   margin: 8px 0;
 }
 .recipe-editor .recipe-grid { margin: 0; }
-.recipe-grid input.drag-over { border-color: var(--amber); background: color-mix(in srgb, var(--amber) 12%, transparent); }
+.recipe-slot.drag-over { border-color: var(--amber); background: color-mix(in srgb, var(--amber) 12%, transparent); border-style: solid; }
 .recipe-item-list {
   display: flex;
   flex-wrap: wrap;
