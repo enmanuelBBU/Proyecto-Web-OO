@@ -294,3 +294,44 @@ button, .btn, a { cursor: pointer; }
   border-color: var(--amber);
 }
 .icon-suggestions .icon-candidate img { width: 24px; height: 24px; }
+
+/* --- recipe grid drag-and-drop item list --- */
+.recipe-editor {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.recipe-editor .recipe-grid { margin: 0; }
+.recipe-grid input.drag-over { border-color: var(--amber); background: color-mix(in srgb, var(--amber) 12%, transparent); }
+.recipe-item-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 6px;
+  max-width: 260px;
+  max-height: 172px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--fg) 20%, transparent);
+  border-radius: 6px;
+  background: var(--card);
+}
+.recipe-item-list-hint { margin: 0; font-size: 12px; color: color-mix(in srgb, var(--fg) 60%, transparent); }
+.recipe-item-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  min-height: 32px;
+  border: 1px solid color-mix(in srgb, var(--fg) 20%, transparent);
+  border-radius: 6px;
+  cursor: grab;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  max-width: 100%;
+}
+.recipe-item-card:hover { border-color: var(--amber); }
+.recipe-item-card img { width: 20px; height: 20px; flex: none; }
+.recipe-item-card span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

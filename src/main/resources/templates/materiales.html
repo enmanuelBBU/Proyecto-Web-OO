@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Materiales · SGI Minecraft</title>
+<link rel="stylesheet" href="/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>Materiales</h1>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<div class="card">
+<form method="get" action="/materiales">
+  <input type="text" name="q" th:value="${q}" placeholder="Buscar por nombre o categoría">
+  <button class="btn-info btn" type="submit">Buscar</button>
+</form>
+</div>
+
+<table>
+  <tr><th>Ícono</th><th>Nombre</th><th>Categoría</th><th>Acciones</th></tr>
+  <tr th:each="i : ${materiales}">
+    <td>
+      <img th:if="${i.fullId}" th:src="${'https://blocksitems.com/api/v1/items/' + i.fullId + '/icon?size=32'}"
+           width="32" height="32" alt="" onerror="this.style.display='none'">
+    </td>
+    <td th:text="${i.nombre}"></td>
+    <td><span class="badge badge-pendiente" th:text="${i.categoria}"></span></td>
+    <td>
+      <a th:href="@{/items/{id}/edit(id=${i.id})}">Editar</a>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

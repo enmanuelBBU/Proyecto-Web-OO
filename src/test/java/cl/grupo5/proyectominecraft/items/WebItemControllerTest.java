@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -138,6 +139,99 @@ class WebItemControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("items"))
         .andExpect(model().attributeExists("error"));
+  }
+
+  @Test
+  void createWithFixedCategoriaSeleccionUsesThatValue() throws Exception {
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "someuid");
+
+    mvc.perform(post("/items").session(session)
+            .param("nombre", "Yunque")
+            .param("categoriaSeleccion", "Utilidad"))
+        .andExpect(status().is3xxRedirection());
+
+    var captor = org.mockito.ArgumentCaptor.forClass(Item.class);
+    org.mockito.Mockito.verify(itemService).create(captor.capture());
+    assertThat(captor.getValue().getCategoria()).isEqualTo("Utilidad");
+  }
+
+  @Test
+  void createWithCategoriaOtraOverridesSeleccion() throws Exception {
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "someuid");
+
+    mvc.perform(post("/items").session(session)
+            .param("nombre", "Estatua")
+            .param("categoriaSeleccion", "otra")
+            .param("categoriaOtra", "Decoración"))
+        .andExpect(status().is3xxRedirection());
+
+    var captor = org.mockito.ArgumentCaptor.forClass(Item.class);
+    org.mockito.Mockito.verify(itemService).create(captor.capture());
+    assertThat(captor.getValue().getCategoria()).isEqualTo("Decoración");
+  }
+
+  @Test
+  void editExposesCategoriaSeleccionOtraForCustomCategoria() throws Exception {
+    var existing = new Item();
+    existing.setNombre("Estatua");
+    existing.setCategoria("Decoración");
+    when(itemService.get("estatua")).thenReturn(existing);
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "someuid");
+
+    mvc.perform(get("/items/estatua/edit").session(session))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("categoriaSeleccion", "otra"))
+        .andExpect(model().attribute("categoriaOtra", "Decoración"));
+  }
+
+  @Test
+  void editExposesCategoriaSeleccionForFixedCategoria() throws Exception {
+    var existing = new Item();
+    existing.setNombre("Yunque");
+    existing.setCategoria("Utilidad");
+    when(itemService.get("yunque")).thenReturn(existing);
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "someuid");
+
+    mvc.perform(get("/items/yunque/edit").session(session))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("categoriaSeleccion", "Utilidad"))
+        .andExpect(model().attribute("categoriaOtra", ""));
+  }
+
+  @Test
+  void materialesWithoutSessionRedirectsToLogin() throws Exception {
+    mvc.perform(get("/materiales"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/login"));
+  }
+
+  @Test
+  void materialesListsOnlyMateriaPrimaItems() throws Exception {
+    var arcilla = new Item();
+    arcilla.setNombre("Arcilla");
+    when(itemService.list(null, true)).thenReturn(List.of(arcilla));
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "someuid");
+
+    mvc.perform(get("/materiales").session(session))
+        .andExpect(status().isOk())
+        .andExpect(view().name("materiales"))
+        .andExpect(model().attribute("materiales", List.of(arcilla)));
+  }
+
+  @Test
+  void materialesPassesSearchQueryToService() throws Exception {
+    when(itemService.list("lana", true)).thenReturn(List.of());
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "someuid");
+
+    mvc.perform(get("/materiales").session(session).param("q", "lana"))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("q", "lana"));
   }
 
   @Test

@@ -23,18 +23,31 @@
   <label for="crear-nombre">Nombre</label><br>
   <input id="crear-nombre" name="nombre" required><br><br>
   <label for="crear-categoria">Categoría</label><br>
-  <input id="crear-categoria" name="categoria"><br><br>
+  <div class="categoria-field">
+    <select id="crear-categoria" name="categoriaSeleccion">
+      <option value="">Selecciona...</option>
+      <option value="Materias Primas">Materias Primas</option>
+      <option value="Bloques de Construcción">Bloques de Construcción</option>
+      <option value="Utilidad">Utilidad</option>
+      <option value="Herramientas">Herramientas</option>
+      <option value="otra">Otra...</option>
+    </select>
+    <input name="categoriaOtra" placeholder="Nombre de la categoría nueva" style="display:none">
+  </div><br>
   <label><input type="checkbox" name="esMateriaPrima" value="true"> Es materia prima</label><br><br>
   <label for="crear-fullId">Full ID (Minecraft)</label><br>
   <input id="crear-fullId" name="fullId" placeholder="minecraft:clay_ball">
   <button type="button" class="btn-info btn sugerir-icono-btn" data-nombre="crear-nombre" data-fullid="crear-fullId" data-target="crear-sugerencias">Sugerir ícono</button>
   <div class="icon-suggestions" id="crear-sugerencias"></div>
   <br>
-  <span>Receta (grilla 3x3 — id de otro item, o vacío):</span>
-  <div class="recipe-grid">
-    <input name="slot" placeholder="1"><input name="slot" placeholder="2"><input name="slot" placeholder="3">
-    <input name="slot" placeholder="4"><input name="slot" placeholder="5"><input name="slot" placeholder="6">
-    <input name="slot" placeholder="7"><input name="slot" placeholder="8"><input name="slot" placeholder="9">
+  <span>Receta (grilla 3x3 — arrastra un item desde la lista, o escribe su id):</span>
+  <div class="recipe-editor">
+    <div class="recipe-grid">
+      <input name="slot" placeholder="1"><input name="slot" placeholder="2"><input name="slot" placeholder="3">
+      <input name="slot" placeholder="4"><input name="slot" placeholder="5"><input name="slot" placeholder="6">
+      <input name="slot" placeholder="7"><input name="slot" placeholder="8"><input name="slot" placeholder="9">
+    </div>
+    <div class="recipe-item-list"><p class="recipe-item-list-hint">Cargando items...</p></div>
   </div>
   <button type="submit">Crear</button>
 </form>
@@ -59,5 +72,7 @@
   </tr>
 </table>
 <script src="/item-icon-suggest.js"></script>
+<script src="/category-select.js"></script>
+<script src="/recipe-item-list.js"></script>
 </body>
 </html>

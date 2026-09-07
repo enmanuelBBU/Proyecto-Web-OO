@@ -8,9 +8,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 @Controller
 public class WebItemController {
+  private static final Set<String> CATEGORIAS_FIJAS = Set.of(
+      "Materias Primas", "Bloques de Construcción", "Utilidad", "Herramientas");
+
   private final ItemService items;
 
   public WebItemController(ItemService items) {
@@ -30,7 +34,9 @@ public class WebItemController {
   }
 
   @PostMapping("/items")
-  public String create(@RequestParam(required = false) String nombre, @RequestParam(required = false) String categoria,
+  public String create(@RequestParam(required = false) String nombre,
+                       @RequestParam(required = false) String categoriaSeleccion,
+                       @RequestParam(required = false) String categoriaOtra,
                        @RequestParam(defaultValue = "false") boolean esMateriaPrima,
                        @RequestParam(required = false) String fullId,
                        @RequestParam(required = false) List<String> slot,
@@ -44,7 +50,7 @@ public class WebItemController {
     }
     var it = new Item();
     it.setNombre(nombre);
-    it.setCategoria(categoria);
+    it.setCategoria(resolveCategoria(categoriaSeleccion, categoriaOtra));
     it.setEsMateriaPrima(esMateriaPrima);
     it.setFullId(fullId);
     it.setRecetaMatriz(normalizeSlots(slot));
@@ -59,6 +65,15 @@ public class WebItemController {
     return "redirect:/items";
   }
 
+  @GetMapping("/materiales")
+  public String materiales(@RequestParam(required = false) String q, Model m, HttpSession s) throws Exception {
+    if (s.getAttribute("uid") == null) return "redirect:/login";
+    m.addAttribute("materiales", items.list(q, true));
+    m.addAttribute("q", q);
+    m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
+    return "materiales";
+  }
+
   @GetMapping("/items/{id}/edit")
   public String edit(@PathVariable String id, Model m, HttpSession s) throws Exception {
     if (s.getAttribute("uid") == null) return "redirect:/login";
@@ -66,12 +81,15 @@ public class WebItemController {
     if (it == null) return "redirect:/items";
     m.addAttribute("item", it);
     m.addAttribute("recetaMatriz", nineSlots(it.getRecetaMatriz()));
+    m.addAttribute("categoriaSeleccion", categoriaSeleccionFor(it.getCategoria()));
+    m.addAttribute("categoriaOtra", categoriaOtraFor(it.getCategoria()));
     return "item-edit";
   }
 
   @PostMapping("/items/{id}/update")
   public String update(@PathVariable String id, @RequestParam(required = false) String nombre,
-                       @RequestParam(required = false) String categoria,
+                       @RequestParam(required = false) String categoriaSeleccion,
+                       @RequestParam(required = false) String categoriaOtra,
                        @RequestParam(defaultValue = "false") boolean esMateriaPrima,
                        @RequestParam(required = false) String fullId,
                        @RequestParam(required = false) List<String> slot,
@@ -82,11 +100,13 @@ public class WebItemController {
     if (nombre == null || nombre.isBlank()) {
       m.addAttribute("item", it);
       m.addAttribute("recetaMatriz", nineSlots(it.getRecetaMatriz()));
+      m.addAttribute("categoriaSeleccion", categoriaSeleccionFor(it.getCategoria()));
+      m.addAttribute("categoriaOtra", categoriaOtraFor(it.getCategoria()));
       m.addAttribute("error", "El nombre del ítem es obligatorio.");
       return "item-edit";
     }
     it.setNombre(nombre);
-    it.setCategoria(categoria);
+    it.setCategoria(resolveCategoria(categoriaSeleccion, categoriaOtra));
     it.setEsMateriaPrima(esMateriaPrima);
     it.setFullId(fullId);
     it.setRecetaMatriz(normalizeSlots(slot));
@@ -95,6 +115,8 @@ public class WebItemController {
     } catch (RecipeValidationException e) {
       m.addAttribute("item", it);
       m.addAttribute("recetaMatriz", nineSlots(it.getRecetaMatriz()));
+      m.addAttribute("categoriaSeleccion", categoriaSeleccionFor(it.getCategoria()));
+      m.addAttribute("categoriaOtra", categoriaOtraFor(it.getCategoria()));
       m.addAttribute("error", e.getMessage());
       return "item-edit";
     }
@@ -112,6 +134,23 @@ public class WebItemController {
     if (slot == null) return List.of();
     var normalized = slot.stream().map(v -> (v == null || v.isBlank()) ? null : v.trim()).toList();
     return normalized.stream().allMatch(s -> s == null) ? List.of() : normalized;
+  }
+
+  private static String resolveCategoria(String categoriaSeleccion, String categoriaOtra) {
+    if ("otra".equals(categoriaSeleccion)) {
+      return (categoriaOtra == null || categoriaOtra.isBlank()) ? null : categoriaOtra.trim();
+    }
+    return (categoriaSeleccion == null || categoriaSeleccion.isBlank()) ? null : categoriaSeleccion;
+  }
+
+  private static String categoriaSeleccionFor(String categoria) {
+    if (categoria == null || categoria.isBlank()) return "";
+    return CATEGORIAS_FIJAS.contains(categoria) ? categoria : "otra";
+  }
+
+  private static String categoriaOtraFor(String categoria) {
+    if (categoria == null || categoria.isBlank()) return "";
+    return CATEGORIAS_FIJAS.contains(categoria) ? "" : categoria;
   }
 
   private static List<String> nineSlots(List<String> receta) {
