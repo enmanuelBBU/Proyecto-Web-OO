@@ -10,11 +10,32 @@
 
 <div class="card">
 <form method="get" action="/items">
-  <input type="text" name="q" th:value="${q}" placeholder="Buscar por nombre o categoría">
-  <label><input type="checkbox" name="esMateriaPrima" value="true" th:checked="${esMateriaPrima != null and esMateriaPrima}"> Solo materiales</label>
+  <input type="text" id="items-buscar-q" name="q" th:value="${q}" placeholder="Buscar por nombre o categoría" autocomplete="off">
+  <label><input type="checkbox" id="items-buscar-materia-prima" name="esMateriaPrima" value="true" th:checked="${esMateriaPrima != null and esMateriaPrima}"> Solo materiales</label>
   <button class="btn-info btn" type="submit">Buscar</button>
 </form>
 </div>
+
+<table>
+  <tr><th>Ícono</th><th>Nombre</th><th>Categoría</th><th>Materia prima</th><th>Acciones</th></tr>
+  <tbody id="items-resultados">
+  <tr th:each="i : ${items}">
+    <td>
+      <img th:if="${i.fullId}" th:src="${'https://blocksitems.com/api/v1/items/' + i.fullId + '/icon?size=32'}"
+           width="32" height="32" alt="" onerror="this.style.display='none'">
+    </td>
+    <td th:text="${i.nombre}"></td>
+    <td><span class="badge badge-pendiente" th:text="${i.categoria}"></span></td>
+    <td class="mono" th:text="${i.esMateriaPrima} ? 'Sí' : 'No'"></td>
+    <td>
+      <a th:href="@{/items/{id}/edit(id=${i.id})}">Editar</a>
+      <form method="post" th:action="@{/items/{id}/delete(id=${i.id})}" style="display:inline">
+        <button class="btn-danger btn">Eliminar</button>
+      </form>
+    </td>
+  </tr>
+  </tbody>
+</table>
 
 <div class="card">
 <h2>Crear item</h2>
@@ -55,26 +76,9 @@
 </form>
 </div>
 
-<table>
-  <tr><th>Ícono</th><th>Nombre</th><th>Categoría</th><th>Materia prima</th><th>Acciones</th></tr>
-  <tr th:each="i : ${items}">
-    <td>
-      <img th:if="${i.fullId}" th:src="${'https://blocksitems.com/api/v1/items/' + i.fullId + '/icon?size=32'}"
-           width="32" height="32" alt="" onerror="this.style.display='none'">
-    </td>
-    <td th:text="${i.nombre}"></td>
-    <td><span class="badge badge-pendiente" th:text="${i.categoria}"></span></td>
-    <td class="mono" th:text="${i.esMateriaPrima} ? 'Sí' : 'No'"></td>
-    <td>
-      <a th:href="@{/items/{id}/edit(id=${i.id})}">Editar</a>
-      <form method="post" th:action="@{/items/{id}/delete(id=${i.id})}" style="display:inline">
-        <button class="btn-danger btn">Eliminar</button>
-      </form>
-    </td>
-  </tr>
-</table>
 <script src="/item-icon-suggest.js"></script>
 <script src="/category-select.js"></script>
 <script src="/recipe-item-list.js"></script>
+<script src="/items-search.js"></script>
 </body>
 </html>
