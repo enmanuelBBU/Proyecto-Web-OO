@@ -248,6 +248,7 @@ button, .btn, a { cursor: pointer; }
 .home-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  align-items: start;
   gap: 16px;
   margin-top: 16px;
 }
