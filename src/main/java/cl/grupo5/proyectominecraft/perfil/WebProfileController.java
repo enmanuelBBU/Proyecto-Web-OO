@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class WebProfileController {
@@ -32,7 +33,8 @@ public class WebProfileController {
   }
 
   @PostMapping("/perfil")
-  public String save(@RequestParam String nombre, @RequestParam String email, HttpSession s) throws Exception {
+  public String save(@RequestParam String nombre, @RequestParam String email, HttpSession s,
+                     RedirectAttributes ra) throws Exception {
     String uid = (String) s.getAttribute("uid");
     if (uid == null) return "redirect:/login";
     var existing = service.get(uid);
@@ -41,6 +43,7 @@ public class WebProfileController {
     p.setEmail(email);
     p.setRol(existing != null ? existing.getRol() : "USUARIO");
     service.save(uid, p);
+    ra.addFlashAttribute("toastSuccess", "Perfil actualizado correctamente");
     return "redirect:/perfil";
   }
 

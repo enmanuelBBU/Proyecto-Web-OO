@@ -18,6 +18,7 @@ public class ItemService {
     var items = docs.stream().map(d -> {
       var it = d.toObject(Item.class);
       it.setId(d.getId());
+      decorar(it);
       return it;
     }).toList();
     return filter(items, q, esMateriaPrima);
@@ -43,6 +44,7 @@ public class ItemService {
     if (!snap.exists()) return null;
     var it = snap.toObject(Item.class);
     it.setId(id);
+    decorar(it);
     return it;
   }
 
@@ -56,6 +58,7 @@ public class ItemService {
     validarReferenciasYCiclos(id, item.getRecetaMatriz());
     item.setIngredientesParaCalculo(computeIngredientes(item.getRecetaMatriz()));
     item.setId(id);
+    decorar(item);
     db.collection("items").document(id).set(item).get();
     return item;
   }
@@ -67,6 +70,7 @@ public class ItemService {
     validarReferenciasYCiclos(id, item.getRecetaMatriz());
     item.setIngredientesParaCalculo(computeIngredientes(item.getRecetaMatriz()));
     item.setId(id);
+    decorar(item);
     db.collection("items").document(id).set(item).get();
     return item;
   }
@@ -143,5 +147,78 @@ public class ItemService {
       ing.setCantidad(e.getValue());
       return ing;
     }).toList();
+  }
+
+  static void decorar(Item item) {
+    if (item.getTipoVisual() == null || item.getTipoVisual().isBlank()) {
+      item.setTipoVisual(derivarTipoVisual(item));
+    }
+    item.setTextura(texturaPara(item));
+  }
+
+  static String derivarTipoVisual(Item item) {
+    var nombre = norm(item.getNombre());
+    var categoria = norm(item.getCategoria());
+    String[] itemsPlanos = {
+        "pickaxe", "sword", "axe", "shovel", "hoe", "ingot", "nugget", "diamond", "emerald",
+        "apple", "stick", "book", "gem", "arrow", "bow", "helmet", "chestplate", "leggings",
+        "boots", "bread", "carrot", "pearl", "skull", "cristal", "barrita", "ladrillo", "brick",
+        "redstone", "vidrio", "glass", "panel", "arcilla", "clay"
+    };
+    for (var k : itemsPlanos) {
+      if (nombre.contains(k)) return "ITEM_PLANO";
+    }
+    String[] bloques = {
+        "stone", "piedra", "roca", "adoquin", "guijarro", "block", "bloque", "dirt", "tierra",
+        "grass", "pasto", "plank", "tabla", "wood", "madera", "log", "tronco", "roble",
+        "obsidian", "obsidiana", "bedrock", "cobble", "cobblestone", "sand", "arena", "gravel",
+        "grava", "ore", "mineral", "wool", "lana", "crafting", "mesa", "furnace", "horno",
+        "chest", "cofre", "ice", "snow", "esponja", "hongo"
+    };
+    for (var k : bloques) {
+      if (nombre.contains(k)) return "BLOQUE";
+    }
+    if (categoria.contains("construccion") || categoria.contains("bloque")) return "BLOQUE";
+    return "ITEM_PLANO";
+  }
+
+  static String texturaPara(Item item) {
+    var nombre = norm(item.getNombre());
+    if ("BLOQUE".equals(item.getTipoVisual())) {
+      if (nombre.contains("grass") || nombre.contains("pasto")) return "block/grass";
+      if (nombre.contains("dirt") || nombre.contains("tierra")) return "block/dirt";
+      if (nombre.contains("obsidian") || nombre.contains("obsidiana")) return "block/obsidian";
+      if (nombre.contains("bedrock")) return "block/bedrock";
+      if (nombre.contains("crafting") || nombre.contains("mesa")) return "block/crafting";
+      if (nombre.contains("sand") || nombre.contains("arena")) return "block/sand";
+      if (nombre.contains("gravel") || nombre.contains("grava")) return "block/gravel";
+      if (nombre.contains("wool") || nombre.contains("lana")) return "block/wool";
+      if (nombre.contains("cobblestone") || nombre.contains("roca") || nombre.contains("adoquin") || nombre.contains("cobble")) return "block/cobblestone";
+      if (nombre.contains("log") || nombre.contains("tronco")) return "block/log";
+      if (nombre.contains("plank") || nombre.contains("tabla") || nombre.contains("wood") || nombre.contains("madera") || nombre.contains("roble")) return "block/oak_planks";
+      if (nombre.contains("stone") || nombre.contains("piedra") || nombre.contains("guijarro")
+          || nombre.contains("horno")) return "block/stone";
+      return "block/stone";
+    }
+    if (nombre.contains("vidrio") || nombre.contains("cristal") || nombre.contains("glass") || nombre.contains("panel")) return "item/vidrio";
+    if (nombre.contains("diamond")) return "item/diamond";
+    if (nombre.contains("emerald")) return "item/emerald";
+    if (nombre.contains("iron") || nombre.contains("gold") || nombre.contains("hierro")) return "item/iron_ingot";
+    if (nombre.contains("apple") || nombre.contains("manzana")) return "item/apple";
+    if (nombre.contains("stick") || nombre.contains("palo")) return "item/stick";
+    if (nombre.contains("book") || nombre.contains("libro")) return "item/book";
+    if (nombre.contains("pickaxe")) {
+      if (nombre.contains("diamond")) return "item/diamond_pickaxe";
+      return "item/stone_pickaxe";
+    }
+    if (nombre.contains("stone") || nombre.contains("piedra")) return "item/stone";
+    if (nombre.contains("crafting") || nombre.contains("mesa")) return "item/crafting_table";
+    return null;
+  }
+
+  static String norm(String s) {
+    if (s == null) return "";
+    var n = java.text.Normalizer.normalize(s.toLowerCase(), java.text.Normalizer.Form.NFD);
+    return n.replaceAll("\\p{M}", "");
   }
 }

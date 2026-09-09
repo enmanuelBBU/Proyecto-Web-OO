@@ -15,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -70,5 +71,18 @@ class WebProfileControllerTest {
     mvc.perform(get("/perfil").session(session))
         .andExpect(status().isOk())
         .andExpect(model().attribute("isAdmin", true));
+  }
+
+  @Test
+  void saveRedirectsWithSuccessToast() throws Exception {
+    when(profileService.get("uid-1")).thenReturn(null);
+    var session = authenticated("uid-1");
+
+    mvc.perform(post("/perfil").session(session)
+            .param("nombre", "Ana")
+            .param("email", "ana@x.com"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/perfil"))
+        .andExpect(flash().attribute("toastSuccess", "Perfil actualizado correctamente"));
   }
 }

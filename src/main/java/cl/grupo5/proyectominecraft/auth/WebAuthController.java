@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class WebAuthController {
@@ -28,7 +29,8 @@ public class WebAuthController {
   }
 
   @PostMapping("/login")
-  public String doLogin(@RequestParam String email, @RequestParam String password, HttpSession s, Model m) {
+  public String doLogin(@RequestParam String email, @RequestParam String password, HttpSession s, Model m,
+                        RedirectAttributes ra) {
     try {
       var r = identity.signIn(email, password);
       String uid = String.valueOf(r.get("localId"));
@@ -36,9 +38,11 @@ public class WebAuthController {
       s.setAttribute("uid", uid);
       s.setAttribute("email", email);
       s.setAttribute("rol", profile != null ? profile.getRol() : "USUARIO");
+      ra.addFlashAttribute("toastSuccess", "¡Bienvenido!");
       return "redirect:/inicio";
     } catch (Exception e) {
       m.addAttribute("error", "Login: " + causa(e));
+      m.addAttribute("toastError", "Login: " + causa(e));
       return "login";
     }
   }
@@ -59,7 +63,8 @@ public class WebAuthController {
   }
 
   @PostMapping("/register")
-  public String doRegister(@RequestParam String email, @RequestParam String password, HttpSession s, Model m) {
+  public String doRegister(@RequestParam String email, @RequestParam String password, HttpSession s, Model m,
+                           RedirectAttributes ra) {
     try {
       var r = identity.signUp(email, password);
       String uid = String.valueOf(r.get("localId"));
@@ -71,9 +76,11 @@ public class WebAuthController {
       s.setAttribute("uid", uid);
       s.setAttribute("email", email);
       s.setAttribute("rol", p.getRol());
+      ra.addFlashAttribute("toastSuccess", "¡Cuenta creada!");
       return "redirect:/inicio";
     } catch (Exception e) {
       m.addAttribute("error", "Registro: " + causa(e));
+      m.addAttribute("toastError", "Registro: " + causa(e));
       return "register";
     }
   }

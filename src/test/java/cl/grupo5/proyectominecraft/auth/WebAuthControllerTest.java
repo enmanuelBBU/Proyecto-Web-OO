@@ -110,9 +110,35 @@ class WebAuthControllerTest {
 
     var session = new MockHttpSession();
     mvc.perform(post("/login").session(session).param("email", "user@example.com").param("password", "secret1"))
-        .andExpect(status().is3xxRedirection());
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/inicio"))
+        .andExpect(flash().attribute("toastSuccess", "¡Bienvenido!"));
 
     verify(profiles, never()).save(any(), any());
     assertThat(session.getAttribute("rol")).isEqualTo("USUARIO");
+  }
+
+  @Test
+  void registerSuccessRedirectsWithWelcomeToast() throws Exception {
+    when(identity.signUp("user@example.com", "secret1")).thenReturn(Map.of("localId", "uid-5"));
+    when(adminEmails.isAdmin("user@example.com")).thenReturn(false);
+
+    var session = new MockHttpSession();
+    mvc.perform(post("/register").session(session).param("email", "user@example.com").param("password", "secret1"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/inicio"))
+        .andExpect(flash().attribute("toastSuccess", "¡Cuenta creada!"));
+  }
+
+  @Test
+  void loginFailureRerendersWithErrorToast() throws Exception {
+    when(identity.signIn("user@example.com", "wrong")).thenThrow(new RuntimeException("invalid credentials"));
+
+    var session = new MockHttpSession();
+    mvc.perform(post("/login").session(session).param("email", "user@example.com").param("password", "wrong"))
+        .andExpect(status().isOk())
+        .andExpect(view().name("login"))
+        .andExpect(model().attributeExists("error"))
+        .andExpect(model().attribute("toastError", "Login: invalid credentials"));
   }
 }

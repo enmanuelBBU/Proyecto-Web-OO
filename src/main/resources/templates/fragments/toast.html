@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="toast" id="toast-container" class="toast-container" aria-live="polite" aria-atomic="false"></div>
+<script th:fragment="toast" src="/toast.js"></script>
+<script th:fragment="toast" th:inline="javascript">
+  (function () {
+    var tipo = null;
+    var mensaje = null;
+
+    var success = /*[[${toastSuccess}]]*/ null;
+    var error = /*[[${toastError}]]*/ null;
+    var info = /*[[${toastInfo}]]*/ null;
+    var warning = /*[[${toastWarning}]]*/ null;
+    var generico = /*[[${toastMensaje}]]*/ null;
+    var genericoTipo = /*[[${toastTipo}]]*/ null;
+
+    if (success != null) { tipo = 'success'; mensaje = success; }
+    else if (error != null) { tipo = 'error'; mensaje = error; }
+    else if (info != null) { tipo = 'info'; mensaje = info; }
+    else if (warning != null) { tipo = 'warning'; mensaje = warning; }
+    else if (generico != null) { tipo = genericoTipo || 'success'; mensaje = generico; }
+
+    if (mensaje != null && window.mostrarToast) {
+      window.mostrarToast(mensaje, tipo);
+    }
+  })();
+</script>
+</body>
+</html>

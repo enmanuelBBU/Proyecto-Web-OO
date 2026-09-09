@@ -26,6 +26,12 @@
            th:style="${categoriaSeleccion == 'otra'} ? '' : 'display:none'">
   </div><br>
   <label><input type="checkbox" name="esMateriaPrima" value="true" th:checked="${item.esMateriaPrima}"> Es materia prima</label><br><br>
+  <label for="editar-tipo">Tipo visual</label><br>
+  <select id="editar-tipo" name="tipoVisual">
+    <option value="" th:selected="${item.tipoVisual == null or item.tipoVisual == ''}">Automático</option>
+    <option value="BLOQUE" th:selected="${item.tipoVisual == 'BLOQUE'}">Bloque (cubo)</option>
+    <option value="ITEM_PLANO" th:selected="${item.tipoVisual == 'ITEM_PLANO'}">Ítem plano</option>
+  </select><br><br>
   <label for="editar-fullId">Full ID (Minecraft)</label><br>
   <input id="editar-fullId" name="fullId" th:value="${item.fullId}" placeholder="minecraft:clay_ball">
   <button type="button" class="btn-info btn sugerir-icono-btn" data-nombre="editar-nombre" data-fullid="editar-fullId" data-target="editar-sugerencias">Sugerir ícono</button>
@@ -48,6 +54,7 @@
 <script src="/item-icon-suggest.js"></script>
 <script src="/category-select.js"></script>
 <script src="/recipe-item-list.js"></script>
+<div th:replace="~{fragments/toast :: toast}"></div>
 </div>
 </body>
 </html>

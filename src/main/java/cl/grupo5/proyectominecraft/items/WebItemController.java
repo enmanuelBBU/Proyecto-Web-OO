@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,11 +40,13 @@ public class WebItemController {
                        @RequestParam(required = false) String categoriaOtra,
                        @RequestParam(defaultValue = "false") boolean esMateriaPrima,
                        @RequestParam(required = false) String fullId,
+                       @RequestParam(required = false) String tipoVisual,
                        @RequestParam(required = false) List<String> slot,
-                       Model m, HttpSession s) throws Exception {
+                       Model m, HttpSession s, RedirectAttributes ra) throws Exception {
     if (s.getAttribute("uid") == null) return "redirect:/login";
     if (nombre == null || nombre.isBlank()) {
       m.addAttribute("error", "El nombre del ítem es obligatorio.");
+      m.addAttribute("toastError", "El nombre del ítem es obligatorio.");
       m.addAttribute("items", items.list(null, null));
       m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
       return "items";
@@ -53,15 +56,18 @@ public class WebItemController {
     it.setCategoria(resolveCategoria(categoriaSeleccion, categoriaOtra));
     it.setEsMateriaPrima(esMateriaPrima);
     it.setFullId(fullId);
+    it.setTipoVisual(tipoVisual);
     it.setRecetaMatriz(normalizeSlots(slot));
     try {
       items.create(it);
     } catch (ItemAlreadyExistsException | RecipeValidationException e) {
       m.addAttribute("error", e.getMessage());
+      m.addAttribute("toastError", e.getMessage());
       m.addAttribute("items", items.list(null, null));
       m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
       return "items";
     }
+    ra.addFlashAttribute("toastSuccess", "Ítem creado correctamente");
     return "redirect:/items";
   }
 
@@ -92,8 +98,9 @@ public class WebItemController {
                        @RequestParam(required = false) String categoriaOtra,
                        @RequestParam(defaultValue = "false") boolean esMateriaPrima,
                        @RequestParam(required = false) String fullId,
+                       @RequestParam(required = false) String tipoVisual,
                        @RequestParam(required = false) List<String> slot,
-                       Model m, HttpSession s) throws Exception {
+                       Model m, HttpSession s, RedirectAttributes ra) throws Exception {
     if (s.getAttribute("uid") == null) return "redirect:/login";
     var it = items.get(id);
     if (it == null) return "redirect:/items";
@@ -103,12 +110,14 @@ public class WebItemController {
       m.addAttribute("categoriaSeleccion", categoriaSeleccionFor(it.getCategoria()));
       m.addAttribute("categoriaOtra", categoriaOtraFor(it.getCategoria()));
       m.addAttribute("error", "El nombre del ítem es obligatorio.");
+      m.addAttribute("toastError", "El nombre del ítem es obligatorio.");
       return "item-edit";
     }
     it.setNombre(nombre);
     it.setCategoria(resolveCategoria(categoriaSeleccion, categoriaOtra));
     it.setEsMateriaPrima(esMateriaPrima);
     it.setFullId(fullId);
+    it.setTipoVisual(tipoVisual);
     it.setRecetaMatriz(normalizeSlots(slot));
     try {
       items.update(id, it);
@@ -118,15 +127,18 @@ public class WebItemController {
       m.addAttribute("categoriaSeleccion", categoriaSeleccionFor(it.getCategoria()));
       m.addAttribute("categoriaOtra", categoriaOtraFor(it.getCategoria()));
       m.addAttribute("error", e.getMessage());
+      m.addAttribute("toastError", e.getMessage());
       return "item-edit";
     }
+    ra.addFlashAttribute("toastSuccess", "Ítem actualizado correctamente");
     return "redirect:/items";
   }
 
   @PostMapping("/items/{id}/delete")
-  public String delete(@PathVariable String id, HttpSession s) throws Exception {
+  public String delete(@PathVariable String id, HttpSession s, RedirectAttributes ra) throws Exception {
     if (s.getAttribute("uid") == null) return "redirect:/login";
     items.delete(id);
+    ra.addFlashAttribute("toastSuccess", "Ítem eliminado correctamente");
     return "redirect:/items";
   }
 

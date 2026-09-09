@@ -18,7 +18,7 @@
       <li><a class="btn btn-info" href="/items">Catálogo de Items</a></li>
       <li><a class="btn btn-info" href="/materiales">Gestión de Materiales</a></li>
       <li><button type="button" class="btn btn-ghost" disabled>Calculadora de Crafteo <span class="badge badge-pendiente">En construcción</span></button></li>
-      <li><button type="button" class="btn btn-ghost" disabled>Modelo 3D <span class="badge badge-pendiente">En construcción</span></button></li>
+      <li><a class="btn btn-info" href="/modelo-3d">Modelo 3D</a></li>
     </ul>
   </details>
 
@@ -30,7 +30,7 @@
     <ul>
       <li><button type="button" class="btn btn-ghost" disabled>Mis Proyectos <span class="badge badge-pendiente">En construcción</span></button></li>
       <li><button type="button" class="btn btn-ghost" disabled>Estados de Proyecto <span class="badge badge-pendiente">En construcción</span></button></li>
-      <li><button type="button" class="btn btn-ghost" disabled>Generar Documento (PDF) <span class="badge badge-pendiente">En construcción</span></button></li>
+      <li><a class="btn btn-info" href="/proyectos/reportes">📄 Exportar PDF</a></li>
     </ul>
   </details>
 
@@ -46,5 +46,6 @@
     </ul>
   </details>
 </div>
+<div th:replace="~{fragments/toast :: toast}"></div>
 </body>
 </html>

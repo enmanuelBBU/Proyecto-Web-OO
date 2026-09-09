@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Exportar PDF · SGI Minecraft</title>
+<link rel="stylesheet" href="/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>📄 Exportar PDF</h1>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<div class="card">
+  <h2>Reportes de proyectos</h2>
+  <p>Selecciona un proyecto para generar su reporte en PDF. Los reportes incluyen el detalle del proyecto y el desglose de sus materiales.</p>
+</div>
+
+<div class="card" th:if="${#lists.isEmpty(proyectos)}">
+  <h2>No hay proyectos registrados aún</h2>
+  <p>Cuando existan proyectos de construcción, podrás exportar su reporte en PDF desde esta página.</p>
+</div>
+
+<table th:unless="${#lists.isEmpty(proyectos)}">
+  <tr><th>Proyecto</th><th>Estado</th><th>Materiales</th><th>Acciones</th></tr>
+  <tr th:each="p : ${proyectos}">
+    <td th:text="${p.nombre}"></td>
+    <td>
+      <span class="badge badge-pendiente" th:if="${p.estado != null}" th:text="${p.estado}"></span>
+      <span class="mono" th:unless="${p.estado != null}">—</span>
+    </td>
+    <td class="mono" th:text="${p.materiales != null ? p.materiales.size() : 0}"></td>
+    <td>
+      <a class="btn-info btn" th:href="@{/proyectos/reporte-pdf(id=${p.id})}">📄 Exportar PDF</a>
+    </td>
+  </tr>
+</table>
+<div th:replace="~{fragments/toast :: toast}"></div>
+</body>
+</html>

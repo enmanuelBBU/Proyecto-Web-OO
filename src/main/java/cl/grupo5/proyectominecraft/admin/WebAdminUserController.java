@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Set;
 
@@ -44,7 +45,7 @@ public class WebAdminUserController {
 
   @PostMapping("/{uid}/update")
   public String update(@PathVariable String uid, @RequestParam String nombre, @RequestParam String email,
-                       @RequestParam String rol, Model m, HttpSession s) throws Exception {
+                       @RequestParam String rol, Model m, HttpSession s, RedirectAttributes ra) throws Exception {
     var guard = guardAdmin(s);
     if (guard != null) return guard;
     if (uid.equals(s.getAttribute("uid"))) return "redirect:/admin/usuarios";
@@ -53,32 +54,37 @@ public class WebAdminUserController {
     if (nombre == null || nombre.isBlank()) {
       m.addAttribute("usuario", target);
       m.addAttribute("error", "El nombre es obligatorio.");
+      m.addAttribute("toastError", "El nombre es obligatorio.");
       return "admin-usuario-edit";
     }
     if (email == null || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
       m.addAttribute("usuario", target);
       m.addAttribute("error", "El email no es válido.");
+      m.addAttribute("toastError", "El email no es válido.");
       return "admin-usuario-edit";
     }
     if (!ROLES_VALIDOS.contains(rol)) {
       m.addAttribute("usuario", target);
       m.addAttribute("error", "Rol inválido.");
+      m.addAttribute("toastError", "Rol inválido.");
       return "admin-usuario-edit";
     }
     target.setNombre(nombre);
     target.setEmail(email);
     target.setRol(rol);
     service.save(uid, target);
+    ra.addFlashAttribute("toastSuccess", "Usuario actualizado correctamente");
     return "redirect:/admin/usuarios";
   }
 
   @PostMapping("/{uid}/delete")
-  public String delete(@PathVariable String uid, HttpSession s) throws Exception {
+  public String delete(@PathVariable String uid, HttpSession s, RedirectAttributes ra) throws Exception {
     var guard = guardAdmin(s);
     if (guard != null) return guard;
     if (uid.equals(s.getAttribute("uid"))) return "redirect:/admin/usuarios";
     auth.deleteUser(uid);
     service.delete(uid);
+    ra.addFlashAttribute("toastSuccess", "Usuario eliminado correctamente");
     return "redirect:/admin/usuarios";
   }
 

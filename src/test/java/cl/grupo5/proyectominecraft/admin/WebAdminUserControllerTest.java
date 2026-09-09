@@ -120,7 +120,8 @@ class WebAdminUserControllerTest {
             .param("rol", "SUPERADMIN"))
         .andExpect(status().isOk())
         .andExpect(view().name("admin-usuario-edit"))
-        .andExpect(model().attributeExists("error"));
+        .andExpect(model().attributeExists("error"))
+        .andExpect(model().attribute("toastError", "Rol inválido."));
 
     verify(profileService, never()).save(any(), any());
   }
@@ -140,7 +141,8 @@ class WebAdminUserControllerTest {
             .param("email", "ananueva@x.com")
             .param("rol", "ADMIN"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/admin/usuarios"));
+        .andExpect(redirectedUrl("/admin/usuarios"))
+        .andExpect(flash().attribute("toastSuccess", "Usuario actualizado correctamente"));
 
     var captor = org.mockito.ArgumentCaptor.forClass(UserProfile.class);
     verify(profileService).save(eq("user-2"), captor.capture());
@@ -153,7 +155,8 @@ class WebAdminUserControllerTest {
   void deleteRemovesTargetAuthAndProfileInSafeOrder() throws Exception {
     mvc.perform(post("/admin/usuarios/user-2/delete").session(adminSession()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/admin/usuarios"));
+        .andExpect(redirectedUrl("/admin/usuarios"))
+        .andExpect(flash().attribute("toastSuccess", "Usuario eliminado correctamente"));
 
     var order = inOrder(authService, profileService);
     order.verify(authService).deleteUser("user-2");
@@ -176,7 +179,8 @@ class WebAdminUserControllerTest {
             .param("rol", "USUARIO"))
         .andExpect(status().isOk())
         .andExpect(view().name("admin-usuario-edit"))
-        .andExpect(model().attributeExists("error"));
+        .andExpect(model().attributeExists("error"))
+        .andExpect(model().attribute("toastError", "El nombre es obligatorio."));
 
     verify(profileService, never()).save(any(), any());
   }
@@ -197,7 +201,8 @@ class WebAdminUserControllerTest {
             .param("rol", "USUARIO"))
         .andExpect(status().isOk())
         .andExpect(view().name("admin-usuario-edit"))
-        .andExpect(model().attributeExists("error"));
+        .andExpect(model().attributeExists("error"))
+        .andExpect(model().attribute("toastError", "El email no es válido."));
 
     verify(profileService, never()).save(any(), any());
   }

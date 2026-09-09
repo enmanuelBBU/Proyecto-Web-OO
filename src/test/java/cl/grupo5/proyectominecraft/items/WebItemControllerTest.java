@@ -15,6 +15,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -38,7 +39,8 @@ class WebItemControllerTest {
     mvc.perform(post("/items").session(session).param("nombre", ""))
         .andExpect(status().isOk())
         .andExpect(view().name("items"))
-        .andExpect(model().attributeExists("error"));
+        .andExpect(model().attributeExists("error"))
+        .andExpect(model().attribute("toastError", "El nombre del ítem es obligatorio."));
   }
 
   @Test
@@ -65,7 +67,8 @@ class WebItemControllerTest {
     mvc.perform(post("/items/item-1/update").session(session).param("nombre", ""))
         .andExpect(status().isOk())
         .andExpect(view().name("item-edit"))
-        .andExpect(model().attributeExists("error"));
+        .andExpect(model().attributeExists("error"))
+        .andExpect(model().attribute("toastError", "El nombre del ítem es obligatorio."));
   }
 
   @Test
@@ -77,6 +80,33 @@ class WebItemControllerTest {
     mvc.perform(post("/items/missing-1/update").session(session).param("nombre", "New Name"))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl("/items"));
+  }
+
+  @Test
+  void updateExistingItemRedirectsWithSuccessToast() throws Exception {
+    var existing = new Item();
+    existing.setNombre("Piedra");
+    when(itemService.get("piedra")).thenReturn(existing);
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "someuid");
+
+    mvc.perform(post("/items/piedra/update").session(session).param("nombre", "Piedra Lisa"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/items"))
+        .andExpect(flash().attribute("toastSuccess", "Ítem actualizado correctamente"));
+  }
+
+  @Test
+  void deleteRedirectsWithSuccessToast() throws Exception {
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "someuid");
+
+    mvc.perform(post("/items/piedra/delete").session(session))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/items"))
+        .andExpect(flash().attribute("toastSuccess", "Ítem eliminado correctamente"));
+
+    org.mockito.Mockito.verify(itemService).delete("piedra");
   }
 
   @Test
@@ -124,7 +154,8 @@ class WebItemControllerTest {
     mvc.perform(post("/items").session(session).param("nombre", "Arcilla"))
         .andExpect(status().isOk())
         .andExpect(view().name("items"))
-        .andExpect(model().attributeExists("error"));
+        .andExpect(model().attributeExists("error"))
+        .andExpect(model().attribute("toastError", "Ya existe un item con ese nombre."));
   }
 
   @Test
@@ -138,7 +169,8 @@ class WebItemControllerTest {
     mvc.perform(post("/items").session(session).param("nombre", "Cama").param("slot", "lana"))
         .andExpect(status().isOk())
         .andExpect(view().name("items"))
-        .andExpect(model().attributeExists("error"));
+        .andExpect(model().attributeExists("error"))
+        .andExpect(model().attribute("toastError", "La receta debe tener exactamente 9 casillas."));
   }
 
   @Test
@@ -149,7 +181,8 @@ class WebItemControllerTest {
     mvc.perform(post("/items").session(session)
             .param("nombre", "Yunque")
             .param("categoriaSeleccion", "Utilidad"))
-        .andExpect(status().is3xxRedirection());
+        .andExpect(status().is3xxRedirection())
+        .andExpect(flash().attribute("toastSuccess", "Ítem creado correctamente"));
 
     var captor = org.mockito.ArgumentCaptor.forClass(Item.class);
     org.mockito.Mockito.verify(itemService).create(captor.capture());
