@@ -26,18 +26,24 @@ public class InventoryService {
   public Map<String, Long> set(String uid, String itemId, long cantidad) throws Exception {
     if (cantidad < 0) throw new InventoryException("La cantidad no puede ser negativa.");
     if (items.get(itemId) == null) throw new InventoryException("El ítem no existe en el catálogo.");
-    var current = get(uid);
-    var updated = mergeSet(current, itemId, cantidad);
-    db.collection("inventarios").document(uid).set(Map.of("items", updated)).get();
-    return updated;
+    var ref = db.collection("inventarios").document(uid);
+    return db.runTransaction(tx -> {
+      var current = readItems(tx.get(ref).get());
+      var updated = mergeSet(current, itemId, cantidad);
+      tx.set(ref, Map.of("items", updated));
+      return updated;
+    }).get();
   }
 
   public Map<String, Long> add(String uid, String itemId, long delta) throws Exception {
     if (items.get(itemId) == null) throw new InventoryException("El ítem no existe en el catálogo.");
-    var current = get(uid);
-    var updated = mergeAdd(current, itemId, delta);
-    db.collection("inventarios").document(uid).set(Map.of("items", updated)).get();
-    return updated;
+    var ref = db.collection("inventarios").document(uid);
+    return db.runTransaction(tx -> {
+      var current = readItems(tx.get(ref).get());
+      var updated = mergeAdd(current, itemId, delta);
+      tx.set(ref, Map.of("items", updated));
+      return updated;
+    }).get();
   }
 
   public void clear(String uid) throws Exception {

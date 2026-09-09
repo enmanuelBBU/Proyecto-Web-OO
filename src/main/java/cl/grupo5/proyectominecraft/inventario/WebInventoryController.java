@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 
@@ -30,33 +31,40 @@ public class WebInventoryController {
   @PostMapping("/inventario/agregar")
   public String add(@RequestParam(required = false) String itemId,
                     @RequestParam(defaultValue = "1") long cantidad,
-                    Model m, HttpSession s) throws Exception {
+                    Model m, HttpSession s, RedirectAttributes ra) throws Exception {
     if (s.getAttribute("uid") == null) return "redirect:/login";
     try {
       inventory.add(uid(s), itemId, cantidad);
     } catch (InventoryException e) {
       return rerender(m, s, e.getMessage());
     }
+    ra.addFlashAttribute("toastSuccess", "Inventario actualizado correctamente");
     return "redirect:/inventario";
   }
 
   @PostMapping("/inventario/actualizar")
   public String update(@RequestParam(required = false) String itemId,
                        @RequestParam(defaultValue = "0") long cantidad,
-                       Model m, HttpSession s) throws Exception {
+                       Model m, HttpSession s, RedirectAttributes ra) throws Exception {
     if (s.getAttribute("uid") == null) return "redirect:/login";
     try {
       inventory.set(uid(s), itemId, cantidad);
     } catch (InventoryException e) {
       return rerender(m, s, e.getMessage());
     }
+    ra.addFlashAttribute("toastSuccess", "Inventario actualizado correctamente");
     return "redirect:/inventario";
   }
 
   @PostMapping("/inventario/eliminar")
-  public String remove(@RequestParam(required = false) String itemId, HttpSession s) throws Exception {
+  public String remove(@RequestParam(required = false) String itemId, Model m, HttpSession s, RedirectAttributes ra) throws Exception {
     if (s.getAttribute("uid") == null) return "redirect:/login";
-    inventory.set(uid(s), itemId, 0);
+    try {
+      inventory.set(uid(s), itemId, 0);
+    } catch (InventoryException e) {
+      return rerender(m, s, e.getMessage());
+    }
+    ra.addFlashAttribute("toastSuccess", "Ítem quitado del inventario");
     return "redirect:/inventario";
   }
 
@@ -65,6 +73,7 @@ public class WebInventoryController {
     m.addAttribute("catalogo", items.list(null, null));
     m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
     m.addAttribute("error", error);
+    m.addAttribute("toastError", error);
     return "inventario";
   }
 

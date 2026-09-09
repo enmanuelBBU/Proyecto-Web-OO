@@ -17,6 +17,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -67,6 +68,16 @@ class WebCraftingControllerTest {
             .param("itemId", "pala").param("cantidad", "1"))
         .andExpect(status().isOk())
         .andExpect(view().name("calculadora"))
-        .andExpect(model().attributeExists("error"));
+        .andExpect(model().attributeExists("error"))
+        .andExpect(model().attribute("toastError", "No tienes suficientes materiales."));
+  }
+
+  @Test
+  void craftSuccessRedirectsWithSuccessToast() throws Exception {
+    mvc.perform(post("/calculadora/craftear").session(authenticated())
+            .param("itemId", "pala").param("cantidad", "1"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/calculadora?targetId=pala&cantidad=1"))
+        .andExpect(flash().attribute("toastSuccess", "¡Crafteo exitoso!"));
   }
 }

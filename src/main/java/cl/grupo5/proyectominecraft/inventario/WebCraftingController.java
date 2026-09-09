@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class WebCraftingController {
@@ -38,7 +39,7 @@ public class WebCraftingController {
   @PostMapping("/calculadora/craftear")
   public String craft(@RequestParam(required = false) String itemId,
                       @RequestParam(defaultValue = "1") int cantidad,
-                      Model m, HttpSession s) throws Exception {
+                      Model m, HttpSession s, RedirectAttributes ra) throws Exception {
     if (s.getAttribute("uid") == null) return "redirect:/login";
     try {
       calculator.craft(uid(s), itemId, cantidad);
@@ -48,8 +49,10 @@ public class WebCraftingController {
       m.addAttribute("cantidad", cantidad);
       m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
       m.addAttribute("error", e.getMessage());
+      m.addAttribute("toastError", e.getMessage());
       return "calculadora";
     }
+    ra.addFlashAttribute("toastSuccess", "¡Crafteo exitoso!");
     return "redirect:/calculadora?targetId=" + itemId + "&cantidad=" + cantidad;
   }
 
