@@ -3,6 +3,7 @@ package cl.grupo5.proyectominecraft.proyectos;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -103,5 +104,94 @@ class ProyectoServiceTest {
     assertThatThrownBy(() -> ProyectoService.validarItemsRequeridos(items, itemId -> false))
         .isInstanceOf(ProyectoValidationException.class)
         .hasMessage("El ítem 'bloque_inexistente' no existe en el catálogo.");
+  }
+
+  // Tests para máquina de estados
+
+  @Test
+  void transicionarEstadoSuccess() throws Exception {
+    var dbMock = org.mockito.Mockito.mock(com.google.cloud.firestore.Firestore.class);
+    var collMock = org.mockito.Mockito.mock(com.google.cloud.firestore.CollectionReference.class);
+    var docRefMock = org.mockito.Mockito.mock(com.google.cloud.firestore.DocumentReference.class);
+    var futureMock = org.mockito.Mockito.mock(com.google.api.core.ApiFuture.class);
+    var snapMock = org.mockito.Mockito.mock(com.google.cloud.firestore.DocumentSnapshot.class);
+    
+    org.mockito.Mockito.when(dbMock.collection("proyectos")).thenReturn(collMock);
+    org.mockito.Mockito.when(collMock.document("p1")).thenReturn(docRefMock);
+    org.mockito.Mockito.when(docRefMock.get()).thenReturn(futureMock);
+    org.mockito.Mockito.when(futureMock.get()).thenReturn(snapMock);
+    org.mockito.Mockito.when(snapMock.exists()).thenReturn(true);
+    
+    var p = new Proyecto();
+    p.setId("p1");
+    p.setEstado("PLANIFICACION");
+    p.setCreadorUid("uid123");
+    
+    org.mockito.Mockito.when(snapMock.toObject(Proyecto.class)).thenReturn(p);
+    org.mockito.Mockito.when(docRefMock.set(org.mockito.ArgumentMatchers.any(Proyecto.class))).thenReturn(futureMock);
+
+    var service = new ProyectoService(dbMock);
+    var actualizado = service.transicionarEstado("p1", "EN_CONSTRUCCION", "Inicio obras", "uid123", "Steve", "USUARIO");
+    
+    assertThat(actualizado.getEstado()).isEqualTo("EN_CONSTRUCCION");
+    assertThat(actualizado.getHistorialEstados()).hasSize(1);
+    assertThat(actualizado.getHistorialEstados().get(0).getEstadoNuevo()).isEqualTo("EN_CONSTRUCCION");
+    assertThat(actualizado.getHistorialEstados().get(0).getMotivo()).isEqualTo("Inicio obras");
+  }
+
+  @Test
+  void transicionarEstadoInvalidTransitionThrows() throws Exception {
+    var dbMock = org.mockito.Mockito.mock(com.google.cloud.firestore.Firestore.class);
+    var collMock = org.mockito.Mockito.mock(com.google.cloud.firestore.CollectionReference.class);
+    var docRefMock = org.mockito.Mockito.mock(com.google.cloud.firestore.DocumentReference.class);
+    var futureMock = org.mockito.Mockito.mock(com.google.api.core.ApiFuture.class);
+    var snapMock = org.mockito.Mockito.mock(com.google.cloud.firestore.DocumentSnapshot.class);
+    
+    org.mockito.Mockito.when(dbMock.collection("proyectos")).thenReturn(collMock);
+    org.mockito.Mockito.when(collMock.document("p1")).thenReturn(docRefMock);
+    org.mockito.Mockito.when(docRefMock.get()).thenReturn(futureMock);
+    org.mockito.Mockito.when(futureMock.get()).thenReturn(snapMock);
+    org.mockito.Mockito.when(snapMock.exists()).thenReturn(true);
+    
+    var p = new Proyecto();
+    p.setId("p1");
+    p.setEstado("PLANIFICACION");
+    p.setCreadorUid("uid123");
+    
+    org.mockito.Mockito.when(snapMock.toObject(Proyecto.class)).thenReturn(p);
+
+    var service = new ProyectoService(dbMock);
+    
+    assertThatThrownBy(() -> service.transicionarEstado("p1", "COMPLETADO", null, "uid123", "Steve", "USUARIO"))
+        .isInstanceOf(ProyectoValidationException.class)
+        .hasMessage("Transición inválida: de PLANIFICACION a COMPLETADO");
+  }
+
+  @Test
+  void transicionarEstadoForbiddenThrows() throws Exception {
+    var dbMock = org.mockito.Mockito.mock(com.google.cloud.firestore.Firestore.class);
+    var collMock = org.mockito.Mockito.mock(com.google.cloud.firestore.CollectionReference.class);
+    var docRefMock = org.mockito.Mockito.mock(com.google.cloud.firestore.DocumentReference.class);
+    var futureMock = org.mockito.Mockito.mock(com.google.api.core.ApiFuture.class);
+    var snapMock = org.mockito.Mockito.mock(com.google.cloud.firestore.DocumentSnapshot.class);
+    
+    org.mockito.Mockito.when(dbMock.collection("proyectos")).thenReturn(collMock);
+    org.mockito.Mockito.when(collMock.document("p1")).thenReturn(docRefMock);
+    org.mockito.Mockito.when(docRefMock.get()).thenReturn(futureMock);
+    org.mockito.Mockito.when(futureMock.get()).thenReturn(snapMock);
+    org.mockito.Mockito.when(snapMock.exists()).thenReturn(true);
+    
+    var p = new Proyecto();
+    p.setId("p1");
+    p.setEstado("PLANIFICACION");
+    p.setCreadorUid("uid123");
+    
+    org.mockito.Mockito.when(snapMock.toObject(Proyecto.class)).thenReturn(p);
+
+    var service = new ProyectoService(dbMock);
+    
+    assertThatThrownBy(() -> service.transicionarEstado("p1", "EN_CONSTRUCCION", null, "otherUid", "Alex", "USUARIO"))
+        .isInstanceOf(ProyectoValidationException.class)
+        .hasMessage("No tienes permisos para cambiar el estado de este proyecto.");
   }
 }

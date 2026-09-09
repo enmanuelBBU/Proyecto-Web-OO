@@ -19,7 +19,8 @@
     </div>
     <div style="display: flex; gap: 8px;">
       <a href="/proyectos" class="btn btn-ghost">← Volver</a>
-      <a th:if="${canEdit}" th:href="@{/proyectos/{id}/edit(id=${proyecto.id})}" class="btn btn-info">Editar</a>
+      <a th:if="${canEdit}" th:href="@{/proyectos/{id}/edit(id=${proyecto.id})}" class="btn btn-ghost">Editar Datos</a>
+      <a th:if="${canEdit}" th:href="@{/proyectos/{id}/estados(id=${proyecto.id})}" class="btn btn-info">Gestionar Estados</a>
       <form th:if="${canEdit}" method="post" th:action="@{/proyectos/{id}/delete(id=${proyecto.id})}"
             onsubmit="return confirm('¿Estás seguro de que deseas eliminar este proyecto?');" style="display: inline;">
         <button class="btn btn-danger" type="submit">Eliminar</button>

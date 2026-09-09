@@ -6,6 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+import java.util.Set;
+
 @RestController
 @RequestMapping("/api/proyectos")
 public class ProyectoController {
@@ -82,6 +85,45 @@ public class ProyectoController {
       return ResponseEntity.noContent().build();
     } catch (ProyectoValidationException e) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+    }
+  }
+
+  @GetMapping("/{id}/estados")
+  public ResponseEntity<?> getAvailableTransitions(@PathVariable String id) throws Exception {
+    var proyecto = service.get(id);
+    if (proyecto == null) {
+      return ResponseEntity.notFound().build();
+    }
+    String estado = proyecto.getEstado() != null ? proyecto.getEstado() : "PLANIFICACION";
+    Set<String> transiciones = EstadoProyecto.fromString(estado).getTransicionesValidas();
+    return ResponseEntity.ok(Map.of("estadoActual", estado, "transiciones", transiciones));
+  }
+
+  @PostMapping("/{id}/estado")
+  public ResponseEntity<?> updateState(@PathVariable String id, @RequestBody Map<String, String> body, HttpSession session) throws Exception {
+    String uid = (String) session.getAttribute("uid");
+    String rol = (String) session.getAttribute("rol");
+    String nombre = (String) session.getAttribute("nombre");
+    if (nombre == null) nombre = (String) session.getAttribute("usuario");
+
+    String nuevoEstado = body.get("estado");
+    String motivo = body.get("motivo");
+
+    if (nuevoEstado == null || nuevoEstado.isBlank()) {
+      return ResponseEntity.badRequest().body("El estado es obligatorio.");
+    }
+
+    try {
+      var actualizado = service.transicionarEstado(id, nuevoEstado, motivo, uid, nombre, rol);
+      if (actualizado == null) {
+        return ResponseEntity.notFound().build();
+      }
+      return ResponseEntity.ok(actualizado);
+    } catch (ProyectoValidationException e) {
+      if (e.getMessage().contains("permisos")) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+      }
+      return ResponseEntity.badRequest().body(e.getMessage());
     }
   }
 }

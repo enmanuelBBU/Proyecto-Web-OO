@@ -98,4 +98,58 @@ class ProyectoControllerTest {
     mvc.perform(delete("/api/proyectos/missing-p").session(authenticated()))
         .andExpect(status().isNotFound());
   }
+
+  @Test
+  void getEstadosReturnsOk() throws Exception {
+    var p = new Proyecto();
+    p.setId("castillo");
+    p.setEstado("PLANIFICACION");
+    when(proyectoService.get("castillo")).thenReturn(p);
+
+    mvc.perform(get("/api/proyectos/castillo/estados").session(authenticated()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.estadoActual").value("PLANIFICACION"))
+        .andExpect(jsonPath("$.transiciones").isArray());
+  }
+
+  @Test
+  void updateStateSuccess() throws Exception {
+    var p = new Proyecto();
+    p.setId("castillo");
+    p.setEstado("EN_CONSTRUCCION");
+
+    when(proyectoService.transicionarEstado(eq("castillo"), eq("EN_CONSTRUCCION"), any(), any(), any(), any()))
+        .thenReturn(p);
+
+    mvc.perform(post("/api/proyectos/castillo/estado")
+            .session(authenticated())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"estado\":\"EN_CONSTRUCCION\",\"motivo\":\"Inicio\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.estado").value("EN_CONSTRUCCION"));
+  }
+
+  @Test
+  void updateStateForbidden() throws Exception {
+    doThrow(new ProyectoValidationException("No tienes permisos para cambiar el estado de este proyecto."))
+        .when(proyectoService).transicionarEstado(any(), any(), any(), any(), any(), any());
+
+    mvc.perform(post("/api/proyectos/castillo/estado")
+            .session(authenticated())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"estado\":\"EN_CONSTRUCCION\"}"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void updateStateInvalid() throws Exception {
+    doThrow(new ProyectoValidationException("Transición inválida"))
+        .when(proyectoService).transicionarEstado(any(), any(), any(), any(), any(), any());
+
+    mvc.perform(post("/api/proyectos/castillo/estado")
+            .session(authenticated())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"estado\":\"COMPLETADO\"}"))
+        .andExpect(status().isBadRequest());
+  }
 }

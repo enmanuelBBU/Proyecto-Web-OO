@@ -161,4 +161,49 @@ class WebProyectoControllerTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl("/proyectos"));
   }
+
+  @Test
+  void estadosExposesModelAttributes() throws Exception {
+    var session = userSession("user123");
+    var p = new Proyecto();
+    p.setId("castillo");
+    p.setEstado("PLANIFICACION");
+    p.setCreadorUid("user123");
+    when(proyectoService.get("castillo")).thenReturn(p);
+
+    mvc.perform(get("/proyectos/castillo/estados").session(session))
+        .andExpect(status().isOk())
+        .andExpect(view().name("proyecto-estados"))
+        .andExpect(model().attributeExists("transicionesDisponibles"))
+        .andExpect(model().attribute("canEdit", true));
+  }
+
+  @Test
+  void transicionarRedirectsOnSuccess() throws Exception {
+    var session = userSession("user123");
+
+    mvc.perform(post("/proyectos/castillo/transicionar").session(session)
+            .param("nuevoEstado", "EN_CONSTRUCCION")
+            .param("motivo", "Start"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/proyectos/castillo/estados"));
+  }
+
+  @Test
+  void transicionarRerendersWithErrorOnFailure() throws Exception {
+    var session = userSession("user123");
+    var p = new Proyecto();
+    p.setId("castillo");
+    p.setEstado("PLANIFICACION");
+    when(proyectoService.get("castillo")).thenReturn(p);
+
+    doThrow(new ProyectoValidationException("Transición inválida"))
+        .when(proyectoService).transicionarEstado(any(), any(), any(), any(), any(), any());
+
+    mvc.perform(post("/proyectos/castillo/transicionar").session(session)
+            .param("nuevoEstado", "COMPLETADO"))
+        .andExpect(status().isOk())
+        .andExpect(view().name("proyecto-estados"))
+        .andExpect(model().attributeExists("error"));
+  }
 }

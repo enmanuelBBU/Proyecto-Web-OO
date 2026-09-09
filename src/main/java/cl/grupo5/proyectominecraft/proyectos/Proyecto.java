@@ -24,4 +24,6 @@ public class Proyecto {
   private String creadorNombre;
 
   private String fechaCreacion;
+
+  private List<HistorialEstado> historialEstados = new ArrayList<>();
 }

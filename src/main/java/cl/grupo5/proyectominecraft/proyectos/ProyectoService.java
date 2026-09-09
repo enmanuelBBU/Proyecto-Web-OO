@@ -11,9 +11,7 @@ import java.util.Set;
 
 @Service
 public class ProyectoService {
-  public static final Set<String> ESTADOS_VALIDOS = Set.of(
-      "PLANIFICACION", "EN_CONSTRUCCION", "COMPLETADO", "CANCELADO"
-  );
+
 
   @FunctionalInterface
   public interface CatalogItemChecker {
@@ -133,6 +131,47 @@ public class ProyectoService {
     return true;
   }
 
+  public Proyecto transicionarEstado(String id, String nuevoEstado, String motivo, String userUid, String userNombre, String userRole) throws Exception {
+    var snap = db.collection("proyectos").document(id).get().get();
+    if (!snap.exists()) return null;
+
+    var actual = snap.toObject(Proyecto.class);
+    actual.setId(id);
+
+    if (!canUserModify(actual, userUid, userRole)) {
+      throw new ProyectoValidationException("No tienes permisos para cambiar el estado de este proyecto.");
+    }
+
+    String estadoActual = actual.getEstado();
+    if (estadoActual == null) estadoActual = "PLANIFICACION";
+
+    EstadoProyecto estadoEnum = EstadoProyecto.fromString(estadoActual);
+    if (!estadoEnum.puedeTransicionarA(nuevoEstado)) {
+      throw new ProyectoValidationException("Transición inválida: de " + estadoActual + " a " + nuevoEstado);
+    }
+
+    EstadoProyecto nuevoEstadoEnum = EstadoProyecto.fromString(nuevoEstado);
+
+    if (actual.getHistorialEstados() == null) {
+      actual.setHistorialEstados(new ArrayList<>());
+    }
+
+    HistorialEstado historial = new HistorialEstado(
+        estadoActual,
+        nuevoEstadoEnum.name(),
+        userUid,
+        userNombre != null ? userNombre : "Anónimo",
+        Instant.now().toString(),
+        motivo
+    );
+
+    actual.getHistorialEstados().add(historial);
+    actual.setEstado(nuevoEstadoEnum.name());
+
+    db.collection("proyectos").document(id).set(actual).get();
+    return actual;
+  }
+
   public static boolean canUserModify(Proyecto proyecto, String userUid, String userRole) {
     if (proyecto == null) return false;
     if ("ADMIN".equals(userRole)) return true;
@@ -141,8 +180,10 @@ public class ProyectoService {
 
   public static void validarEstado(String estado) {
     if (estado != null && !estado.isBlank()) {
-      if (!ESTADOS_VALIDOS.contains(estado.toUpperCase())) {
-        throw new ProyectoValidationException("El estado '" + estado + "' no es válido.");
+      try {
+        EstadoProyecto.fromString(estado);
+      } catch (IllegalArgumentException e) {
+        throw new ProyectoValidationException(e.getMessage());
       }
     }
   }

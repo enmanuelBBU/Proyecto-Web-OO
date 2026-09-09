@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Controller
 public class WebProyectoController {
@@ -117,8 +118,61 @@ public class WebProyectoController {
 
     m.addAttribute("proyecto", p);
     m.addAttribute("catalogItems", catalog);
-    m.addAttribute("estados", ProyectoService.ESTADOS_VALIDOS);
+    m.addAttribute("estados", List.of("PLANIFICACION", "EN_CONSTRUCCION", "COMPLETADO", "CANCELADO")); // Mantenemos para el select general por ahora o se quita, pero no es estados de transicion
     return "proyecto-edit";
+  }
+
+  @GetMapping("/proyectos/{id}/estados")
+  public String estados(@PathVariable String id, Model m, HttpSession s) throws Exception {
+    String uid = (String) s.getAttribute("uid");
+    if (uid == null) return "redirect:/login";
+
+    Proyecto p = proyectoService.get(id);
+    if (p == null) return "redirect:/proyectos";
+
+    boolean canEdit = ProyectoService.canUserModify(p, uid, (String) s.getAttribute("rol"));
+
+    String estadoActual = p.getEstado() != null ? p.getEstado() : "PLANIFICACION";
+    Set<String> transicionesDisponibles = EstadoProyecto.fromString(estadoActual).getTransicionesValidas();
+
+    m.addAttribute("proyecto", p);
+    m.addAttribute("canEdit", canEdit);
+    m.addAttribute("transicionesDisponibles", transicionesDisponibles);
+    m.addAttribute("historial", p.getHistorialEstados());
+    m.addAttribute("currentUid", uid);
+    m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
+    return "proyecto-estados";
+  }
+
+  @PostMapping("/proyectos/{id}/transicionar")
+  public String transicionar(@PathVariable String id,
+                             @RequestParam String nuevoEstado,
+                             @RequestParam(required = false) String motivo,
+                             Model m, HttpSession s) throws Exception {
+    String uid = (String) s.getAttribute("uid");
+    if (uid == null) return "redirect:/login";
+    String rol = (String) s.getAttribute("rol");
+    String nombre = (String) s.getAttribute("nombre");
+    if (nombre == null) nombre = (String) s.getAttribute("usuario");
+
+    try {
+      proyectoService.transicionarEstado(id, nuevoEstado, motivo, uid, nombre, rol);
+    } catch (ProyectoValidationException e) {
+      Proyecto p = proyectoService.get(id);
+      String estadoActual = p.getEstado() != null ? p.getEstado() : "PLANIFICACION";
+      Set<String> transicionesDisponibles = EstadoProyecto.fromString(estadoActual).getTransicionesValidas();
+
+      m.addAttribute("proyecto", p);
+      m.addAttribute("canEdit", ProyectoService.canUserModify(p, uid, rol));
+      m.addAttribute("transicionesDisponibles", transicionesDisponibles);
+      m.addAttribute("historial", p.getHistorialEstados());
+      m.addAttribute("error", e.getMessage());
+      m.addAttribute("currentUid", uid);
+      m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
+      return "proyecto-estados";
+    }
+
+    return "redirect:/proyectos/" + id + "/estados";
   }
 
   @PostMapping("/proyectos/{id}/update")
@@ -147,7 +201,7 @@ public class WebProyectoController {
     } catch (ProyectoValidationException e) {
       m.addAttribute("proyecto", p);
       m.addAttribute("catalogItems", itemService.list(null, null));
-      m.addAttribute("estados", ProyectoService.ESTADOS_VALIDOS);
+      m.addAttribute("estados", List.of("PLANIFICACION", "EN_CONSTRUCCION", "COMPLETADO", "CANCELADO"));
       m.addAttribute("error", e.getMessage());
       return "proyecto-edit";
     }
