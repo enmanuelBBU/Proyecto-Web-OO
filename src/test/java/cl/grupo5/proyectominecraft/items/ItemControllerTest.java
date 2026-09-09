@@ -38,6 +38,14 @@ class ItemControllerTest {
   private MockHttpSession authenticated() {
     var session = new MockHttpSession();
     session.setAttribute("uid", "someuid");
+    session.setAttribute("rol", "USUARIO");
+    return session;
+  }
+
+  private MockHttpSession adminAuthenticated() {
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "admin-1");
+    session.setAttribute("rol", "ADMIN");
     return session;
   }
 
@@ -55,18 +63,37 @@ class ItemControllerTest {
     when(itemService.update(eq("missing-1"), any())).thenReturn(null);
 
     mvc.perform(put("/api/items/missing-1")
-            .session(authenticated())
+            .session(adminAuthenticated())
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"nombre\":\"Piedra\"}"))
         .andExpect(status().isNotFound());
   }
 
   @Test
+  void updateForNonAdminSessionIsForbidden() throws Exception {
+    mvc.perform(put("/api/items/piedra")
+            .session(authenticated())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"nombre\":\"Piedra\"}"))
+        .andExpect(status().isForbidden());
+
+    org.mockito.Mockito.verify(itemService, org.mockito.Mockito.never()).update(any(), any());
+  }
+
+  @Test
   void deleteUnknownIdIsNotFound() throws Exception {
     when(itemService.delete("missing-1")).thenReturn(false);
 
-    mvc.perform(delete("/api/items/missing-1").session(authenticated()))
+    mvc.perform(delete("/api/items/missing-1").session(adminAuthenticated()))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void deleteForNonAdminSessionIsForbidden() throws Exception {
+    mvc.perform(delete("/api/items/piedra").session(authenticated()))
+        .andExpect(status().isForbidden());
+
+    org.mockito.Mockito.verify(itemService, org.mockito.Mockito.never()).delete(any());
   }
 
   @Test

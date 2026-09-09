@@ -26,6 +26,13 @@ class WebHomeControllerTest {
   }
 
   @Test
+  void rootRedirectsToInicio() throws Exception {
+    mvc.perform(get("/"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/inicio"));
+  }
+
+  @Test
   void withSessionRendersInicioWithIsAdminFalseForRegularUser() throws Exception {
     var session = new MockHttpSession();
     session.setAttribute("uid", "user-1");

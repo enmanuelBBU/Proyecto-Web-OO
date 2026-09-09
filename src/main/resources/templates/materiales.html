@@ -24,9 +24,10 @@
     </td>
     <td th:text="${i.nombre}"></td>
     <td><span class="badge badge-pendiente" th:text="${i.categoria}"></span></td>
-    <td>
+    <td th:if="${isAdmin}">
       <a th:href="@{/items/{id}/edit(id=${i.id})}">Editar</a>
     </td>
+    <td th:unless="${isAdmin}"></td>
   </tr>
 </table>
 <div th:replace="~{fragments/toast :: toast}"></div>

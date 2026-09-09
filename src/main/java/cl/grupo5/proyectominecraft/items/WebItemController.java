@@ -82,7 +82,8 @@ public class WebItemController {
 
   @GetMapping("/items/{id}/edit")
   public String edit(@PathVariable String id, Model m, HttpSession s) throws Exception {
-    if (s.getAttribute("uid") == null) return "redirect:/login";
+    var guard = guardAdmin(s);
+    if (guard != null) return guard;
     var it = items.get(id);
     if (it == null) return "redirect:/items";
     m.addAttribute("item", it);
@@ -101,7 +102,8 @@ public class WebItemController {
                        @RequestParam(required = false) String tipoVisual,
                        @RequestParam(required = false) List<String> slot,
                        Model m, HttpSession s, RedirectAttributes ra) throws Exception {
-    if (s.getAttribute("uid") == null) return "redirect:/login";
+    var guard = guardAdmin(s);
+    if (guard != null) return guard;
     var it = items.get(id);
     if (it == null) return "redirect:/items";
     if (nombre == null || nombre.isBlank()) {
@@ -136,10 +138,17 @@ public class WebItemController {
 
   @PostMapping("/items/{id}/delete")
   public String delete(@PathVariable String id, HttpSession s, RedirectAttributes ra) throws Exception {
-    if (s.getAttribute("uid") == null) return "redirect:/login";
+    var guard = guardAdmin(s);
+    if (guard != null) return guard;
     items.delete(id);
     ra.addFlashAttribute("toastSuccess", "Ítem eliminado correctamente");
     return "redirect:/items";
+  }
+
+  private static String guardAdmin(HttpSession s) {
+    if (s.getAttribute("uid") == null) return "redirect:/login";
+    if (!"ADMIN".equals(s.getAttribute("rol"))) return "redirect:/items";
+    return null;
   }
 
   private static List<String> normalizeSlots(List<String> slot) {

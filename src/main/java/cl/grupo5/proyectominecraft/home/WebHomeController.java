@@ -8,6 +8,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class WebHomeController {
 
+  @GetMapping("/")
+  public String root() {
+    return "redirect:/inicio";
+  }
+
   @GetMapping("/inicio")
   public String inicio(Model m, HttpSession s) {
     if (s.getAttribute("uid") == null) return "redirect:/login";

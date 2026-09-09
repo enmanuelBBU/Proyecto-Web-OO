@@ -30,6 +30,13 @@ class WebItemControllerTest {
   @MockitoBean
   private ItemService itemService;
 
+  private MockHttpSession adminSession() {
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "admin-1");
+    session.setAttribute("rol", "ADMIN");
+    return session;
+  }
+
   @Test
   void createWithBlankNombreRerendersItemsWithError() throws Exception {
     when(itemService.list(null, null)).thenReturn(List.of());
@@ -61,8 +68,7 @@ class WebItemControllerTest {
     var existing = new Item();
     existing.setNombre("Piedra");
     when(itemService.get("item-1")).thenReturn(existing);
-    var session = new MockHttpSession();
-    session.setAttribute("uid", "someuid");
+    var session = adminSession();
 
     mvc.perform(post("/items/item-1/update").session(session).param("nombre", ""))
         .andExpect(status().isOk())
@@ -74,8 +80,7 @@ class WebItemControllerTest {
   @Test
   void updateWithMissingItemRedirectsToItems() throws Exception {
     when(itemService.get("missing-1")).thenReturn(null);
-    var session = new MockHttpSession();
-    session.setAttribute("uid", "someuid");
+    var session = adminSession();
 
     mvc.perform(post("/items/missing-1/update").session(session).param("nombre", "New Name"))
         .andExpect(status().is3xxRedirection())
@@ -87,8 +92,7 @@ class WebItemControllerTest {
     var existing = new Item();
     existing.setNombre("Piedra");
     when(itemService.get("piedra")).thenReturn(existing);
-    var session = new MockHttpSession();
-    session.setAttribute("uid", "someuid");
+    var session = adminSession();
 
     mvc.perform(post("/items/piedra/update").session(session).param("nombre", "Piedra Lisa"))
         .andExpect(status().is3xxRedirection())
@@ -97,9 +101,24 @@ class WebItemControllerTest {
   }
 
   @Test
-  void deleteRedirectsWithSuccessToast() throws Exception {
+  void updateRedirectsToItemsForNonAdminSessionWithoutCallingService() throws Exception {
+    var existing = new Item();
+    existing.setNombre("Piedra");
+    when(itemService.get("piedra")).thenReturn(existing);
     var session = new MockHttpSession();
     session.setAttribute("uid", "someuid");
+    session.setAttribute("rol", "USUARIO");
+
+    mvc.perform(post("/items/piedra/update").session(session).param("nombre", "Piedra Lisa"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/items"));
+
+    org.mockito.Mockito.verify(itemService, org.mockito.Mockito.never()).update(any(), any());
+  }
+
+  @Test
+  void deleteRedirectsWithSuccessToast() throws Exception {
+    var session = adminSession();
 
     mvc.perform(post("/items/piedra/delete").session(session))
         .andExpect(status().is3xxRedirection())
@@ -110,14 +129,46 @@ class WebItemControllerTest {
   }
 
   @Test
-  void editWithMissingItemRedirectsToItems() throws Exception {
-    when(itemService.get("missing-1")).thenReturn(null);
+  void deleteRedirectsToItemsForNonAdminSessionWithoutCallingService() throws Exception {
     var session = new MockHttpSession();
     session.setAttribute("uid", "someuid");
+    session.setAttribute("rol", "USUARIO");
+
+    mvc.perform(post("/items/piedra/delete").session(session))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/items"));
+
+    org.mockito.Mockito.verify(itemService, org.mockito.Mockito.never()).delete(any());
+  }
+
+  @Test
+  void editWithMissingItemRedirectsToItems() throws Exception {
+    when(itemService.get("missing-1")).thenReturn(null);
+    var session = adminSession();
 
     mvc.perform(get("/items/missing-1/edit").session(session))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl("/items"));
+  }
+
+  @Test
+  void editRedirectsToItemsForNonAdminSessionWithoutCallingService() throws Exception {
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "someuid");
+    session.setAttribute("rol", "USUARIO");
+
+    mvc.perform(get("/items/piedra/edit").session(session))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/items"));
+
+    org.mockito.Mockito.verify(itemService, org.mockito.Mockito.never()).get(any());
+  }
+
+  @Test
+  void editRedirectsToLoginWhenNotAuthenticated() throws Exception {
+    mvc.perform(get("/items/piedra/edit"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/login"));
   }
 
   @Test
@@ -211,8 +262,7 @@ class WebItemControllerTest {
     existing.setNombre("Estatua");
     existing.setCategoria("Decoración");
     when(itemService.get("estatua")).thenReturn(existing);
-    var session = new MockHttpSession();
-    session.setAttribute("uid", "someuid");
+    var session = adminSession();
 
     mvc.perform(get("/items/estatua/edit").session(session))
         .andExpect(status().isOk())
@@ -226,8 +276,7 @@ class WebItemControllerTest {
     existing.setNombre("Yunque");
     existing.setCategoria("Utilidad");
     when(itemService.get("yunque")).thenReturn(existing);
-    var session = new MockHttpSession();
-    session.setAttribute("uid", "someuid");
+    var session = adminSession();
 
     mvc.perform(get("/items/yunque/edit").session(session))
         .andExpect(status().isOk())
@@ -273,8 +322,7 @@ class WebItemControllerTest {
     existing.setNombre("Cama");
     existing.setRecetaMatriz(List.of("lana", "lana"));
     when(itemService.get("cama")).thenReturn(existing);
-    var session = new MockHttpSession();
-    session.setAttribute("uid", "someuid");
+    var session = adminSession();
 
     mvc.perform(get("/items/cama/edit").session(session))
         .andExpect(status().isOk())

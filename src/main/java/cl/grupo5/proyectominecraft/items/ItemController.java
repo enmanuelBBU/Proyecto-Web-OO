@@ -1,5 +1,6 @@
 package cl.grupo5.proyectominecraft.items;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +34,8 @@ public class ItemController {
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<?> update(@PathVariable String id, @Valid @RequestBody Item item) throws Exception {
+  public ResponseEntity<?> update(@PathVariable String id, @Valid @RequestBody Item item, HttpSession session) throws Exception {
+    if (!isAdmin(session)) return ResponseEntity.status(403).build();
     try {
       var updated = service.update(id, item);
       if (updated == null) return ResponseEntity.notFound().build();
@@ -44,9 +46,14 @@ public class ItemController {
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<?> delete(@PathVariable String id) throws Exception {
+  public ResponseEntity<?> delete(@PathVariable String id, HttpSession session) throws Exception {
+    if (!isAdmin(session)) return ResponseEntity.status(403).build();
     if (!service.delete(id)) return ResponseEntity.notFound().build();
     return ResponseEntity.noContent().build();
+  }
+
+  private static boolean isAdmin(HttpSession session) {
+    return "ADMIN".equals(session.getAttribute("rol"));
   }
 
   @GetMapping("/sugerencias-icono")

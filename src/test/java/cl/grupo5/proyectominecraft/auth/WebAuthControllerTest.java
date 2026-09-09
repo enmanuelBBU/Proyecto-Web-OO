@@ -119,6 +119,24 @@ class WebAuthControllerTest {
   }
 
   @Test
+  void loginStoresProfileNombreInSession() throws Exception {
+    when(identity.signIn("user@example.com", "secret1")).thenReturn(Map.of("localId", "uid-5"));
+    var existing = new UserProfile();
+    existing.setNombre("Steve");
+    existing.setEmail("user@example.com");
+    existing.setRol("USUARIO");
+    when(profiles.get("uid-5")).thenReturn(existing);
+    when(adminEmails.isAdmin("user@example.com")).thenReturn(false);
+
+    var session = new MockHttpSession();
+    mvc.perform(post("/login").session(session).param("email", "user@example.com").param("password", "secret1"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/inicio"));
+
+    assertThat(session.getAttribute("nombre")).isEqualTo("Steve");
+  }
+
+  @Test
   void registerSuccessRedirectsWithWelcomeToast() throws Exception {
     when(identity.signUp("user@example.com", "secret1")).thenReturn(Map.of("localId", "uid-5"));
     when(adminEmails.isAdmin("user@example.com")).thenReturn(false);
@@ -128,6 +146,19 @@ class WebAuthControllerTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl("/inicio"))
         .andExpect(flash().attribute("toastSuccess", "¡Cuenta creada!"));
+  }
+
+  @Test
+  void registerStoresGeneratedNombreInSession() throws Exception {
+    when(identity.signUp("user@example.com", "secret1")).thenReturn(Map.of("localId", "uid-5"));
+    when(adminEmails.isAdmin("user@example.com")).thenReturn(false);
+
+    var session = new MockHttpSession();
+    mvc.perform(post("/register").session(session).param("email", "user@example.com").param("password", "secret1"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/inicio"));
+
+    assertThat(session.getAttribute("nombre")).isEqualTo("user");
   }
 
   @Test

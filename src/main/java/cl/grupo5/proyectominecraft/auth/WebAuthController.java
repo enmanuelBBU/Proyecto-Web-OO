@@ -37,6 +37,7 @@ public class WebAuthController {
       var profile = resolveRoleOnLogin(uid, email);
       s.setAttribute("uid", uid);
       s.setAttribute("email", email);
+      s.setAttribute("nombre", profile != null ? profile.getNombre() : email);
       s.setAttribute("rol", profile != null ? profile.getRol() : "USUARIO");
       ra.addFlashAttribute("toastSuccess", "¡Bienvenido!");
       return "redirect:/inicio";
@@ -75,6 +76,7 @@ public class WebAuthController {
       profiles.save(uid, p);
       s.setAttribute("uid", uid);
       s.setAttribute("email", email);
+      s.setAttribute("nombre", p.getNombre());
       s.setAttribute("rol", p.getRol());
       ra.addFlashAttribute("toastSuccess", "¡Cuenta creada!");
       return "redirect:/inicio";

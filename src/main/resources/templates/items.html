@@ -29,12 +29,13 @@
     <td th:text="${i.nombre}"></td>
     <td><span class="badge badge-pendiente" th:text="${i.categoria}"></span></td>
     <td class="mono" th:text="${i.esMateriaPrima} ? 'Sí' : 'No'"></td>
-    <td>
+    <td th:if="${isAdmin}">
       <a th:href="@{/items/{id}/edit(id=${i.id})}">Editar</a>
       <form method="post" th:action="@{/items/{id}/delete(id=${i.id})}" style="display:inline">
         <button class="btn-danger btn">Eliminar</button>
       </form>
     </td>
+    <td th:unless="${isAdmin}"></td>
   </tr>
   </tbody>
 </table>
