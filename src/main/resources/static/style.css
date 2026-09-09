@@ -375,6 +375,48 @@ button, .btn, a { cursor: pointer; }
 }
 .icon-suggestions .icon-candidate img { width: 24px; height: 24px; }
 
+/* --- icon search + preview --- */
+.icon-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+.icon-search-row input { flex: 1; }
+.icon-preview-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 4px;
+}
+.icon-preview {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed color-mix(in srgb, var(--fg) 25%, transparent);
+  border-radius: 8px;
+  background: var(--card);
+  overflow: hidden;
+}
+.icon-preview-img { width: 32px; height: 32px; }
+.icon-preview-text {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 9px;
+  line-height: 1.2;
+  text-align: center;
+  color: color-mix(in srgb, var(--fg) 60%, transparent);
+  padding: 0 4px;
+}
+.icon-suggestions .icon-candidate.selected {
+  border-color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 12%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--amber) 30%, transparent);
+}
+
 /* --- recipe grid drag-and-drop item list --- */
 .recipe-editor {
   display: flex;

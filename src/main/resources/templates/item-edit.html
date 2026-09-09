@@ -32,10 +32,21 @@
     <option value="BLOQUE" th:selected="${item.tipoVisual == 'BLOQUE'}">Bloque (cubo)</option>
     <option value="ITEM_PLANO" th:selected="${item.tipoVisual == 'ITEM_PLANO'}">Ítem plano</option>
   </select><br><br>
-  <label for="editar-fullId">Full ID (Minecraft)</label><br>
-  <input id="editar-fullId" name="fullId" th:value="${item.fullId}" placeholder="minecraft:clay_ball">
-  <button type="button" class="btn-info btn sugerir-icono-btn" data-nombre="editar-nombre" data-fullid="editar-fullId" data-target="editar-sugerencias">Sugerir ícono</button>
+  <label for="editar-textura">Buscar textura / Palabra clave</label><br>
+  <div class="icon-search-row">
+    <input id="editar-textura" type="text" placeholder="ej. espada, pico, madera, tierra" autocomplete="off">
+    <button type="button" class="btn-info btn icon-buscar-btn" data-buscar="editar-textura" data-fullid="editar-fullId" data-target="editar-sugerencias">Sugerir icono</button>
+  </div>
   <div class="icon-suggestions" id="editar-sugerencias"></div>
+  <br>
+  <label for="editar-fullId">Full ID (Minecraft)</label><br>
+  <div class="icon-preview-row">
+    <div class="icon-preview" id="editar-preview">
+      <img class="icon-preview-img" alt="" hidden>
+      <span class="icon-preview-text">Sin icono</span>
+    </div>
+    <input id="editar-fullId" name="fullId" th:value="${item.fullId}" data-preview="editar-preview" placeholder="minecraft:diamond_sword" required>
+  </div>
   <br>
   <span>Receta (grilla 3x3 — arrastra un item desde la lista):</span>
   <div class="recipe-editor">
