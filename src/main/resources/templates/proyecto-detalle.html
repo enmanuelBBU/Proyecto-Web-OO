@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${proyecto.nombre + ' · Proyectos'}">Detalle de Proyecto · SGI Minecraft</title>
+  <link rel="stylesheet" href="/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>🏗️ Detalle de Proyecto</h1>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<div class="card">
+  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+    <div>
+      <h2 th:text="${proyecto.nombre}" style="margin: 0 0 8px 0;">Nombre del Proyecto</h2>
+      <span th:class="'badge badge-' + ${#strings.toLowerCase(proyecto.estado != null ? proyecto.estado : 'PLANIFICACION')}"
+            th:text="${proyecto.estado}" style="font-size: 14px; padding: 4px 12px;">ESTADO</span>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <a href="/proyectos" class="btn btn-ghost">← Volver</a>
+      <a th:if="${canEdit}" th:href="@{/proyectos/{id}/edit(id=${proyecto.id})}" class="btn btn-info">Editar</a>
+      <form th:if="${canEdit}" method="post" th:action="@{/proyectos/{id}/delete(id=${proyecto.id})}"
+            onsubmit="return confirm('¿Estás seguro de que deseas eliminar este proyecto?');" style="display: inline;">
+        <button class="btn btn-danger" type="submit">Eliminar</button>
+      </form>
+    </div>
+  </div>
+
+  <div style="margin-top: 20px;">
+    <h3>Descripción</h3>
+    <p th:text="${proyecto.descripcion != null and !proyecto.descripcion.isBlank() ? proyecto.descripcion : 'Sin descripción registrada.'}">
+      Descripción detallada del proyecto...
+    </p>
+  </div>
+
+  <div class="project-card-meta" style="margin-top: 16px; padding-top: 12px; border-top: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);">
+    <p style="margin: 4px 0;"><strong>Creador:</strong> <span th:text="${proyecto.creadorNombre != null ? proyecto.creadorNombre : 'Anónimo'}">Creador</span> (<span th:text="${proyecto.creadorUid}">UID</span>)</p>
+    <p style="margin: 4px 0;" th:if="${proyecto.fechaCreacion != null}"><strong>Fecha de creación:</strong> <span th:text="${proyecto.fechaCreacion}">Fecha</span></p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Materiales e Ítems Requeridos</h2>
+  <div th:if="${proyecto.itemsRequeridos == null or #lists.isEmpty(proyecto.itemsRequeridos)}">
+    <p style="color: color-mix(in srgb, var(--fg) 60%, transparent);">Este proyecto no tiene ítems asignados aún.</p>
+  </div>
+
+  <table th:if="${proyecto.itemsRequeridos != null and !#lists.isEmpty(proyecto.itemsRequeridos)}">
+    <thead>
+      <tr>
+        <th>Ícono</th>
+        <th>Ítem</th>
+        <th>Categoría</th>
+        <th>Cantidad Requerida</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="ir : ${proyecto.itemsRequeridos}">
+        <td>
+          <img th:if="${itemMap[ir.itemId] != null and itemMap[ir.itemId].fullId != null}"
+               th:src="${'https://blocksitems.com/api/v1/items/' + itemMap[ir.itemId].fullId + '/icon?size=32'}"
+               width="32" height="32" alt="" onerror="this.style.display='none'">
+        </td>
+        <td>
+          <strong th:text="${itemMap[ir.itemId] != null ? itemMap[ir.itemId].nombre : ir.itemId}">Nombre Ítem</strong>
+          <div class="mono" style="font-size: 11px; color: color-mix(in srgb, var(--fg) 60%, transparent);" th:text="${ir.itemId}">id</div>
+        </td>
+        <td>
+          <span th:if="${itemMap[ir.itemId] != null and itemMap[ir.itemId].categoria != null}" 
+                class="badge badge-pendiente" th:text="${itemMap[ir.itemId].categoria}">Categoría</span>
+          <span th:if="${itemMap[ir.itemId] == null or itemMap[ir.itemId].categoria == null}">-</span>
+        </td>
+        <td>
+          <span class="mono" style="font-size: 16px; font-weight: bold;" th:text="${ir.cantidad}">1</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

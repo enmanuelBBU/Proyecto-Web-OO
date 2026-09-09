@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Proyectos de Construcción · SGI Minecraft</title>
+  <link rel="stylesheet" href="/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>🏗️ Proyectos de Construcción</h1>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<div class="card">
+  <h2>Buscar y Filtrar Proyectos</h2>
+  <form method="get" action="/proyectos" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+    <input type="text" id="proyectos-buscar-q" name="q" th:value="${q}" placeholder="Buscar por nombre o descripción" autocomplete="off" style="flex: 1; min-width: 200px;">
+    
+    <select name="estado" id="proyectos-filtrar-estado">
+      <option value="">Todos los estados</option>
+      <option value="PLANIFICACION" th:selected="${estado == 'PLANIFICACION'}">Planificación</option>
+      <option value="EN_CONSTRUCCION" th:selected="${estado == 'EN_CONSTRUCCION'}">En Construcción</option>
+      <option value="COMPLETADO" th:selected="${estado == 'COMPLETADO'}">Completado</option>
+      <option value="CANCELADO" th:selected="${estado == 'CANCELADO'}">Cancelado</option>
+    </select>
+
+    <label style="display: flex; align-items: center; gap: 6px; font-weight: 700; cursor: pointer;">
+      <input type="checkbox" name="misProyectos" value="true" th:checked="${misProyectos}">
+      Mis proyectos
+    </label>
+
+    <button class="btn-info btn" type="submit">Filtrar</button>
+    <a href="/proyectos" class="btn btn-ghost">Limpiar</a>
+  </form>
+</div>
+
+<h2>Listado de Proyectos</h2>
+<div th:if="${#lists.isEmpty(proyectos)}" class="card">
+  <p style="text-align: center; color: color-mix(in srgb, var(--fg) 60%, transparent);">No se encontraron proyectos con los criterios seleccionados.</p>
+</div>
+
+<div class="project-grid" th:if="${!#lists.isEmpty(proyectos)}">
+  <div class="card project-card" th:each="p : ${proyectos}">
+    <div>
+      <div class="project-card-header">
+        <h3 class="project-card-title">
+          <a th:href="@{/proyectos/{id}(id=${p.id})}" th:text="${p.nombre}">Nombre Proyecto</a>
+        </h3>
+        <span th:class="'badge badge-' + ${#strings.toLowerCase(p.estado != null ? p.estado : 'PLANIFICACION')}"
+              th:text="${p.estado}">ESTADO</span>
+      </div>
+      <p class="project-card-body" th:text="${p.descripcion != null and !p.descripcion.isBlank() ? p.descripcion : 'Sin descripción.'}">Descripción del proyecto...</p>
+      
+      <div style="font-size: 13px; margin-bottom: 8px;">
+        <strong>Ítems requeridos:</strong>
+        <span th:text="${p.itemsRequeridos != null ? p.itemsRequeridos.size() : 0}">0</span> tipos de ítem
+      </div>
+    </div>
+
+    <div>
+      <div class="project-card-meta">
+        <div>Creador: <span th:text="${p.creadorNombre != null ? p.creadorNombre : 'Anónimo'}">Nombre</span></div>
+      </div>
+      <div style="margin-top: 12px; display: flex; gap: 8px;">
+        <a th:href="@{/proyectos/{id}(id=${p.id})}" class="btn btn-info" style="font-size: 12px; padding: 6px 10px;">Ver detalle</a>
+        <a th:if="${isAdmin or (p.creadorUid != null and p.creadorUid == currentUid)}" 
+           th:href="@{/proyectos/{id}/edit(id=${p.id})}" 
+           class="btn btn-ghost" style="font-size: 12px; padding: 6px 10px;">Editar</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-top: 32px;">
+  <h2>Crear Nuevo Proyecto</h2>
+  <p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
+  
+  <form method="post" action="/proyectos">
+    <div class="field">
+      <label for="crear-proyecto-nombre">Nombre del Proyecto</label>
+      <input id="crear-proyecto-nombre" name="nombre" required placeholder="Ej: Castillo Central, Granja de Hierro">
+    </div>
+
+    <div class="field">
+      <label for="crear-proyecto-descripcion">Descripción</label>
+      <textarea id="crear-proyecto-descripcion" name="descripcion" rows="3" 
+                style="width: 100%; background: var(--card); color: var(--fg); border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent); border-radius: 6px; padding: 8px 10px; font-family: inherit;"
+                placeholder="Detalles sobre los materiales o propósito de la construcción..."></textarea>
+    </div>
+
+    <div class="field">
+      <label for="crear-proyecto-estado">Estado inicial</label>
+      <select id="crear-proyecto-estado" name="estado">
+        <option value="PLANIFICACION" selected>PLANIFICACION</option>
+        <option value="EN_CONSTRUCCION">EN_CONSTRUCCION</option>
+        <option value="COMPLETADO">COMPLETADO</option>
+        <option value="CANCELADO">CANCELADO</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Ítems requeridos para el proyecto</label>
+      <div id="proyecto-items-container" class="proyecto-items-editor">
+        <!-- Rows will be dynamically added here -->
+      </div>
+      <button type="button" id="btn-add-item" class="btn btn-ghost" style="margin-top: 4px;">+ Agregar ítem</button>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="margin-top: 16px;">Crear Proyecto</button>
+  </form>
+</div>
+
+<!-- Template for adding dynamic item rows -->
+<template id="proyecto-item-template">
+  <div class="proyecto-item-row-edit">
+    <select name="itemId" required style="flex: 1;">
+      <option value="">Selecciona ítem...</option>
+      <option th:each="it : ${catalogItems}" th:value="${it.id}" th:text="${it.nombre + ' (' + it.id + ')'}"></option>
+    </select>
+    <input type="number" name="cantidad" min="1" value="1" style="width: 90px;" placeholder="Cant." required>
+    <button type="button" class="btn btn-danger btn-remove-item" title="Quitar item">&times;</button>
+  </div>
+</template>
+
+<script src="/proyecto-items.js"></script>
+</body>
+</html>

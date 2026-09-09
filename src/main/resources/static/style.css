@@ -415,3 +415,75 @@ button, .btn, a { cursor: pointer; }
 .recipe-item-card:hover { border-color: var(--amber); }
 .recipe-item-card img { width: 20px; height: 20px; flex: none; }
 .recipe-item-card span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* --- Proyectos state badges & grid layout --- */
+.badge-planificacion { background: color-mix(in srgb, var(--blue) 18%, transparent); color: var(--blue); }
+.badge-en_construccion { background: color-mix(in srgb, var(--amber) 18%, transparent); color: var(--amber); }
+.badge-completado { background: color-mix(in srgb, var(--green) 18%, transparent); color: var(--green); }
+.badge-cancelado { background: color-mix(in srgb, var(--red) 18%, transparent); color: var(--red); }
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.project-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 10px;
+  transition: border-color 0.15s ease;
+  margin: 0;
+}
+.project-card:hover {
+  border-color: var(--amber);
+}
+.project-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.project-card-title {
+  margin: 0;
+  font-family: "Big Shoulders Display", Karla, sans-serif;
+  font-size: 20px;
+}
+.project-card-body {
+  color: color-mix(in srgb, var(--fg) 80%, transparent);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.project-card-meta {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--fg) 60%, transparent);
+  margin-top: 8px;
+}
+.project-items-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+.project-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px dashed color-mix(in srgb, var(--fg) 12%, transparent);
+  font-size: 14px;
+}
+.proyecto-items-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+.proyecto-item-row-edit {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
