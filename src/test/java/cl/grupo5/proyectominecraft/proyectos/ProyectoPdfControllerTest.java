@@ -2,8 +2,6 @@ package cl.grupo5.proyectominecraft.proyectos;
 
 import cl.grupo5.proyectominecraft.items.Item;
 import cl.grupo5.proyectominecraft.items.ItemService;
-import cl.grupo5.proyectominecraft.perfil.UserProfile;
-import cl.grupo5.proyectominecraft.perfil.UserProfileService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,9 +41,6 @@ class ProyectoPdfControllerTest {
 
   @MockitoBean
   private ItemService itemService;
-
-  @MockitoBean
-  private UserProfileService profileService;
 
   private MockHttpSession session(String uid) {
     var session = new MockHttpSession();
@@ -88,7 +83,7 @@ class ProyectoPdfControllerTest {
 
   @Test
   void reportesWithoutProjectsRendersFriendlyEmptyState() throws Exception {
-    when(proyectoService.list()).thenReturn(List.of());
+    when(proyectoService.list(null, null, null)).thenReturn(List.of());
 
     mvc.perform(get("/proyectos/reportes").session(session("uid-1")))
         .andExpect(status().isOk())
@@ -102,8 +97,8 @@ class ProyectoPdfControllerTest {
     var proyecto = new Proyecto();
     proyecto.setId("casa");
     proyecto.setNombre("Casa de Roble");
-    proyecto.setEstado("En planificación");
-    when(proyectoService.list()).thenReturn(List.of(proyecto));
+    proyecto.setEstado("PLANIFICACION");
+    when(proyectoService.list(null, null, null)).thenReturn(List.of(proyecto));
 
     mvc.perform(get("/proyectos/reportes").session(session("uid-1")))
         .andExpect(status().isOk())
@@ -120,26 +115,18 @@ class ProyectoPdfControllerTest {
     proyecto.setId("casa");
     proyecto.setNombre("Casa de Roble");
     proyecto.setDescripcion("Vivienda de supervivencia.");
-    proyecto.setObjetivo("Levantar 3 pisos.");
-    proyecto.setEstado("En planificación");
-    proyecto.setAutorUid("autor-1");
-    var material = new MaterialProyecto();
-    material.setItemId("tablones_de_roble");
-    material.setCantidad(64);
-    var materialPerdido = new MaterialProyecto();
-    materialPerdido.setItemId("diamante");
-    materialPerdido.setCantidad(1);
-    proyecto.setMateriales(List.of(material, materialPerdido));
+    proyecto.setEstado("PLANIFICACION");
+    proyecto.setCreadorUid("autor-1");
+    proyecto.setCreadorNombre("Ana Autor");
+    proyecto.setItemsRequeridos(List.of(
+        new ItemRequerido("tablones_de_roble", 64),
+        new ItemRequerido("diamante", 1)));
 
     var tablones = new Item();
     tablones.setId("tablones_de_roble");
     tablones.setNombre("Tablones de Roble");
     tablones.setCategoria("Bloques de Construcción");
     when(itemService.list(null, null)).thenReturn(List.of(tablones));
-
-    var perfil = new UserProfile();
-    perfil.setNombre("Ana Autor");
-    when(profileService.get("autor-1")).thenReturn(perfil);
 
     when(proyectoService.get("casa")).thenReturn(proyecto);
     when(pdfService.generar(any())).thenReturn("%PDF-1.7\ncontenido".getBytes());
@@ -163,13 +150,12 @@ class ProyectoPdfControllerTest {
   }
 
   @Test
-  void reporteFallsBackToUidWhenAuthorProfileHasNoName() throws Exception {
+  void reporteFallsBackToUidWhenCreadorNombreMissing() throws Exception {
     var proyecto = new Proyecto();
     proyecto.setId("casa");
     proyecto.setNombre("Casa de Roble");
-    proyecto.setAutorUid("autor-1");
+    proyecto.setCreadorUid("autor-1");
     when(proyectoService.get("casa")).thenReturn(proyecto);
-    when(profileService.get("autor-1")).thenReturn(null);
     when(pdfService.generar(any())).thenReturn("%PDF-1.7\ncontenido".getBytes());
 
     mvc.perform(get("/proyectos/reporte-pdf").param("id", "casa").session(session("uid-1")))
@@ -178,5 +164,15 @@ class ProyectoPdfControllerTest {
     var captor = ArgumentCaptor.forClass(ReporteProyecto.class);
     verify(pdfService).generar(captor.capture());
     assertThat(captor.getValue().autor()).isEqualTo("autor-1");
+  }
+
+  @Test
+  void estadoLegibleMapsAllEstados() {
+    assertThat(ProyectoPdfController.estadoLegible("PLANIFICACION")).isEqualTo("En planificación");
+    assertThat(ProyectoPdfController.estadoLegible("EN_CONSTRUCCION")).isEqualTo("En construcción");
+    assertThat(ProyectoPdfController.estadoLegible("COMPLETADO")).isEqualTo("Completado");
+    assertThat(ProyectoPdfController.estadoLegible("CANCELADO")).isEqualTo("Cancelado");
+    assertThat(ProyectoPdfController.estadoLegible(null)).isNull();
+    assertThat(ProyectoPdfController.estadoLegible("DESCONOCIDO")).isEqualTo("DESCONOCIDO");
   }
 }

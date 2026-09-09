@@ -26,7 +26,7 @@
       <span class="badge badge-pendiente" th:if="${p.estado != null}" th:text="${p.estado}"></span>
       <span class="mono" th:unless="${p.estado != null}">—</span>
     </td>
-    <td class="mono" th:text="${p.materiales != null ? p.materiales.size() : 0}"></td>
+    <td class="mono" th:text="${p.itemsRequeridos != null ? p.itemsRequeridos.size() : 0}"></td>
     <td>
       <a class="btn-info btn" th:href="@{/proyectos/reporte-pdf(id=${p.id})}">📄 Exportar PDF</a>
     </td>
