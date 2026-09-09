@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Inventario · SGI Minecraft</title>
+<link rel="stylesheet" href="/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>🎒 Inventario</h1>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<div class="card">
+<h2>Mis items</h2>
+<p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
+<table th:if="${not #lists.isEmpty(entries)}">
+  <tr><th>Item</th><th>Cantidad</th><th>Acciones</th></tr>
+  <tr th:each="e : ${entries}">
+    <td th:text="${e.nombre}"></td>
+    <td class="mono" th:text="${e.cantidad}"></td>
+    <td>
+      <form method="post" action="/inventario/actualizar" style="display:inline">
+        <input type="hidden" name="itemId" th:value="${e.itemId}">
+        <input type="number" name="cantidad" min="0" th:value="${e.cantidad}" style="width:5em">
+        <button class="btn-info btn" type="submit">Guardar</button>
+      </form>
+      <form method="post" action="/inventario/eliminar" style="display:inline">
+        <input type="hidden" name="itemId" th:value="${e.itemId}">
+        <button class="btn-danger btn" type="submit">Quitar</button>
+      </form>
+    </td>
+  </tr>
+</table>
+<p th:if="${#lists.isEmpty(entries)}">Tu inventario está vacío. Agrega items abajo.</p>
+</div>
+
+<div class="card">
+<h2>Agregar items</h2>
+<form method="post" action="/inventario/agregar">
+  <label for="agregar-item">Item</label><br>
+  <select id="agregar-item" name="itemId">
+    <option th:each="i : ${catalogo}" th:value="${i.id}" th:text="${i.nombre}"></option>
+  </select><br><br>
+  <label for="agregar-cantidad">Cantidad</label><br>
+  <input id="agregar-cantidad" type="number" name="cantidad" min="1" value="1"><br><br>
+  <button type="submit">Agregar</button>
+</form>
+</div>
+</body>
+</html>
