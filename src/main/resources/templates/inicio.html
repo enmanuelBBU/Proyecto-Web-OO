@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Inicio · SGI Minecraft</title>
+<link rel="stylesheet" href="/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>Inicio</h1>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<div class="home-grid">
+  <details class="card home-card-group">
+    <summary>
+      <h2>Items</h2>
+      <p>Catálogo de items, materiales y recetas de crafteo.</p>
+    </summary>
+    <ul>
+      <li><a class="btn btn-info" href="/items">Catálogo de Items</a></li>
+      <li><a class="btn btn-info" href="/materiales">Gestión de Materiales</a></li>
+      <li><a class="btn btn-info" href="/calculadora">Calculadora de Crafteo</a></li>
+      <li><a class="btn btn-info" href="/modelo-3d">Modelo 3D</a></li>
+    </ul>
+  </details>
+
+  <details class="card home-card-group">
+    <summary>
+      <h2>Proyectos</h2>
+      <p>Gestión de proyectos de construcción.</p>
+    </summary>
+    <ul>
+      <li><a class="btn btn-info" href="/proyectos">Proyectos de Construcción</a></li>
+      <li><button type="button" class="btn btn-ghost" disabled>Estados de Proyecto <span class="badge badge-pendiente">En construcción</span></button></li>
+      <li><a class="btn btn-info" href="/proyectos/reportes">📄 Exportar PDF</a></li>
+    </ul>
+  </details>
+
+  <details class="card home-card-group">
+    <summary>
+      <h2>Usuario</h2>
+      <p>Tu perfil, inventario y cuenta.</p>
+    </summary>
+    <ul>
+      <li><a class="btn btn-info" href="/perfil">Mi Perfil</a></li>
+      <li><a class="btn btn-info" href="/inventario">Gestión de Inventario</a></li>
+      <li th:if="${isAdmin}"><a class="btn btn-info" href="/admin/usuarios">Administrar Usuarios</a></li>
+    </ul>
+  </details>
+</div>
+<div th:replace="~{fragments/toast :: toast}"></div>
+</body>
+</html>

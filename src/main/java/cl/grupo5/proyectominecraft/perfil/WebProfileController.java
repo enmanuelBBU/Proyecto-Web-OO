@@ -1,16 +1,20 @@
 package cl.grupo5.proyectominecraft.perfil;
 
+import cl.grupo5.proyectominecraft.auth.AuthService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class WebProfileController {
   private final UserProfileService service;
+  private final AuthService auth;
 
-  public WebProfileController(UserProfileService service) {
+  public WebProfileController(UserProfileService service, AuthService auth) {
     this.service = service;
+    this.auth = auth;
   }
 
   @GetMapping("/perfil")
@@ -24,19 +28,35 @@ public class WebProfileController {
       p.setEmail(String.valueOf(s.getAttribute("email")));
     }
     m.addAttribute("p", p);
+    m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
     return "perfil";
   }
 
   @PostMapping("/perfil")
-  public String save(@RequestParam String nombre, @RequestParam String email,
-                     @RequestParam(defaultValue = "USUARIO") String rol, HttpSession s) throws Exception {
+  public String save(@RequestParam String nombre, @RequestParam String email, HttpSession s,
+                     RedirectAttributes ra) throws Exception {
     String uid = (String) s.getAttribute("uid");
     if (uid == null) return "redirect:/login";
+    var existing = service.get(uid);
     var p = new UserProfile();
     p.setNombre(nombre);
     p.setEmail(email);
-    p.setRol(rol);
+    p.setRol(existing != null ? existing.getRol() : "USUARIO");
     service.save(uid, p);
+    ra.addFlashAttribute("toastSuccess", "Perfil actualizado correctamente");
     return "redirect:/perfil";
+  }
+
+  @PostMapping("/perfil/eliminar")
+  public String eliminar(HttpSession s) throws Exception {
+    String uid = (String) s.getAttribute("uid");
+    if (uid == null) return "redirect:/login";
+    try {
+      auth.deleteUser(uid);
+      service.delete(uid);
+    } finally {
+      s.invalidate();
+    }
+    return "redirect:/login";
   }
 }

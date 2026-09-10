@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Calculadora · SGI Minecraft</title>
+<link rel="stylesheet" href="/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>🧮 Calculadora de Crafteo</h1>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<div class="card">
+<h2>¿Qué quieres craftear?</h2>
+<p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
+<form method="get" action="/calculadora">
+  <label for="calc-target">Item</label><br>
+  <select id="calc-target" name="targetId">
+    <option th:each="i : ${catalogo}" th:value="${i.id}" th:text="${i.nombre}" th:selected="${i.id == targetId}"></option>
+  </select><br><br>
+  <label for="calc-cantidad">Cantidad</label><br>
+  <input id="calc-cantidad" type="number" name="cantidad" min="1" th:value="${cantidad}"><br><br>
+  <button class="btn-info btn" type="submit">Calcular</button>
+</form>
+</div>
+
+<div class="card" th:if="${plan}">
+<h2>Materiales necesarios</h2>
+<p th:if="${plan.craftable}" class="badge">Puedes craftearlo ✓</p>
+<p th:unless="${plan.craftable}" class="badge badge-pendiente">Te faltan materiales</p>
+<table>
+  <tr><th>Material</th><th>Requerido</th><th>Disponible</th><th>Faltante</th></tr>
+  <tr th:each="f : ${plan.materiales}">
+    <td th:text="${f.nombre}"></td>
+    <td class="mono" th:text="${f.requerido}"></td>
+    <td class="mono" th:text="${f.disponible}"></td>
+    <td class="mono" th:text="${f.faltante}"></td>
+  </tr>
+</table>
+<form method="post" action="/calculadora/craftear" th:if="${plan.craftable}">
+  <input type="hidden" name="itemId" th:value="${plan.targetItemId}">
+  <input type="hidden" name="cantidad" th:value="${plan.cantidad}">
+  <button type="submit">Craftear</button>
+</form>
+</div>
+<div th:replace="~{fragments/toast :: toast}"></div>
+</body>
+</html>

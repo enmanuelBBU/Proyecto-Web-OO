@@ -17,17 +17,18 @@ public class FirebaseConfig {
   @Value("${firebase.credentials.path:}")
   private String credentialsPath;
 
-  @Bean
+  @Bean(destroyMethod = "")
   public Firestore firestore() throws Exception {
-    if (FirebaseApp.getApps().isEmpty()) {
-      FirebaseOptions.Builder b = FirebaseOptions.builder().setProjectId(projectId);
-      if (!credentialsPath.isBlank()) {
-        b.setCredentials(GoogleCredentials.fromStream(new FileInputStream(credentialsPath)));
-      } else {
-        b.setCredentials(GoogleCredentials.getApplicationDefault());
-      }
-      FirebaseApp.initializeApp(b.build());
+    if (!FirebaseApp.getApps().isEmpty()) {
+      for (FirebaseApp app : FirebaseApp.getApps()) app.delete();
     }
+    FirebaseOptions.Builder b = FirebaseOptions.builder().setProjectId(projectId);
+    if (!credentialsPath.isBlank()) {
+      b.setCredentials(GoogleCredentials.fromStream(new FileInputStream(credentialsPath)));
+    } else {
+      b.setCredentials(GoogleCredentials.getApplicationDefault());
+    }
+    FirebaseApp.initializeApp(b.build());
     return FirestoreClient.getFirestore();
   }
 }

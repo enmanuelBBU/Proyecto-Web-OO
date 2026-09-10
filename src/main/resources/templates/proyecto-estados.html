@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${'Estados: ' + proyecto.nombre + ' · Proyectos'}">Estados de Proyecto · SGI Minecraft</title>
+  <link rel="stylesheet" href="/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>🔄 Estados de Proyecto</h1>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<div class="card">
+  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+    <div>
+      <h2 th:text="${proyecto.nombre}" style="margin: 0 0 8px 0;">Nombre del Proyecto</h2>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 14px; font-weight: bold; color: color-mix(in srgb, var(--fg) 60%, transparent);">Estado Actual:</span>
+        <span th:class="'badge badge-' + ${#strings.toLowerCase(proyecto.estado != null ? proyecto.estado : 'PLANIFICACION')}"
+              th:text="${proyecto.estado}" style="font-size: 14px; padding: 4px 12px;">ESTADO</span>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <a th:href="@{/proyectos/{id}(id=${proyecto.id})}" class="btn btn-ghost">← Volver al Proyecto</a>
+    </div>
+  </div>
+</div>
+
+<div class="card" th:if="${canEdit}">
+  <h2>Transicionar Estado</h2>
+  <p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
+
+  <div th:if="${transicionesDisponibles != null and !transicionesDisponibles.isEmpty()}">
+    <p style="margin-bottom: 16px; color: color-mix(in srgb, var(--fg) 80%, transparent);">
+      Selecciona el nuevo estado al que deseas transicionar este proyecto.
+    </p>
+    
+    <form th:each="destino : ${transicionesDisponibles}" method="post" th:action="@{/proyectos/{id}/transicionar(id=${proyecto.id})}" style="margin-bottom: 16px; padding: 16px; border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--bg) 40%, transparent);">
+      <input type="hidden" name="nuevoEstado" th:value="${destino}">
+      
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <strong style="display: block; margin-bottom: 4px; font-size: 16px;">
+            Cambiar a <span th:class="'badge badge-' + ${#strings.toLowerCase(destino)}" th:text="${destino}">DESTINO</span>
+          </strong>
+          <span style="font-size: 13px; color: color-mix(in srgb, var(--fg) 60%, transparent);" th:if="${destino == 'CANCELADO'}">
+            El proyecto será marcado como cancelado. Puedes reabrirlo más adelante si es necesario.
+          </span>
+          <span style="font-size: 13px; color: color-mix(in srgb, var(--fg) 60%, transparent);" th:if="${destino == 'EN_CONSTRUCCION'}">
+            El proyecto está en progreso activo.
+          </span>
+          <span style="font-size: 13px; color: color-mix(in srgb, var(--fg) 60%, transparent);" th:if="${destino == 'COMPLETADO'}">
+            El proyecto ha finalizado. Esta acción es definitiva (estado terminal).
+          </span>
+          <span style="font-size: 13px; color: color-mix(in srgb, var(--fg) 60%, transparent);" th:if="${destino == 'PLANIFICACION'}">
+            Reabrir el proyecto y volver a la fase de planificación.
+          </span>
+        </div>
+        
+        <div style="flex: 1; min-width: 200px; max-width: 400px;" th:if="${destino == 'CANCELADO' or destino == 'PLANIFICACION'}">
+          <input type="text" name="motivo" placeholder="Motivo (opcional)" style="width: 100%; margin-bottom: 8px;">
+        </div>
+        
+        <div>
+          <button type="submit" class="btn btn-primary" th:classappend="${destino == 'CANCELADO' ? 'btn-danger' : 'btn-primary'}"
+                  th:onclick="${destino == 'COMPLETADO'} ? 'return confirm(\'¿Estás seguro de marcar como COMPLETADO? Este estado es terminal y no podrás cambiarlo después.\');' : ''">
+            Confirmar Transición
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+  
+  <div th:if="${transicionesDisponibles == null or transicionesDisponibles.isEmpty()}" style="padding: 20px; text-align: center; border: 1px dashed color-mix(in srgb, var(--fg) 20%, transparent); border-radius: 8px;">
+    <p style="margin: 0; font-weight: bold; color: var(--green);" th:if="${proyecto.estado == 'COMPLETADO'}">✓ Proyecto Completado</p>
+    <p style="margin: 0; color: color-mix(in srgb, var(--fg) 60%, transparent);" th:if="${proyecto.estado == 'COMPLETADO'}">Este es un estado terminal y no admite más transiciones.</p>
+    
+    <p style="margin: 0; color: color-mix(in srgb, var(--fg) 60%, transparent);" th:if="${proyecto.estado != 'COMPLETADO'}">No hay transiciones disponibles desde el estado actual.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Historial de Estados</h2>
+  
+  <div th:if="${historial == null or historial.isEmpty()}" style="text-align: center; padding: 20px; color: color-mix(in srgb, var(--fg) 60%, transparent);">
+    No hay registro de cambios de estado para este proyecto.
+  </div>
+  
+  <table th:if="${historial != null and !historial.isEmpty()}">
+    <thead>
+      <tr>
+        <th>Fecha (UTC)</th>
+        <th>Transición</th>
+        <th>Usuario</th>
+        <th>Motivo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="h : ${historial}">
+        <td><span class="mono" style="font-size: 13px;" th:text="${h.fecha}">Fecha</span></td>
+        <td>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span th:class="'badge badge-' + ${#strings.toLowerCase(h.estadoAnterior != null ? h.estadoAnterior : 'planificacion')}" th:text="${h.estadoAnterior != null ? h.estadoAnterior : 'PLANIFICACION'}" style="font-size: 11px; padding: 2px 6px;">ANT</span>
+            <span style="color: color-mix(in srgb, var(--fg) 40%, transparent);">→</span>
+            <span th:class="'badge badge-' + ${#strings.toLowerCase(h.estadoNuevo)}" th:text="${h.estadoNuevo}" style="font-size: 11px; padding: 2px 6px;">NUEVO</span>
+          </div>
+        </td>
+        <td>
+          <span th:text="${h.nombre}">Usuario</span>
+          <div class="mono" style="font-size: 11px; color: color-mix(in srgb, var(--fg) 60%, transparent);" th:text="${h.uid}">uid</div>
+        </td>
+        <td th:text="${h.motivo != null and !h.motivo.isBlank() ? h.motivo : '-'}">Motivo</td>
+      </tr>
+</tbody>
+    </table>
+  </div>
+<div th:replace="~{fragments/toast :: toast}"></div>
+</body>
+</html>

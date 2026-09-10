@@ -1,46 +1,100 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Items · Ore & Basalt</title>
+<head><meta charset="UTF-8"><title>Items · SGI Minecraft</title>
 <link rel="stylesheet" href="/style.css">
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 <h1>⛏️ Items</h1>
-<nav>
-<a href="/perfil">Perfil</a>
-<form method="post" action="/logout"><button class="btn-ghost btn">Salir</button></form>
-</nav>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
 
 <div class="card">
+<h2>Buscar item</h2>
 <form method="get" action="/items">
-  <input type="text" name="q" th:value="${q}" placeholder="Buscar por nombre">
+  <input type="text" id="items-buscar-q" name="q" th:value="${q}" placeholder="Buscar por nombre o categoría" autocomplete="off">
+  <label><input type="checkbox" id="items-buscar-materia-prima" name="esMateriaPrima" value="true" th:checked="${esMateriaPrima != null and esMateriaPrima}"> Solo materiales</label>
   <button class="btn-info btn" type="submit">Buscar</button>
 </form>
 </div>
 
-<div class="card">
-<h2>Crear item</h2>
-<form method="post" action="/items">
-  Nombre: <input name="nombre" required>
-  Tipo: <input name="tipo" value="BLOQUE">
-  Cantidad: <input type="number" name="cantidad" value="0">
-  <button type="submit">Crear</button>
-</form>
-</div>
-
-<table>
-  <tr><th>Nombre</th><th>Tipo</th><th>Cantidad</th><th>Acciones</th></tr>
+<table id="items-resultados-tabla"
+       th:style="${(q != null and !q.isEmpty()) or (esMateriaPrima != null and esMateriaPrima)} ? '' : 'display:none'">
+  <tr><th>Ícono</th><th>Nombre</th><th>Categoría</th><th>Materia prima</th><th>Acciones</th></tr>
+  <tbody id="items-resultados">
   <tr th:each="i : ${items}">
-    <td th:text="${i.nombre}"></td>
-    <td><span class="badge badge-pendiente" th:text="${i.tipo}"></span></td>
-    <td class="mono" th:text="${i.cantidad}"></td>
     <td>
+      <img th:if="${i.fullId}" th:src="${'https://blocksitems.com/api/v1/items/' + i.fullId + '/icon?size=32'}"
+           width="32" height="32" alt="" onerror="this.style.display='none'">
+    </td>
+    <td th:text="${i.nombre}"></td>
+    <td><span class="badge badge-pendiente" th:text="${i.categoria}"></span></td>
+    <td class="mono" th:text="${i.esMateriaPrima} ? 'Sí' : 'No'"></td>
+    <td th:if="${isAdmin}">
       <a th:href="@{/items/{id}/edit(id=${i.id})}">Editar</a>
       <form method="post" th:action="@{/items/{id}/delete(id=${i.id})}" style="display:inline">
         <button class="btn-danger btn">Eliminar</button>
       </form>
     </td>
+    <td th:unless="${isAdmin}"></td>
   </tr>
+  </tbody>
 </table>
+
+<div class="card" th:if="${isAdmin}">
+<h2>Crear item</h2>
+<p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
+<form method="post" action="/items">
+  <label for="crear-nombre">Nombre</label><br>
+  <input id="crear-nombre" name="nombre" required><br><br>
+  <label for="crear-categoria">Categoría</label><br>
+  <div class="categoria-field">
+    <select id="crear-categoria" name="categoriaSeleccion">
+      <option value="">Selecciona...</option>
+      <option value="Materias Primas">Materias Primas</option>
+      <option value="Bloques de Construcción">Bloques de Construcción</option>
+      <option value="Utilidad">Utilidad</option>
+      <option value="Herramientas">Herramientas</option>
+      <option value="otra">Otra...</option>
+    </select>
+    <input name="categoriaOtra" placeholder="Nombre de la categoría nueva" style="display:none">
+  </div><br>
+  <label><input type="checkbox" name="esMateriaPrima" value="true"> Es materia prima</label><br><br>
+  <label for="crear-textura">Buscar textura / Palabra clave</label><br>
+  <div class="icon-search-row">
+    <input id="crear-textura" type="text" placeholder="ej. espada, pico, madera, tierra" autocomplete="off">
+    <button type="button" class="btn-info btn icon-buscar-btn" data-buscar="crear-textura" data-fullid="crear-fullId" data-target="crear-sugerencias">Sugerir icono</button>
+  </div>
+  <div class="icon-suggestions" id="crear-sugerencias"></div>
+  <br>
+  <label for="crear-fullId">Full ID (Minecraft)</label><br>
+  <div class="icon-preview-row">
+    <div class="icon-preview" id="crear-preview">
+      <img class="icon-preview-img" alt="" hidden>
+      <span class="icon-preview-text">Sin icono</span>
+    </div>
+    <input id="crear-fullId" name="fullId" data-preview="crear-preview" placeholder="minecraft:diamond_sword" required>
+  </div>
+  <br>
+  <span>Receta (grilla 3x3 — arrastra un item desde la lista):</span>
+  <div class="recipe-editor">
+    <div class="recipe-grid">
+      <div class="recipe-slot" th:each="i : ${#numbers.sequence(1, 9)}">
+        <button type="button" class="recipe-slot-remove" style="display:none" title="Quitar" aria-label="Quitar item de la casilla">×</button>
+        <img class="recipe-slot-icon" alt="" style="display:none">
+        <span class="recipe-slot-name"></span>
+        <input type="hidden" name="slot" value="">
+      </div>
+    </div>
+    <div class="recipe-item-list"><p class="recipe-item-list-hint">Cargando items...</p></div>
+  </div>
+  <button type="submit">Crear</button>
+</form>
+</div>
+
+<script src="/item-icon-suggest.js"></script>
+<script src="/category-select.js"></script>
+<script src="/recipe-item-list.js"></script>
+<script src="/items-search.js"></script>
+<div th:replace="~{fragments/toast :: toast}"></div>
 </body>
 </html>

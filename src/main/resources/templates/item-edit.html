@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Editar Item · Ore & Basalt</title>
+<head><meta charset="UTF-8"><title>Editar Item · SGI Minecraft</title>
 <link rel="stylesheet" href="/style.css">
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -8,12 +8,64 @@
 <h1>Editar item</h1>
 <nav><a href="/items">Volver</a></nav>
 <div class="card">
+<p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
 <form method="post" th:action="@{/items/{id}/update(id=${item.id})}">
-  Nombre:<br><input name="nombre" th:value="${item.nombre}" required><br><br>
-  Tipo:<br><input name="tipo" th:value="${item.tipo}"><br><br>
-  Cantidad:<br><input type="number" name="cantidad" th:value="${item.cantidad}"><br><br>
+  <label for="editar-nombre">Nombre</label><br>
+  <input id="editar-nombre" name="nombre" th:value="${item.nombre}" required><br><br>
+  <label for="editar-categoria">Categoría</label><br>
+  <div class="categoria-field">
+    <select id="editar-categoria" name="categoriaSeleccion">
+      <option value="" th:selected="${categoriaSeleccion == ''}">Selecciona...</option>
+      <option value="Materias Primas" th:selected="${categoriaSeleccion == 'Materias Primas'}">Materias Primas</option>
+      <option value="Bloques de Construcción" th:selected="${categoriaSeleccion == 'Bloques de Construcción'}">Bloques de Construcción</option>
+      <option value="Utilidad" th:selected="${categoriaSeleccion == 'Utilidad'}">Utilidad</option>
+      <option value="Herramientas" th:selected="${categoriaSeleccion == 'Herramientas'}">Herramientas</option>
+      <option value="otra" th:selected="${categoriaSeleccion == 'otra'}">Otra...</option>
+    </select>
+    <input name="categoriaOtra" th:value="${categoriaOtra}" placeholder="Nombre de la categoría nueva"
+           th:style="${categoriaSeleccion == 'otra'} ? '' : 'display:none'">
+  </div><br>
+  <label><input type="checkbox" name="esMateriaPrima" value="true" th:checked="${item.esMateriaPrima}"> Es materia prima</label><br><br>
+  <label for="editar-tipo">Tipo visual</label><br>
+  <select id="editar-tipo" name="tipoVisual">
+    <option value="" th:selected="${item.tipoVisual == null or item.tipoVisual == ''}">Automático</option>
+    <option value="BLOQUE" th:selected="${item.tipoVisual == 'BLOQUE'}">Bloque (cubo)</option>
+    <option value="ITEM_PLANO" th:selected="${item.tipoVisual == 'ITEM_PLANO'}">Ítem plano</option>
+  </select><br><br>
+  <label for="editar-textura">Buscar textura / Palabra clave</label><br>
+  <div class="icon-search-row">
+    <input id="editar-textura" type="text" placeholder="ej. espada, pico, madera, tierra" autocomplete="off">
+    <button type="button" class="btn-info btn icon-buscar-btn" data-buscar="editar-textura" data-fullid="editar-fullId" data-target="editar-sugerencias">Sugerir icono</button>
+  </div>
+  <div class="icon-suggestions" id="editar-sugerencias"></div>
+  <br>
+  <label for="editar-fullId">Full ID (Minecraft)</label><br>
+  <div class="icon-preview-row">
+    <div class="icon-preview" id="editar-preview">
+      <img class="icon-preview-img" alt="" hidden>
+      <span class="icon-preview-text">Sin icono</span>
+    </div>
+    <input id="editar-fullId" name="fullId" th:value="${item.fullId}" data-preview="editar-preview" placeholder="minecraft:diamond_sword" required>
+  </div>
+  <br>
+  <span>Receta (grilla 3x3 — arrastra un item desde la lista):</span>
+  <div class="recipe-editor">
+    <div class="recipe-grid">
+      <div class="recipe-slot" th:each="valor : ${recetaMatriz}">
+        <button type="button" class="recipe-slot-remove" style="display:none" title="Quitar" aria-label="Quitar item de la casilla">×</button>
+        <img class="recipe-slot-icon" alt="" style="display:none">
+        <span class="recipe-slot-name"></span>
+        <input type="hidden" name="slot" th:value="${valor} ?: ''">
+      </div>
+    </div>
+    <div class="recipe-item-list"><p class="recipe-item-list-hint">Cargando items...</p></div>
+  </div>
   <button type="submit">Guardar</button>
 </form>
+<script src="/item-icon-suggest.js"></script>
+<script src="/category-select.js"></script>
+<script src="/recipe-item-list.js"></script>
+<div th:replace="~{fragments/toast :: toast}"></div>
 </div>
 </body>
 </html>

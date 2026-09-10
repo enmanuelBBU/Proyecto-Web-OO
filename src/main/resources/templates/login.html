@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Login · Ore & Basalt</title>
+<title>Login · SGI Minecraft</title>
 <link rel="stylesheet" href="/style.css">
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -16,7 +16,7 @@
           <path d="M6 3h12l3 5-9 13L3 8Z"/>
           <path d="M3 8h18M8 3l1.5 5L12 21l1.5-13L16 3"/>
         </svg>
-        <h1>Ore &amp; Basalt</h1>
+        <h1>SGI Minecraft</h1>
       </div>
       <p class="tagline">Gestión de crafteo, inventario y construcción para tu servidor.</p>
     </div>
@@ -55,5 +55,6 @@
     btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>Entrando…';
   });
 </script>
+<div th:replace="~{fragments/toast :: toast}"></div>
 </body>
 </html>

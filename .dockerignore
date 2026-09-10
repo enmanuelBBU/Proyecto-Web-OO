@@ -1,0 +1,7 @@
+.git
+.gradle
+build
+*.json
+!package*.json
+.idea
+.vscode

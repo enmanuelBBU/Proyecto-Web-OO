@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Editar usuario · SGI Minecraft</title>
+<link rel="stylesheet" href="/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>Editar usuario</h1>
+<nav><a href="/admin/usuarios">Volver</a></nav>
+<div class="card">
+<p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
+<form method="post" th:action="@{/admin/usuarios/{uid}/update(uid=${usuario.uid})}">
+  Nombre:<br><input name="nombre" th:value="${usuario.nombre}" required><br><br>
+  Email:<br><input type="email" name="email" th:value="${usuario.email}" required><br><br>
+  Rol:<br>
+  <select name="rol">
+    <option value="USUARIO" th:selected="${usuario.rol == 'USUARIO'}">USUARIO</option>
+    <option value="ADMIN" th:selected="${usuario.rol == 'ADMIN'}">ADMIN</option>
+  </select><br><br>
+  <button type="submit">Guardar</button>
+</form>
+</div>
+<div th:replace="~{fragments/toast :: toast}"></div>
+</body>
+</html>

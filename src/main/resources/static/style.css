@@ -198,3 +198,439 @@ button, .btn, a { cursor: pointer; }
   .auth-brand { padding: 28px 20px; }
   .auth-form-panel { padding: 28px 20px; }
 }
+
+/* --- main nav (Inicio / Items / Proyectos / Usuario) --- */
+.main-nav { flex-wrap: wrap; }
+.nav-home { font-weight: 700; }
+.nav-group { position: relative; }
+.nav-group summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  font-weight: 700;
+  color: var(--fg);
+}
+.nav-group summary::-webkit-details-marker { display: none; }
+.nav-group summary::after { content: "▾"; margin-left: 6px; color: var(--amber); }
+.nav-group[open] summary::after { content: "▴"; }
+.nav-group summary:hover, .nav-group summary:focus-visible { background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.nav-group ul {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 8px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 240px;
+  background: var(--card);
+  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--basalt) 18%, transparent);
+  z-index: 10;
+}
+.nav-group li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  min-height: 44px;
+}
+.nav-group li a { display: inline-block; }
+@media (max-width: 640px) {
+  .nav-group ul { position: static; box-shadow: none; border: 0; padding: 4px 0 4px 12px; }
+}
+
+/* --- inicio (home) --- */
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: start;
+  gap: 16px;
+  margin-top: 16px;
+}
+.home-card {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+.home-card h2 { margin-top: 0; }
+.home-card:hover, .home-card:focus-visible { border-color: var(--amber); }
+.home-card-disabled { opacity: 0.75; cursor: default; }
+@media (max-width: 768px) {
+  .home-grid { grid-template-columns: 1fr; }
+}
+
+.home-card-group summary {
+  cursor: pointer;
+  list-style: none;
+}
+.home-card-group summary::-webkit-details-marker { display: none; }
+.home-card-group summary h2 { margin-top: 0; margin-bottom: 4px; }
+.home-card-group summary p { margin: 0; }
+.home-card-group summary::after {
+  content: "Ver opciones ▾";
+  display: block;
+  margin-top: 10px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  color: var(--amber);
+}
+.home-card-group[open] summary::after { content: "Ocultar ▴"; }
+.home-card-group:hover, .home-card-group:focus-within { border-color: var(--amber); }
+.home-card-group ul {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.home-card-group li { display: block; }
+.home-card-group li .btn { width: 100%; text-align: center; }
+.home-card-group li .btn[disabled] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* --- item recipe grid + icon suggestions --- */
+.recipe-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 76px);
+  grid-auto-rows: 76px;
+  gap: 4px;
+  margin: 8px 0;
+}
+.recipe-slot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px;
+  border: 1px dashed color-mix(in srgb, var(--fg) 25%, transparent);
+  border-radius: 6px;
+  background: var(--card);
+  overflow: hidden;
+}
+.recipe-slot-icon { width: 32px; height: 32px; }
+.recipe-slot-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  padding: 0;
+  line-height: 1;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.recipe-slot-remove:hover { background: color-mix(in srgb, var(--red) 85%, black); }
+.recipe-slot-name {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+  color: color-mix(in srgb, var(--fg) 75%, transparent);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.icon-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.icon-suggestions .icon-candidate {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--fg) 20%, transparent);
+  border-radius: 6px;
+  background: var(--card);
+  cursor: pointer;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+}
+.icon-suggestions .icon-candidate:hover, .icon-suggestions .icon-candidate:focus-visible {
+  border-color: var(--amber);
+}
+.icon-suggestions .icon-candidate img { width: 24px; height: 24px; }
+
+/* --- icon search + preview --- */
+.icon-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+.icon-search-row input { flex: 1; }
+.icon-preview-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 4px;
+}
+.icon-preview {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed color-mix(in srgb, var(--fg) 25%, transparent);
+  border-radius: 8px;
+  background: var(--card);
+  overflow: hidden;
+}
+.icon-preview-img { width: 32px; height: 32px; }
+.icon-preview-text {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 9px;
+  line-height: 1.2;
+  text-align: center;
+  color: color-mix(in srgb, var(--fg) 60%, transparent);
+  padding: 0 4px;
+}
+.icon-suggestions .icon-candidate.selected {
+  border-color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 12%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--amber) 30%, transparent);
+}
+
+/* --- recipe grid drag-and-drop item list --- */
+.recipe-editor {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.recipe-editor .recipe-grid { margin: 0; }
+.recipe-slot.drag-over { border-color: var(--amber); background: color-mix(in srgb, var(--amber) 12%, transparent); border-style: solid; }
+.recipe-item-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 6px;
+  max-width: 260px;
+  max-height: 172px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--fg) 20%, transparent);
+  border-radius: 6px;
+  background: var(--card);
+}
+.recipe-item-list-hint { margin: 0; font-size: 12px; color: color-mix(in srgb, var(--fg) 60%, transparent); }
+.recipe-item-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  min-height: 32px;
+  border: 1px solid color-mix(in srgb, var(--fg) 20%, transparent);
+  border-radius: 6px;
+  cursor: grab;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  max-width: 100%;
+}
+.recipe-item-card:hover { border-color: var(--amber); }
+.recipe-item-card img { width: 20px; height: 20px; flex: none; }
+.recipe-item-card span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* --- modelo 3d (visor de ítems) --- */
+#m3d-scene {
+  position: relative;
+  width: 100%;
+  height: 520px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #10131a;
+  border: 1px solid color-mix(in srgb, var(--fg) 20%, transparent);
+}
+#m3d-scene canvas { display: block; }
+#m3d-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+}
+#m3d-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+}
+
+/* --- toast notifications --- */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 260px;
+  max-width: 360px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  border-left-width: 4px;
+  background: var(--card);
+  color: var(--fg);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--basalt) 20%, transparent);
+  font-family: Karla, system-ui, sans-serif;
+  font-size: 14px;
+  animation: toast-in 0.2s ease-out;
+}
+.toast-success { border-left-color: var(--green); }
+.toast-error { border-left-color: var(--red); }
+.toast-info { border-left-color: var(--blue); }
+.toast-warning { border-left-color: var(--amber); }
+.toast-icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+}
+.toast-success .toast-icon { background: var(--green); }
+.toast-error .toast-icon { background: var(--red); }
+.toast-info .toast-icon { background: var(--blue); }
+.toast-warning .toast-icon { background: var(--amber); color: #1d1d1d; }
+.toast-mensaje { flex: 1; }
+.toast-close {
+  flex: none;
+  background: transparent;
+  border: 0;
+  color: color-mix(in srgb, var(--fg) 55%, transparent);
+  font-size: 18px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+}
+.toast-close:hover { color: var(--fg); }
+.toast-fade-out { animation: toast-out 0.3s forwards; }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes toast-out {
+  to { opacity: 0; transform: translateX(16px); }
+}
+@media (max-width: 640px) {
+  .toast-container { top: 12px; right: 12px; left: 12px; }
+  .toast { min-width: 0; max-width: none; }
+}
+
+/* --- Proyectos state badges & grid layout --- */
+.badge-planificacion { background: color-mix(in srgb, var(--blue) 18%, transparent); color: var(--blue); }
+.badge-en_construccion { background: color-mix(in srgb, var(--amber) 18%, transparent); color: var(--amber); }
+.badge-completado { background: color-mix(in srgb, var(--green) 18%, transparent); color: var(--green); }
+.badge-cancelado { background: color-mix(in srgb, var(--red) 18%, transparent); color: var(--red); }
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.project-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 10px;
+  transition: border-color 0.15s ease;
+  margin: 0;
+}
+.project-card:hover {
+  border-color: var(--amber);
+}
+.project-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.project-card-title {
+  margin: 0;
+  font-family: "Big Shoulders Display", Karla, sans-serif;
+  font-size: 20px;
+}
+.project-card-body {
+  color: color-mix(in srgb, var(--fg) 80%, transparent);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.project-card-meta {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--fg) 60%, transparent);
+  margin-top: 8px;
+}
+.project-items-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+.project-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px dashed color-mix(in srgb, var(--fg) 12%, transparent);
+  font-size: 14px;
+}
+.proyecto-items-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+.proyecto-item-row-edit {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}

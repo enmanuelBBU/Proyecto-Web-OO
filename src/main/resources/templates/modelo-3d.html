@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Modelo 3D · SGI Minecraft</title>
+<link rel="stylesheet" href="/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>Modelo 3D</h1>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<div class="card">
+  <label for="m3d-selector">Ítem a visualizar</label>
+  <select id="m3d-selector">
+    <option value="">Selecciona un ítem...</option>
+    <option th:each="i : ${items}" th:value="${i.id}"
+            th:attr="data-nombre=${i.nombre},data-categoria=${i.categoria},data-tipo=${i.tipoVisual},data-textura=${i.textura},data-fullid=${i.fullId},data-imagen=${i.fullId != null ? 'https://blocksitems.com/api/v1/items/' + i.fullId + '/icon?size=128' : ''}"
+            th:text="${i.nombre}"></option>
+  </select>
+</div>
+
+<div class="card">
+  <div id="m3d-scene">
+    <div id="m3d-hint">Arrastra para rotar · scroll para zoom</div>
+  </div>
+  <div id="m3d-info">
+    <span id="m3d-info-nombre">Selecciona un ítem</span>
+    <span class="badge badge-pendiente" id="m3d-info-tipo"></span>
+    <span class="mono" id="m3d-info-categoria"></span>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="/modelo3d.js"></script>
+<div th:replace="~{fragments/toast :: toast}"></div>
+</body>
+</html>

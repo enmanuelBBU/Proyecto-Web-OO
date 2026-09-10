@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${'Editar ' + proyecto.nombre + ' · Proyectos'}">Editar Proyecto · SGI Minecraft</title>
+  <link rel="stylesheet" href="/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>✏️ Editar Proyecto</h1>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<div class="card">
+  <h2>Modificar Datos del Proyecto</h2>
+  <p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
+
+  <form method="post" th:action="@{/proyectos/{id}/update(id=${proyecto.id})}">
+    <div class="field">
+      <label for="edit-proyecto-nombre">Nombre del Proyecto</label>
+      <input id="edit-proyecto-nombre" name="nombre" th:value="${proyecto.nombre}" required>
+    </div>
+
+    <div class="field">
+      <label for="edit-proyecto-descripcion">Descripción</label>
+      <textarea id="edit-proyecto-descripcion" name="descripcion" rows="3"
+                style="width: 100%; background: var(--card); color: var(--fg); border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent); border-radius: 6px; padding: 8px 10px; font-family: inherit;"
+                th:text="${proyecto.descripcion}"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="edit-proyecto-estado">Estado</label>
+      <select id="edit-proyecto-estado" name="estado">
+        <option th:each="est : ${estados}" 
+                th:value="${est}" 
+                th:text="${est}" 
+                th:selected="${est == proyecto.estado}">
+        </option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Ítems requeridos para el proyecto</label>
+      <div id="proyecto-items-container" class="proyecto-items-editor">
+        <div class="proyecto-item-row-edit" th:each="ir : ${proyecto.itemsRequeridos}">
+          <select name="itemId" required style="flex: 1;">
+            <option value="">Selecciona ítem...</option>
+            <option th:each="it : ${catalogItems}" 
+                    th:value="${it.id}" 
+                    th:text="${it.nombre + ' (' + it.id + ')'}"
+                    th:selected="${it.id == ir.itemId}">
+            </option>
+          </select>
+          <input type="number" name="cantidad" min="1" th:value="${ir.cantidad}" style="width: 90px;" placeholder="Cant." required>
+          <button type="button" class="btn btn-danger btn-remove-item" title="Quitar item">&times;</button>
+        </div>
+      </div>
+      <button type="button" id="btn-add-item" class="btn btn-ghost" style="margin-top: 4px;">+ Agregar ítem</button>
+    </div>
+
+    <div style="margin-top: 20px; display: flex; gap: 12px;">
+      <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+      <a th:href="@{/proyectos/{id}(id=${proyecto.id})}" class="btn btn-ghost">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<!-- Template for adding dynamic item rows -->
+<template id="proyecto-item-template">
+  <div class="proyecto-item-row-edit">
+    <select name="itemId" required style="flex: 1;">
+      <option value="">Selecciona ítem...</option>
+      <option th:each="it : ${catalogItems}" th:value="${it.id}" th:text="${it.nombre + ' (' + it.id + ')'}"></option>
+    </select>
+    <input type="number" name="cantidad" min="1" value="1" style="width: 90px;" placeholder="Cant." required>
+    <button type="button" class="btn btn-danger btn-remove-item" title="Quitar item">&times;</button>
+  </div>
+</template>
+
+<script src="/proyecto-items.js"></script>
+<div th:replace="~{fragments/toast :: toast}"></div>
+</body>
+</html>
