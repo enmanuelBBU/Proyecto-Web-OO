@@ -23,7 +23,8 @@ public class ItemController {
   }
 
   @PostMapping
-  public ResponseEntity<?> create(@Valid @RequestBody Item item) throws Exception {
+  public ResponseEntity<?> create(@Valid @RequestBody Item item, HttpSession session) throws Exception {
+    if (!isAdmin(session)) return ResponseEntity.status(403).build();
     try {
       return ResponseEntity.ok(service.create(item));
     } catch (ItemAlreadyExistsException e) {

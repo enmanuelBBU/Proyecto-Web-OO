@@ -101,7 +101,7 @@ class ItemControllerTest {
     doThrow(new ItemAlreadyExistsException("arcilla")).when(itemService).create(any());
 
     mvc.perform(post("/api/items")
-            .session(authenticated())
+            .session(adminAuthenticated())
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"nombre\":\"Arcilla\"}"))
         .andExpect(status().isConflict());
@@ -113,10 +113,21 @@ class ItemControllerTest {
         .when(itemService).create(any());
 
     mvc.perform(post("/api/items")
-            .session(authenticated())
+            .session(adminAuthenticated())
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"nombre\":\"Cama\",\"recetaMatriz\":[\"lana\"]}"))
         .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void createForNonAdminSessionIsForbidden() throws Exception {
+    mvc.perform(post("/api/items")
+            .session(authenticated())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"nombre\":\"Arcilla\"}"))
+        .andExpect(status().isForbidden());
+
+    org.mockito.Mockito.verify(itemService, org.mockito.Mockito.never()).create(any());
   }
 
   @Test

@@ -43,7 +43,8 @@ public class WebItemController {
                        @RequestParam(required = false) String tipoVisual,
                        @RequestParam(required = false) List<String> slot,
                        Model m, HttpSession s, RedirectAttributes ra) throws Exception {
-    if (s.getAttribute("uid") == null) return "redirect:/login";
+    var guard = guardAdmin(s);
+    if (guard != null) return guard;
     if (nombre == null || nombre.isBlank()) {
       m.addAttribute("error", "El nombre del ítem es obligatorio.");
       m.addAttribute("toastError", "El nombre del ítem es obligatorio.");

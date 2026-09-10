@@ -222,7 +222,12 @@ public class WebProyectoController {
     if (uid == null) return "redirect:/login";
     String rol = (String) s.getAttribute("rol");
 
-    proyectoService.delete(id, uid, rol);
+    try {
+      proyectoService.delete(id, uid, rol);
+    } catch (ProyectoValidationException e) {
+      ra.addFlashAttribute("toastError", e.getMessage());
+      return "redirect:/proyectos/" + id;
+    }
     ra.addFlashAttribute("toastSuccess", "Proyecto eliminado correctamente");
     return "redirect:/proyectos";
   }

@@ -40,7 +40,7 @@
   </tbody>
 </table>
 
-<div class="card">
+<div class="card" th:if="${isAdmin}">
 <h2>Crear item</h2>
 <p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
 <form method="post" action="/items">

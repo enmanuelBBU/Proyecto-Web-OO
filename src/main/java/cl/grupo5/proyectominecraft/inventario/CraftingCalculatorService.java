@@ -10,6 +10,7 @@ import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class CraftingCalculatorService {
@@ -36,23 +37,28 @@ public class CraftingCalculatorService {
     var plan = plan(uid, targetItemId, cantidad);
     if (!plan.isCraftable()) throw new InventoryException("No tienes suficientes materiales.");
     var ref = db.collection("inventarios").document(uid);
-    db.runTransaction(tx -> {
-      var current = InventoryService.readItems(tx.get(ref).get());
-      for (var m : plan.getMateriales()) {
-        if (current.getOrDefault(m.getItemId(), 0L) < m.getRequerido()) {
-          throw new InventoryException("No tienes suficientes materiales.");
+    try {
+      db.runTransaction(tx -> {
+        var current = InventoryService.readItems(tx.get(ref).get());
+        for (var m : plan.getMateriales()) {
+          if (current.getOrDefault(m.getItemId(), 0L) < m.getRequerido()) {
+            throw new InventoryException("No tienes suficientes materiales.");
+          }
         }
-      }
-      var updated = new LinkedHashMap<>(current);
-      for (var m : plan.getMateriales()) {
-        long next = updated.getOrDefault(m.getItemId(), 0L) - m.getRequerido();
-        if (next <= 0) updated.remove(m.getItemId());
-        else updated.put(m.getItemId(), next);
-      }
-      updated.merge(targetItemId, (long) cantidad, Long::sum);
-      tx.set(ref, Map.of("items", updated));
-      return null;
-    }).get();
+        var updated = new LinkedHashMap<>(current);
+        for (var m : plan.getMateriales()) {
+          long next = updated.getOrDefault(m.getItemId(), 0L) - m.getRequerido();
+          if (next <= 0) updated.remove(m.getItemId());
+          else updated.put(m.getItemId(), next);
+        }
+        updated.merge(targetItemId, (long) cantidad, Long::sum);
+        tx.set(ref, Map.of("items", updated));
+        return null;
+      }).get();
+    } catch (ExecutionException e) {
+      if (e.getCause() instanceof InventoryException ie) throw ie;
+      throw e;
+    }
     return plan;
   }
 

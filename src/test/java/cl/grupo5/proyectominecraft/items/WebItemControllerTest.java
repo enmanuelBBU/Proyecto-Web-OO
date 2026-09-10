@@ -40,14 +40,26 @@ class WebItemControllerTest {
   @Test
   void createWithBlankNombreRerendersItemsWithError() throws Exception {
     when(itemService.list(null, null)).thenReturn(List.of());
-    var session = new MockHttpSession();
-    session.setAttribute("uid", "someuid");
+    var session = adminSession();
 
     mvc.perform(post("/items").session(session).param("nombre", ""))
         .andExpect(status().isOk())
         .andExpect(view().name("items"))
         .andExpect(model().attributeExists("error"))
         .andExpect(model().attribute("toastError", "El nombre del ítem es obligatorio."));
+  }
+
+  @Test
+  void createRedirectsToItemsForNonAdminSessionWithoutCallingService() throws Exception {
+    var session = new MockHttpSession();
+    session.setAttribute("uid", "someuid");
+    session.setAttribute("rol", "USUARIO");
+
+    mvc.perform(post("/items").session(session).param("nombre", "Arcilla"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/items"));
+
+    org.mockito.Mockito.verify(itemService, org.mockito.Mockito.never()).create(any());
   }
 
   @Test
@@ -199,8 +211,7 @@ class WebItemControllerTest {
   void createDuplicateSlugRerendersItemsWithError() throws Exception {
     when(itemService.list(null, null)).thenReturn(List.of());
     doThrow(new ItemAlreadyExistsException("arcilla")).when(itemService).create(any());
-    var session = new MockHttpSession();
-    session.setAttribute("uid", "someuid");
+    var session = adminSession();
 
     mvc.perform(post("/items").session(session).param("nombre", "Arcilla"))
         .andExpect(status().isOk())
@@ -214,8 +225,7 @@ class WebItemControllerTest {
     when(itemService.list(null, null)).thenReturn(List.of());
     doThrow(new RecipeValidationException("La receta debe tener exactamente 9 casillas."))
         .when(itemService).create(any());
-    var session = new MockHttpSession();
-    session.setAttribute("uid", "someuid");
+    var session = adminSession();
 
     mvc.perform(post("/items").session(session).param("nombre", "Cama").param("slot", "lana"))
         .andExpect(status().isOk())
@@ -226,8 +236,7 @@ class WebItemControllerTest {
 
   @Test
   void createWithFixedCategoriaSeleccionUsesThatValue() throws Exception {
-    var session = new MockHttpSession();
-    session.setAttribute("uid", "someuid");
+    var session = adminSession();
 
     mvc.perform(post("/items").session(session)
             .param("nombre", "Yunque")
@@ -242,8 +251,7 @@ class WebItemControllerTest {
 
   @Test
   void createWithCategoriaOtraOverridesSeleccion() throws Exception {
-    var session = new MockHttpSession();
-    session.setAttribute("uid", "someuid");
+    var session = adminSession();
 
     mvc.perform(post("/items").session(session)
             .param("nombre", "Estatua")
