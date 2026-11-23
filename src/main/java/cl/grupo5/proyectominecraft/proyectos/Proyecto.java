@@ -26,4 +26,14 @@ public class Proyecto {
   private String fechaCreacion;
 
   private List<HistorialEstado> historialEstados = new ArrayList<>();
+
+  // Ubicación (opcional): mundo del creador + coordenadas
+  private String mundoId;
+  private Integer x;
+  private Integer y;
+  private Integer z;
+
+  // Colaboración: miembros invitados y espejo de sus uid (para consultas array-contains)
+  private List<Miembro> miembros = new ArrayList<>();
+  private List<String> miembroUids = new ArrayList<>();
 }

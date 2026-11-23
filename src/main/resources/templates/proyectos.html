@@ -48,6 +48,8 @@
         <span th:class="'badge badge-' + ${#strings.toLowerCase(p.estado != null ? p.estado : 'PLANIFICACION')}"
               th:text="${p.estado}">ESTADO</span>
       </div>
+      <span th:if="${compartidos != null and compartidos.containsKey(p.id)}" class="badge badge-pendiente"
+            th:text="${'Compartido · ' + (compartidos[p.id] == 'EDICION' ? 'Edición' : 'Lectura')}">Compartido</span>
       <p class="project-card-body" th:text="${p.descripcion != null and !p.descripcion.isBlank() ? p.descripcion : 'Sin descripción.'}">Descripción del proyecto...</p>
       
       <div style="font-size: 13px; margin-bottom: 8px;">
@@ -63,7 +65,7 @@
       <div style="margin-top: 12px; display: flex; gap: 8px;">
         <a th:href="@{/proyectos/{id}(id=${p.id})}" class="btn btn-info" style="font-size: 12px; padding: 6px 10px;">Ver detalle</a>
         <a th:href="@{/proyectos/reporte-pdf(id=${p.id})}" class="btn btn-ghost" style="font-size: 12px; padding: 6px 10px;">📄 Exportar PDF</a>
-        <a th:if="${isAdmin or (p.creadorUid != null and p.creadorUid == currentUid)}" 
+        <a th:if="${editables != null and editables.contains(p.id)}" 
            th:href="@{/proyectos/{id}/edit(id=${p.id})}" 
            class="btn btn-ghost" style="font-size: 12px; padding: 6px 10px;">Editar</a>
       </div>
@@ -97,6 +99,8 @@
         <option value="CANCELADO">CANCELADO</option>
       </select>
     </div>
+
+    <div th:replace="~{fragments/ubicacion :: campos(null)}"></div>
 
     <div class="field">
       <label>Ítems requeridos para el proyecto</label>

@@ -1,5 +1,6 @@
 package cl.grupo5.proyectominecraft.auth;
 
+import cl.grupo5.proyectominecraft.auditoria.AuditService;
 import cl.grupo5.proyectominecraft.config.AdminEmails;
 import cl.grupo5.proyectominecraft.perfil.UserProfile;
 import cl.grupo5.proyectominecraft.perfil.UserProfileService;
@@ -15,11 +16,14 @@ public class WebAuthController {
   private final FirebaseIdentityService identity;
   private final UserProfileService profiles;
   private final AdminEmails adminEmails;
+  private final AuditService audit;
 
-  public WebAuthController(FirebaseIdentityService identity, UserProfileService profiles, AdminEmails adminEmails) {
+  public WebAuthController(FirebaseIdentityService identity, UserProfileService profiles, AdminEmails adminEmails,
+                           AuditService audit) {
     this.identity = identity;
     this.profiles = profiles;
     this.adminEmails = adminEmails;
+    this.audit = audit;
   }
 
   @GetMapping("/login")
@@ -78,6 +82,7 @@ public class WebAuthController {
       s.setAttribute("email", email);
       s.setAttribute("nombre", p.getNombre());
       s.setAttribute("rol", p.getRol());
+      audit.registrar(s, AuditService.CREAR, AuditService.USUARIO, uid, email, null);
       ra.addFlashAttribute("toastSuccess", "¡Cuenta creada!");
       return "redirect:/inicio";
     } catch (Exception e) {

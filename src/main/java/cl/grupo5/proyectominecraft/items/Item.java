@@ -19,4 +19,6 @@ public class Item {
   private String textura;
   private List<String> recetaMatriz;
   private List<Ingrediente> ingredientesParaCalculo;
+  private String tipoReceta;   // CRAFTEO (default si null) | HORNO
+  private String recetaHorno;  // id del ítem de entrada; solo si tipoReceta == HORNO
 }

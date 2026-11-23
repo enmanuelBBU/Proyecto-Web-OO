@@ -26,6 +26,18 @@ public class UserProfileService {
     }).toList();
   }
 
+  public UserProfile findByEmail(String email) throws Exception {
+    return buscarPorEmail(list(), email);
+  }
+
+  static UserProfile buscarPorEmail(List<UserProfile> todos, String email) {
+    if (email == null || email.isBlank()) return null;
+    var buscado = email.trim();
+    return todos.stream()
+        .filter(u -> u.getEmail() != null && u.getEmail().trim().equalsIgnoreCase(buscado))
+        .findFirst().orElse(null);
+  }
+
   public UserProfile save(String uid, UserProfile p) throws Exception {
     db.collection("users").document(uid).set(p).get();
     return p;

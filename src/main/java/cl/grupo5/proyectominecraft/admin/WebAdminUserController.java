@@ -1,5 +1,6 @@
 package cl.grupo5.proyectominecraft.admin;
 
+import cl.grupo5.proyectominecraft.auditoria.AuditService;
 import cl.grupo5.proyectominecraft.auth.AuthService;
 import cl.grupo5.proyectominecraft.perfil.UserProfileService;
 import jakarta.servlet.http.HttpSession;
@@ -17,10 +18,12 @@ public class WebAdminUserController {
 
   private final UserProfileService service;
   private final AuthService auth;
+  private final AuditService audit;
 
-  public WebAdminUserController(UserProfileService service, AuthService auth) {
+  public WebAdminUserController(UserProfileService service, AuthService auth, AuditService audit) {
     this.service = service;
     this.auth = auth;
+    this.audit = audit;
   }
 
   @GetMapping
@@ -69,10 +72,13 @@ public class WebAdminUserController {
       m.addAttribute("toastError", "Rol inválido.");
       return "admin-usuario-edit";
     }
+    String rolAnterior = target.getRol();
     target.setNombre(nombre);
     target.setEmail(email);
     target.setRol(rol);
     service.save(uid, target);
+    audit.registrar(s, AuditService.EDITAR, AuditService.USUARIO, uid, email,
+        rol.equals(rolAnterior) ? null : "Rol: " + rolAnterior + " → " + rol);
     ra.addFlashAttribute("toastSuccess", "Usuario actualizado correctamente");
     return "redirect:/admin/usuarios";
   }
@@ -82,8 +88,10 @@ public class WebAdminUserController {
     var guard = guardAdmin(s);
     if (guard != null) return guard;
     if (uid.equals(s.getAttribute("uid"))) return "redirect:/admin/usuarios";
+    var target = service.get(uid);
     auth.deleteUser(uid);
     service.delete(uid);
+    audit.registrar(s, AuditService.ELIMINAR, AuditService.USUARIO, uid, target != null ? target.getEmail() : uid, null);
     ra.addFlashAttribute("toastSuccess", "Usuario eliminado correctamente");
     return "redirect:/admin/usuarios";
   }

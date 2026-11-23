@@ -1,5 +1,6 @@
 package cl.grupo5.proyectominecraft.auth;
 
+import cl.grupo5.proyectominecraft.auditoria.AuditService;
 import cl.grupo5.proyectominecraft.config.AdminEmails;
 import cl.grupo5.proyectominecraft.perfil.UserProfile;
 import cl.grupo5.proyectominecraft.perfil.UserProfileService;
@@ -12,6 +13,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
 
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -24,6 +29,9 @@ class WebAuthControllerTest {
 
   @Autowired
   private MockMvc mvc;
+
+  @MockitoBean
+  private AuditService audit;
 
   @MockitoBean
   private FirebaseIdentityService identity;
@@ -171,5 +179,12 @@ class WebAuthControllerTest {
         .andExpect(view().name("login"))
         .andExpect(model().attributeExists("error"))
         .andExpect(model().attribute("toastError", "Login: invalid credentials"));
+  }
+
+  @Test
+  void registroRegistraCreacionDeUsuario() throws Exception {
+    when(identity.signUp("nuevo@example.com", "secret1")).thenReturn(Map.of("localId", "uid-7"));
+    mvc.perform(post("/register").param("email", "nuevo@example.com").param("password", "secret1"));
+    verify(audit).registrar(any(), eq("CREAR"), eq("USUARIO"), eq("uid-7"), eq("nuevo@example.com"), isNull());
   }
 }

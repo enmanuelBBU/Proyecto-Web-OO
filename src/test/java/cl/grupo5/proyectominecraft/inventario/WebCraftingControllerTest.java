@@ -17,6 +17,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -78,6 +80,21 @@ class WebCraftingControllerTest {
             .param("itemId", "pala").param("cantidad", "1"))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl("/calculadora?targetId=pala&cantidad=1"))
-        .andExpect(flash().attribute("toastSuccess", "¡Crafteo exitoso!"));
+        .andExpect(flash().attribute("toastSuccess", "¡Crafteo exitoso! Quedó registrado en tu historial."));
+  }
+
+  @Test
+  void calculadoraMuestraFundirParaRecetaDeHorno() throws Exception {
+    var plan = new CraftingPlan();
+    plan.setTargetItemId("lingote");
+    plan.setCantidad(1);
+    plan.setMateriales(List.of());
+    plan.setCraftable(true);
+    plan.setTipoReceta("HORNO");
+    when(itemService.list(null, false)).thenReturn(List.of());
+    when(calculator.plan("someuid", "lingote", 1)).thenReturn(plan);
+    mvc.perform(get("/calculadora").param("targetId", "lingote").session(authenticated()))
+        .andExpect(status().isOk())
+        .andExpect(content().string(containsString(">Fundir<")));
   }
 }

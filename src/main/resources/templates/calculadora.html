@@ -19,12 +19,13 @@
   <label for="calc-cantidad">Cantidad</label><br>
   <input id="calc-cantidad" type="number" name="cantidad" min="1" th:value="${cantidad}"><br><br>
   <button class="btn-info btn" type="submit">Calcular</button>
+  <a class="btn btn-ghost" href="/historial-crafteo">Ver historial de crafteo</a>
 </form>
 </div>
 
 <div class="card" th:if="${plan}">
 <h2>Materiales necesarios</h2>
-<p th:if="${plan.craftable}" class="badge">Puedes craftearlo ✓</p>
+<p th:if="${plan.craftable}" class="badge" th:text="${plan.tipoReceta == 'HORNO'} ? 'Puedes fundirlo ✓' : 'Puedes craftearlo ✓'">Puedes craftearlo ✓</p>
 <p th:unless="${plan.craftable}" class="badge badge-pendiente">Te faltan materiales</p>
 <table>
   <tr><th>Material</th><th>Requerido</th><th>Disponible</th><th>Faltante</th></tr>
@@ -38,7 +39,7 @@
 <form method="post" action="/calculadora/craftear" th:if="${plan.craftable}">
   <input type="hidden" name="itemId" th:value="${plan.targetItemId}">
   <input type="hidden" name="cantidad" th:value="${plan.cantidad}">
-  <button type="submit">Craftear</button>
+  <button type="submit" th:text="${plan.tipoReceta == 'HORNO'} ? 'Fundir' : 'Craftear'">Craftear</button>
 </form>
 </div>
 <div th:replace="~{fragments/toast :: toast}"></div>

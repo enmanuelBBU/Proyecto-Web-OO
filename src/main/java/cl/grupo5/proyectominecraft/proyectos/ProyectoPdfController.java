@@ -40,7 +40,8 @@ public class ProyectoPdfController {
   @GetMapping("/proyectos/reportes")
   public String reportes(Model m, HttpSession s) throws Exception {
     if (s.getAttribute("uid") == null) return "redirect:/login";
-    m.addAttribute("proyectos", proyectos.list(null, null, null));
+    m.addAttribute("proyectos", proyectos.list(null, null, null,
+        (String) s.getAttribute("uid"), (String) s.getAttribute("rol")));
     m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
     return "reportes";
   }
@@ -55,7 +56,7 @@ public class ProyectoPdfController {
       return redirect("/proyectos/reportes");
     }
 
-    var proyecto = proyectos.get(id);
+    var proyecto = proyectos.getVisible(id, (String) s.getAttribute("uid"), (String) s.getAttribute("rol"));
     if (proyecto == null) {
       return redirect("/proyectos/reportes");
     }

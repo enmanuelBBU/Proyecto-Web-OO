@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Historial de Crafteo · SGI Minecraft</title>
+  <link rel="stylesheet" href="/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>📜 Historial de Crafteo</h1>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<div class="card" th:if="${#lists.isEmpty(registros)}">
+  <h2>Todavía no has crafteado nada</h2>
+  <p>Cada vez que craftees o fundas un ítem desde la <a href="/calculadora">calculadora</a>, quedará registrado aquí con los materiales que consumiste.</p>
+</div>
+
+<table th:unless="${#lists.isEmpty(registros)}">
+  <tr><th>Fecha</th><th>Ítem</th><th>Tipo</th><th>Cantidad</th><th>Materiales consumidos</th></tr>
+  <tr th:each="r : ${registros}">
+    <td class="mono" th:text="${r.fecha != null ? #strings.replace(#strings.substring(r.fecha, 0, 16), 'T', ' ') : '—'}"></td>
+    <td>
+      <img th:if="${itemMap[r.itemId] != null and itemMap[r.itemId].fullId != null}"
+           th:src="${'https://blocksitems.com/api/v1/items/' + itemMap[r.itemId].fullId + '/icon?size=32'}"
+           width="24" height="24" alt="" style="vertical-align: middle;" onerror="this.style.display='none'">
+      <span th:text="${r.itemNombre}"></span>
+    </td>
+    <td>
+      <span th:class="${r.tipoReceta == 'HORNO'} ? 'badge badge-horno' : 'badge badge-pendiente'"
+            th:text="${r.tipoReceta == 'HORNO'} ? 'Horno' : 'Crafteo'"></span>
+    </td>
+    <td class="mono" th:text="${r.cantidad}"></td>
+    <td>
+      <span th:each="mc, st : ${r.materiales}"
+            th:text="${mc.cantidad + '× ' + mc.nombre + (st.last ? '' : ', ')}"></span>
+    </td>
+  </tr>
+</table>
+<div th:replace="~{fragments/toast :: toast}"></div>
+</body>
+</html>

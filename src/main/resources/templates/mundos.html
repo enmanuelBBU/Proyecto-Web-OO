@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Mis Mundos · SGI Minecraft</title>
+  <link rel="stylesheet" href="/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>🌍 Mis Mundos</h1>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<div class="card" th:if="${#lists.isEmpty(mundos)}">
+  <h2>Aún no registras mundos</h2>
+  <p>Registra tus mundos o servidores para asignarles proyectos con coordenadas exactas.</p>
+</div>
+
+<table th:unless="${#lists.isEmpty(mundos)}">
+  <tr><th>Nombre</th><th>Versión</th><th>Modo</th><th>Semilla</th><th>Acciones</th></tr>
+  <tr th:each="mu : ${mundos}">
+    <td th:text="${mu.nombre}"></td>
+    <td class="mono" th:text="${mu.version}"></td>
+    <td><span class="badge badge-pendiente" th:text="${mu.modoJuego}"></span></td>
+    <td class="mono" th:text="${mu.semilla != null ? mu.semilla : '—'}"></td>
+    <td>
+      <a class="btn btn-info" th:href="@{/mundos/{id}(id=${mu.id})}">Ver</a>
+      <a class="btn btn-ghost" th:href="@{/mundos/{id}/edit(id=${mu.id})}">Editar</a>
+    </td>
+  </tr>
+</table>
+
+<div class="card" style="margin-top: 24px;">
+  <h2>Registrar mundo</h2>
+  <p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
+  <form method="post" action="/mundos">
+    <div class="field">
+      <label for="mundo-nombre">Nombre</label>
+      <input id="mundo-nombre" name="nombre" required placeholder="Ej: Survival con amigos">
+    </div>
+    <div class="field">
+      <label for="mundo-version">Versión</label>
+      <input id="mundo-version" name="version" required placeholder="Ej: 1.21.4">
+    </div>
+    <div class="field">
+      <label for="mundo-modo">Modo de juego</label>
+      <select id="mundo-modo" name="modoJuego">
+        <option th:each="modo : ${modos}" th:value="${modo}" th:text="${modo}"></option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="mundo-semilla">Semilla (opcional)</label>
+      <input id="mundo-semilla" name="semilla" placeholder="Ej: -4172144997902289642">
+    </div>
+    <button type="submit" class="btn btn-primary">Registrar</button>
+  </form>
+</div>
+<div th:replace="~{fragments/toast :: toast}"></div>
+</body>
+</html>

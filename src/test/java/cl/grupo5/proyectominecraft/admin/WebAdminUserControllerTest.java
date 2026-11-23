@@ -1,5 +1,6 @@
 package cl.grupo5.proyectominecraft.admin;
 
+import cl.grupo5.proyectominecraft.auditoria.AuditService;
 import cl.grupo5.proyectominecraft.auth.AuthService;
 import cl.grupo5.proyectominecraft.perfil.UserProfile;
 import cl.grupo5.proyectominecraft.perfil.UserProfileService;
@@ -12,6 +13,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -24,6 +29,9 @@ class WebAdminUserControllerTest {
 
   @Autowired
   private MockMvc mvc;
+
+  @MockitoBean
+  private AuditService audit;
 
   @MockitoBean
   private UserProfileService profileService;
@@ -205,5 +213,18 @@ class WebAdminUserControllerTest {
         .andExpect(model().attribute("toastError", "El email no es válido."));
 
     verify(profileService, never()).save(any(), any());
+  }
+
+  @Test
+  void adminCambioDeRolRegistraDetalle() throws Exception {
+    var target = new cl.grupo5.proyectominecraft.perfil.UserProfile();
+    target.setUid("u2");
+    target.setNombre("Alex");
+    target.setEmail("alex@x.cl");
+    target.setRol("USUARIO");
+    when(profileService.get("u2")).thenReturn(target);
+    mvc.perform(post("/admin/usuarios/u2/update").session(adminSession())
+        .param("nombre", "Alex").param("email", "alex@x.cl").param("rol", "ADMIN"));
+    verify(audit).registrar(any(), eq("EDITAR"), eq("USUARIO"), eq("u2"), eq("alex@x.cl"), eq("Rol: USUARIO → ADMIN"));
   }
 }

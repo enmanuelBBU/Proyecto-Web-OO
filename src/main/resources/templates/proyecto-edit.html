@@ -38,6 +38,8 @@
       </select>
     </div>
 
+    <div th:replace="~{fragments/ubicacion :: campos(${proyecto})}"></div>
+
     <div class="field">
       <label>Ítems requeridos para el proyecto</label>
       <div id="proyecto-items-container" class="proyecto-items-editor">

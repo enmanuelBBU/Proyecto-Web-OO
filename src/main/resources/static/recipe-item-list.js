@@ -1,7 +1,7 @@
 function fillSlotVisual(slot, item) {
   var icon = slot.querySelector('.recipe-slot-icon');
   var name = slot.querySelector('.recipe-slot-name');
-  var input = slot.querySelector('input[name="slot"]');
+  var input = slot.querySelector('input[type="hidden"]');
   var remove = slot.querySelector('.recipe-slot-remove');
   input.value = item.id;
   name.textContent = item.nombre;
@@ -16,7 +16,7 @@ function fillSlotVisual(slot, item) {
 function clearSlotVisual(slot) {
   var icon = slot.querySelector('.recipe-slot-icon');
   var name = slot.querySelector('.recipe-slot-name');
-  var input = slot.querySelector('input[name="slot"]');
+  var input = slot.querySelector('input[type="hidden"]');
   var remove = slot.querySelector('.recipe-slot-remove');
   input.value = '';
   name.textContent = '';
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // resolve any already-filled slots (edit form) to their icon + name
         document.querySelectorAll('.recipe-slot').forEach(function (slot) {
-          var input = slot.querySelector('input[name="slot"]');
+          var input = slot.querySelector('input[type="hidden"]');
           if (input && input.value && byId[input.value]) {
             fillSlotVisual(slot, byId[input.value]);
           }

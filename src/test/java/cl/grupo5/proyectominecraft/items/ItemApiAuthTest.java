@@ -1,5 +1,6 @@
 package cl.grupo5.proyectominecraft.items;
 
+import cl.grupo5.proyectominecraft.auditoria.AuditService;
 import cl.grupo5.proyectominecraft.config.AdminAuthInterceptor;
 import cl.grupo5.proyectominecraft.config.ApiAuthInterceptor;
 import cl.grupo5.proyectominecraft.config.CorsConfig;
@@ -21,6 +22,9 @@ class ItemApiAuthTest {
 
   @Autowired
   private MockMvc mvc;
+
+  @MockitoBean
+  private AuditService audit;
 
   @MockitoBean
   private ItemService itemService;

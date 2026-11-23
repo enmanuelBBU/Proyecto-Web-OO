@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Auditoría · SGI Minecraft</title>
+  <link rel="stylesheet" href="/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>🛡️ Log de Auditoría</h1>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<div class="card">
+  <h2>Filtrar eventos</h2>
+  <form method="get" action="/admin/auditoria" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+    <div class="field" style="margin: 0;">
+      <label for="aud-entidad">Entidad</label>
+      <select id="aud-entidad" name="entidad">
+        <option value="">Todas</option>
+        <option th:each="en : ${entidades}" th:value="${en}" th:text="${en}" th:selected="${en == entidad}"></option>
+      </select>
+    </div>
+    <div class="field" style="margin: 0;">
+      <label for="aud-accion">Acción</label>
+      <select id="aud-accion" name="accion">
+        <option value="">Todas</option>
+        <option th:each="ac : ${acciones}" th:value="${ac}" th:text="${ac}" th:selected="${ac == accion}"></option>
+      </select>
+    </div>
+    <div class="field" style="margin: 0; flex: 1; min-width: 180px;">
+      <label for="aud-q">Buscar</label>
+      <input id="aud-q" name="q" th:value="${q}" placeholder="Usuario, nombre o id">
+    </div>
+    <button class="btn btn-info" type="submit">Filtrar</button>
+    <a class="btn btn-ghost" href="/admin/auditoria">Limpiar</a>
+  </form>
+</div>
+
+<div class="card" th:if="${#lists.isEmpty(eventos)}">
+  <p>No hay eventos registrados con esos filtros.</p>
+</div>
+
+<table th:unless="${#lists.isEmpty(eventos)}">
+  <tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>Nombre</th><th>Detalle</th></tr>
+  <tr th:each="e : ${eventos}">
+    <td class="mono" th:text="${e.fecha != null and e.fecha.length() >= 16 ? #strings.replace(#strings.substring(e.fecha, 0, 16), 'T', ' ') : e.fecha}"></td>
+    <td th:text="${e.actorNombre != null ? e.actorNombre : e.actorUid}"></td>
+    <td>
+      <span th:class="${e.accion == 'ELIMINAR'} ? 'badge badge-cancelado' : (${e.accion == 'CREAR'} ? 'badge badge-completado' : 'badge badge-pendiente')"
+            th:text="${e.accion}"></span>
+    </td>
+    <td class="mono" th:text="${e.entidad}"></td>
+    <td>
+      <span th:text="${e.entidadNombre}"></span>
+      <div class="mono" style="font-size: 11px;" th:text="${e.entidadId}"></div>
+    </td>
+    <td th:text="${e.detalle != null ? e.detalle : '—'}"></td>
+  </tr>
+</table>
+<div th:replace="~{fragments/toast :: toast}"></div>
+</body>
+</html>

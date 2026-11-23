@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Editar mundo · SGI Minecraft</title>
+  <link rel="stylesheet" href="/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>✏️ Editar mundo</h1>
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<div class="card">
+  <p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
+  <form method="post" th:action="@{/mundos/{id}/update(id=${mundo.id})}">
+    <div class="field">
+      <label for="edit-mundo-nombre">Nombre</label>
+      <input id="edit-mundo-nombre" name="nombre" th:value="${mundo.nombre}" required>
+    </div>
+    <div class="field">
+      <label for="edit-mundo-version">Versión</label>
+      <input id="edit-mundo-version" name="version" th:value="${mundo.version}" required>
+    </div>
+    <div class="field">
+      <label for="edit-mundo-modo">Modo de juego</label>
+      <select id="edit-mundo-modo" name="modoJuego">
+        <option th:each="modo : ${modos}" th:value="${modo}" th:text="${modo}"
+                th:selected="${modo.name() == mundo.modoJuego}"></option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="edit-mundo-semilla">Semilla (opcional)</label>
+      <input id="edit-mundo-semilla" name="semilla" th:value="${mundo.semilla}">
+    </div>
+    <div style="display: flex; gap: 12px;">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <a class="btn btn-ghost" th:href="@{/mundos/{id}(id=${mundo.id})}">Cancelar</a>
+    </div>
+  </form>
+</div>
+<div th:replace="~{fragments/toast :: toast}"></div>
+</body>
+</html>

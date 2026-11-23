@@ -6,6 +6,7 @@ import cl.grupo5.proyectominecraft.items.ItemService;
 import com.google.cloud.firestore.Firestore;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,13 +31,17 @@ public class CraftingCalculatorService {
     if (target == null) throw new InventoryException("El ítem no existe en el catálogo.");
     if (isRaw(target)) throw new InventoryException("Las materias primas no se craftean.");
     var requirements = expandRequirements(targetItemId, cantidad, items::get);
-    return toPlan(targetItemId, cantidad, requirements, inventory.get(uid), this::nombreDe);
+    var plan = toPlan(targetItemId, cantidad, requirements, inventory.get(uid), this::nombreDe);
+    plan.setTipoReceta(ItemService.tipoRecetaDe(target));
+    return plan;
   }
 
   public CraftingPlan craft(String uid, String targetItemId, int cantidad) throws Exception {
     var plan = plan(uid, targetItemId, cantidad);
     if (!plan.isCraftable()) throw new InventoryException("No tienes suficientes materiales.");
+    var registro = HistorialCrafteoService.crearRegistro(uid, items.get(targetItemId), plan, Instant.now().toString());
     var ref = db.collection("inventarios").document(uid);
+    var registroRef = db.collection(HistorialCrafteoService.COLECCION).document();
     try {
       db.runTransaction(tx -> {
         var current = InventoryService.readItems(tx.get(ref).get());
@@ -53,6 +58,7 @@ public class CraftingCalculatorService {
         }
         updated.merge(targetItemId, (long) cantidad, Long::sum);
         tx.set(ref, Map.of("items", updated));
+        tx.create(registroRef, registro);
         return null;
       }).get();
     } catch (ExecutionException e) {

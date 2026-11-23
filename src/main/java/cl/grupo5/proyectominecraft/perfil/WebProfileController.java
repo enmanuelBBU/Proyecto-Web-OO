@@ -1,5 +1,6 @@
 package cl.grupo5.proyectominecraft.perfil;
 
+import cl.grupo5.proyectominecraft.auditoria.AuditService;
 import cl.grupo5.proyectominecraft.auth.AuthService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -11,10 +12,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class WebProfileController {
   private final UserProfileService service;
   private final AuthService auth;
+  private final AuditService audit;
 
-  public WebProfileController(UserProfileService service, AuthService auth) {
+  public WebProfileController(UserProfileService service, AuthService auth, AuditService audit) {
     this.service = service;
     this.auth = auth;
+    this.audit = audit;
   }
 
   @GetMapping("/perfil")
@@ -43,6 +46,7 @@ public class WebProfileController {
     p.setEmail(email);
     p.setRol(existing != null ? existing.getRol() : "USUARIO");
     service.save(uid, p);
+    audit.registrar(s, AuditService.EDITAR, AuditService.USUARIO, uid, email, null);
     ra.addFlashAttribute("toastSuccess", "Perfil actualizado correctamente");
     return "redirect:/perfil";
   }
@@ -51,9 +55,12 @@ public class WebProfileController {
   public String eliminar(HttpSession s) throws Exception {
     String uid = (String) s.getAttribute("uid");
     if (uid == null) return "redirect:/login";
+    var perfil = service.get(uid);
     try {
       auth.deleteUser(uid);
       service.delete(uid);
+      audit.registrar(s, AuditService.ELIMINAR, AuditService.USUARIO, uid,
+          perfil != null ? perfil.getEmail() : (String) s.getAttribute("email"), null);
     } finally {
       s.invalidate();
     }

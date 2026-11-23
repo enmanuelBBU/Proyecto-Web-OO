@@ -1,5 +1,6 @@
 package cl.grupo5.proyectominecraft.admin;
 
+import cl.grupo5.proyectominecraft.auditoria.AuditService;
 import cl.grupo5.proyectominecraft.auth.AuthService;
 import cl.grupo5.proyectominecraft.config.AdminAuthInterceptor;
 import cl.grupo5.proyectominecraft.config.ApiAuthInterceptor;
@@ -31,6 +32,9 @@ class AdminUserControllerTest {
 
   @Autowired
   private MockMvc mvc;
+
+  @MockitoBean
+  private AuditService audit;
 
   @MockitoBean
   private UserProfileService profileService;

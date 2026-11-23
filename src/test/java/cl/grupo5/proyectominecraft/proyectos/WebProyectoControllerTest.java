@@ -1,7 +1,10 @@
 package cl.grupo5.proyectominecraft.proyectos;
 
+import cl.grupo5.proyectominecraft.auditoria.AuditService;
 import cl.grupo5.proyectominecraft.items.ItemService;
+import cl.grupo5.proyectominecraft.mundos.MundoService;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.mock.web.MockHttpSession;
@@ -10,10 +13,14 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -25,10 +32,16 @@ class WebProyectoControllerTest {
   private MockMvc mvc;
 
   @MockitoBean
+  private AuditService audit;
+
+  @MockitoBean
   private ProyectoService proyectoService;
 
   @MockitoBean
   private ItemService itemService;
+
+  @MockitoBean
+  private MundoService mundoService;
 
   private MockHttpSession userSession(String uid) {
     var session = new MockHttpSession();
@@ -48,7 +61,7 @@ class WebProyectoControllerTest {
   @Test
   void listProyectosExposesModelAttributes() throws Exception {
     var session = userSession("user123");
-    when(proyectoService.list(null, null, null)).thenReturn(List.of());
+    when(proyectoService.list(eq(null), eq(null), eq(null), any(), any())).thenReturn(List.of());
     when(itemService.list(null, null)).thenReturn(List.of());
 
     mvc.perform(get("/proyectos").session(session))
@@ -62,7 +75,7 @@ class WebProyectoControllerTest {
   @Test
   void listProyectosWithMisProyectosFilter() throws Exception {
     var session = userSession("user123");
-    when(proyectoService.list(null, null, "user123")).thenReturn(List.of());
+    when(proyectoService.list(eq(null), eq(null), eq("user123"), any(), any())).thenReturn(List.of());
     when(itemService.list(null, null)).thenReturn(List.of());
 
     mvc.perform(get("/proyectos").session(session).param("misProyectos", "true"))
@@ -99,7 +112,7 @@ class WebProyectoControllerTest {
   @Test
   void detailWithMissingProyectoRedirectsToProyectos() throws Exception {
     var session = userSession("user123");
-    when(proyectoService.get("missing-id")).thenReturn(null);
+    when(proyectoService.getVisible(eq("missing-id"), any(), any())).thenReturn(null);
 
     mvc.perform(get("/proyectos/missing-id").session(session))
         .andExpect(status().is3xxRedirection())
@@ -113,7 +126,7 @@ class WebProyectoControllerTest {
     p.setId("castillo");
     p.setNombre("Castillo");
     p.setCreadorUid("user123");
-    when(proyectoService.get("castillo")).thenReturn(p);
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
     when(itemService.list(null, null)).thenReturn(List.of());
 
     mvc.perform(get("/proyectos/castillo").session(session))
@@ -129,7 +142,7 @@ class WebProyectoControllerTest {
     p.setId("castillo");
     p.setNombre("Castillo");
     p.setCreadorUid("user123");
-    when(proyectoService.get("castillo")).thenReturn(p);
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
 
     mvc.perform(get("/proyectos/castillo/edit").session(session))
         .andExpect(status().is3xxRedirection())
@@ -143,7 +156,7 @@ class WebProyectoControllerTest {
     p.setId("castillo");
     p.setNombre("Castillo");
     p.setCreadorUid("user123");
-    when(proyectoService.get("castillo")).thenReturn(p);
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
     doThrow(new ProyectoValidationException("El estado 'INVALID' no es válido."))
         .when(proyectoService).update(eq("castillo"), any(), any(), any());
 
@@ -163,7 +176,7 @@ class WebProyectoControllerTest {
     p.setId("castillo");
     p.setNombre("Castillo");
     p.setCreadorUid("user123");
-    when(proyectoService.get("castillo")).thenReturn(p);
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
 
     mvc.perform(post("/proyectos/castillo/update").session(session)
             .param("nombre", "Castillo Nuevo")
@@ -176,6 +189,7 @@ class WebProyectoControllerTest {
   @Test
   void deleteRedirectsToProyectos() throws Exception {
     var session = userSession("user123");
+    when(proyectoService.delete("castillo", "user123", "USER")).thenReturn(true);
 
     mvc.perform(post("/proyectos/castillo/delete").session(session))
         .andExpect(status().is3xxRedirection())
@@ -190,7 +204,7 @@ class WebProyectoControllerTest {
     p.setId("castillo");
     p.setEstado("PLANIFICACION");
     p.setCreadorUid("user123");
-    when(proyectoService.get("castillo")).thenReturn(p);
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
 
     mvc.perform(get("/proyectos/castillo/estados").session(session))
         .andExpect(status().isOk())
@@ -202,6 +216,8 @@ class WebProyectoControllerTest {
   @Test
   void transicionarRedirectsOnSuccess() throws Exception {
     var session = userSession("user123");
+    when(proyectoService.transicionarEstado(eq("castillo"), eq("EN_CONSTRUCCION"), eq("Start"), eq("user123"), any(), any()))
+        .thenReturn(new Proyecto());
 
     mvc.perform(post("/proyectos/castillo/transicionar").session(session)
             .param("nuevoEstado", "EN_CONSTRUCCION")
@@ -217,7 +233,7 @@ class WebProyectoControllerTest {
     var p = new Proyecto();
     p.setId("castillo");
     p.setEstado("PLANIFICACION");
-    when(proyectoService.get("castillo")).thenReturn(p);
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
 
     doThrow(new ProyectoValidationException("Transición inválida"))
         .when(proyectoService).transicionarEstado(any(), any(), any(), any(), any(), any());
@@ -228,5 +244,153 @@ class WebProyectoControllerTest {
         .andExpect(view().name("proyecto-estados"))
         .andExpect(model().attributeExists("error"))
         .andExpect(model().attribute("toastError", "Transición inválida"));
+  }
+
+  @Test
+  void crearProyectoEnviaMundoYCoordenadas() throws Exception {
+    mvc.perform(post("/proyectos").session(userSession("user123"))
+            .param("nombre", "Granja").param("mundoId", "m1")
+            .param("x", "10").param("y", "64").param("z", "-5"))
+        .andExpect(redirectedUrl("/proyectos"));
+    var captor = ArgumentCaptor.forClass(Proyecto.class);
+    verify(proyectoService).create(captor.capture(), eq("user123"), any());
+    assertThat(captor.getValue().getMundoId()).isEqualTo("m1");
+    assertThat(captor.getValue().getX()).isEqualTo(10);
+    assertThat(captor.getValue().getY()).isEqualTo(64);
+    assertThat(captor.getValue().getZ()).isEqualTo(-5);
+  }
+
+  @Test
+  void listaExponeMundosDelUsuarioParaElFormulario() throws Exception {
+    when(mundoService.listar("user123")).thenReturn(List.of());
+    mvc.perform(get("/proyectos").session(userSession("user123")))
+        .andExpect(model().attributeExists("mundos"));
+  }
+
+  @Test
+  void detalleNoVisibleRedirigeConToast() throws Exception {
+    mvc.perform(get("/proyectos/p1").session(userSession("user123")))
+        .andExpect(redirectedUrl("/proyectos"))
+        .andExpect(flash().attribute("toastError", "Proyecto no encontrado."));
+  }
+
+  @Test
+  void lectorNoPuedeAbrirEdicion() throws Exception {
+    var p = new Proyecto();
+    p.setId("p1");
+    p.setNombre("Castillo");
+    p.setCreadorUid("creador");
+    p.getMiembros().add(new Miembro("user123", "Steve", "s@x.cl", "LECTURA", "t"));
+    when(proyectoService.getVisible(eq("p1"), eq("user123"), any())).thenReturn(p);
+    mvc.perform(get("/proyectos/p1/edit").session(userSession("user123")))
+        .andExpect(redirectedUrl("/proyectos/p1"));
+  }
+
+  @Test
+  void detalleExponePermisosDeGestion() throws Exception {
+    var p = new Proyecto();
+    p.setId("p1");
+    p.setNombre("Castillo");
+    p.setCreadorUid("creador");
+    p.getMiembros().add(new Miembro("user123", "Steve", "s@x.cl", "EDICION", "t"));
+    when(proyectoService.getVisible(eq("p1"), eq("user123"), any())).thenReturn(p);
+    when(itemService.list(null, null)).thenReturn(List.of());
+    mvc.perform(get("/proyectos/p1").session(userSession("user123")))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("canEdit", true))
+        .andExpect(model().attribute("canManage", false));
+  }
+
+  @Test
+  void invitarMiembroRedirigeConToastExito() throws Exception {
+    var p = new Proyecto();
+    p.setId("p1");
+    when(proyectoService.invitar("p1", "a@x.cl", "EDICION", "user123", "USER")).thenReturn(p);
+    mvc.perform(post("/proyectos/p1/miembros").session(userSession("user123"))
+            .param("email", "a@x.cl").param("permiso", "EDICION"))
+        .andExpect(redirectedUrl("/proyectos/p1"))
+        .andExpect(flash().attribute("toastSuccess", "Miembro agregado: a@x.cl"));
+  }
+
+  @Test
+  void invitarMiembroConErrorRedirigeConToastError() throws Exception {
+    when(proyectoService.getVisible(eq("p1"), any(), any())).thenReturn(new Proyecto());
+    when(proyectoService.invitar("p1", "nadie@x.cl", "LECTURA", "user123", "USER"))
+        .thenThrow(new ProyectoValidationException("No existe un usuario registrado con ese email."));
+    mvc.perform(post("/proyectos/p1/miembros").session(userSession("user123"))
+            .param("email", "nadie@x.cl").param("permiso", "LECTURA"))
+        .andExpect(redirectedUrl("/proyectos/p1"))
+        .andExpect(flash().attribute("toastError", "No existe un usuario registrado con ese email."));
+  }
+
+  @Test
+  void listaMarcaProyectosCompartidosYEditables() throws Exception {
+    var propio = new Proyecto();
+    propio.setId("p1");
+    propio.setNombre("Propio");
+    propio.setCreadorUid("user123");
+    var compartido = new Proyecto();
+    compartido.setId("p2");
+    compartido.setNombre("Compartido");
+    compartido.setCreadorUid("otro");
+    compartido.getMiembros().add(new Miembro("user123", "Steve", "s@x.cl", "LECTURA", "t"));
+    when(proyectoService.list(eq(null), eq(null), eq(null), eq("user123"), any())).thenReturn(List.of(propio, compartido));
+    when(itemService.list(null, null)).thenReturn(List.of());
+    mvc.perform(get("/proyectos").session(userSession("user123")))
+        .andExpect(model().attribute("editables", java.util.Set.of("p1")))
+        .andExpect(model().attribute("compartidos", java.util.Map.of("p2", "LECTURA")));
+  }
+
+  @Test
+  void eliminarProyectoInexistenteRedirigeConToast() throws Exception {
+    mvc.perform(post("/proyectos/nada/delete").session(userSession("user123")))
+        .andExpect(redirectedUrl("/proyectos"))
+        .andExpect(flash().attribute("toastError", "Proyecto no encontrado."));
+  }
+
+  @Test
+  void transicionRegistraDetalleDeEstado() throws Exception {
+    var p = new Proyecto();
+    p.setId("castillo");
+    p.setNombre("Castillo");
+    p.setEstado("EN_CONSTRUCCION");
+    var historial = new HistorialEstado("PLANIFICACION", "EN_CONSTRUCCION", "user123", "Steve", "t", null);
+    p.getHistorialEstados().add(historial);
+    when(proyectoService.transicionarEstado(eq("castillo"), eq("EN_CONSTRUCCION"), any(), eq("user123"), any(), any()))
+        .thenReturn(p);
+    mvc.perform(post("/proyectos/castillo/transicionar").session(userSession("user123")).param("nuevoEstado", "EN_CONSTRUCCION"));
+    verify(audit).registrar(any(), eq("EDITAR"), eq("PROYECTO"), eq("castillo"), eq("Castillo"),
+        eq("Estado: PLANIFICACION → EN_CONSTRUCCION"));
+  }
+
+  @Test
+  void invitarRegistraDetalle() throws Exception {
+    var p = new Proyecto();
+    p.setId("p1");
+    p.setNombre("Castillo");
+    when(proyectoService.invitar("p1", "a@x.cl", "EDICION", "user123", "USER")).thenReturn(p);
+    mvc.perform(post("/proyectos/p1/miembros").session(userSession("user123"))
+        .param("email", "a@x.cl").param("permiso", "EDICION"));
+    verify(audit).registrar(any(), eq("EDITAR"), eq("PROYECTO"), eq("p1"), eq("Castillo"), eq("Invitó a a@x.cl (EDICION)"));
+  }
+
+  @Test
+  void crearProyectoRegistraAuditoria() throws Exception {
+    when(proyectoService.create(any(), eq("user123"), any())).thenAnswer(inv -> {
+      Proyecto p = inv.getArgument(0);
+      p.setId("abc123");
+      return p;
+    });
+    mvc.perform(post("/proyectos").session(userSession("user123")).param("nombre", "Granja"));
+    verify(audit).registrar(any(), eq("CREAR"), eq("PROYECTO"), eq("abc123"), eq("Granja"), isNull());
+  }
+
+  @Test
+  void eliminarProyectoAjenoNoRevelaQueExiste() throws Exception {
+    when(proyectoService.delete(eq("ajeno"), any(), any()))
+        .thenThrow(new ProyectoValidationException("No tienes permisos para eliminar este proyecto."));
+    mvc.perform(post("/proyectos/ajeno/delete").session(userSession("user123")))
+        .andExpect(redirectedUrl("/proyectos"))
+        .andExpect(flash().attribute("toastError", "Proyecto no encontrado."));
   }
 }

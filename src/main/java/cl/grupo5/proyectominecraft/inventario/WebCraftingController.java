@@ -52,7 +52,7 @@ public class WebCraftingController {
       m.addAttribute("toastError", e.getMessage());
       return "calculadora";
     }
-    ra.addFlashAttribute("toastSuccess", "¡Crafteo exitoso!");
+    ra.addFlashAttribute("toastSuccess", "¡Crafteo exitoso! Quedó registrado en tu historial.");
     return "redirect:/calculadora?targetId=" + itemId + "&cantidad=" + cantidad;
   }
 

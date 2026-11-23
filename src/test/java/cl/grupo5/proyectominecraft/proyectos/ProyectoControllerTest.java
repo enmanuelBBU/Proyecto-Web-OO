@@ -1,5 +1,6 @@
 package cl.grupo5.proyectominecraft.proyectos;
 
+import cl.grupo5.proyectominecraft.auditoria.AuditService;
 import cl.grupo5.proyectominecraft.config.AdminAuthInterceptor;
 import cl.grupo5.proyectominecraft.config.ApiAuthInterceptor;
 import cl.grupo5.proyectominecraft.config.CorsConfig;
@@ -30,6 +31,9 @@ class ProyectoControllerTest {
   private MockMvc mvc;
 
   @MockitoBean
+  private AuditService audit;
+
+  @MockitoBean
   private ProyectoService proyectoService;
 
   private MockHttpSession authenticated() {
@@ -51,7 +55,7 @@ class ProyectoControllerTest {
     var p = new Proyecto();
     p.setId("castillo");
     p.setNombre("Castillo");
-    when(proyectoService.list(null, null, null)).thenReturn(List.of(p));
+    when(proyectoService.list(eq(null), eq(null), eq(null), any(), any())).thenReturn(List.of(p));
 
     mvc.perform(get("/api/proyectos").session(authenticated()))
         .andExpect(status().isOk())
@@ -81,6 +85,7 @@ class ProyectoControllerTest {
 
   @Test
   void updateForbiddenIsForbidden() throws Exception {
+    when(proyectoService.getVisible(any(), any(), any())).thenReturn(new Proyecto());
     doThrow(new ProyectoValidationException("No tienes permisos para modificar este proyecto."))
         .when(proyectoService).update(eq("p1"), any(), any(), any());
 
@@ -104,7 +109,7 @@ class ProyectoControllerTest {
     var p = new Proyecto();
     p.setId("castillo");
     p.setEstado("PLANIFICACION");
-    when(proyectoService.get("castillo")).thenReturn(p);
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
 
     mvc.perform(get("/api/proyectos/castillo/estados").session(authenticated()))
         .andExpect(status().isOk())
@@ -131,6 +136,7 @@ class ProyectoControllerTest {
 
   @Test
   void updateStateForbidden() throws Exception {
+    when(proyectoService.getVisible(any(), any(), any())).thenReturn(new Proyecto());
     doThrow(new ProyectoValidationException("No tienes permisos para cambiar el estado de este proyecto."))
         .when(proyectoService).transicionarEstado(any(), any(), any(), any(), any(), any());
 
@@ -151,5 +157,110 @@ class ProyectoControllerTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"estado\":\"COMPLETADO\"}"))
         .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void apiGetProyectoPrivadoAjenoDa404() throws Exception {
+    when(proyectoService.getVisible("p1", "user123", "USER")).thenReturn(null);
+    mvc.perform(get("/api/proyectos/p1").session(authenticated())).andExpect(status().isNotFound());
+  }
+
+  @Test
+  void apiInvitarSinPermisoDa403() throws Exception {
+    when(proyectoService.getVisible(eq("p1"), any(), any())).thenReturn(new Proyecto());
+    when(proyectoService.invitar(eq("p1"), eq("a@x.cl"), eq("LECTURA"), any(), any()))
+        .thenThrow(new ProyectoValidationException("No tienes permisos para gestionar los miembros de este proyecto."));
+    mvc.perform(post("/api/proyectos/p1/miembros").session(authenticated())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"email\":\"a@x.cl\",\"permiso\":\"LECTURA\"}"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void apiInvitarEmailDesconocidoDa400() throws Exception {
+    when(proyectoService.invitar(eq("p1"), eq("nadie@x.cl"), eq("LECTURA"), any(), any()))
+        .thenThrow(new ProyectoValidationException("No existe un usuario registrado con ese email."));
+    mvc.perform(post("/api/proyectos/p1/miembros").session(authenticated())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"email\":\"nadie@x.cl\",\"permiso\":\"LECTURA\"}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void apiListarMiembrosDeProyectoVisible() throws Exception {
+    var p = new Proyecto();
+    p.setId("p1");
+    p.getMiembros().add(new Miembro("u2", "Alex", "a@x.cl", "LECTURA", "t"));
+    when(proyectoService.getVisible("p1", "user123", "USER")).thenReturn(p);
+    mvc.perform(get("/api/proyectos/p1/miembros").session(authenticated()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].uid").value("u2"));
+  }
+
+  @Test
+  void apiQuitarMiembroInexistenteProyectoDa404() throws Exception {
+    when(proyectoService.quitarMiembro(eq("p9"), eq("u2"), any(), any())).thenReturn(null);
+    mvc.perform(delete("/api/proyectos/p9/miembros/u2").session(authenticated()))
+        .andExpect(status().isNotFound());
+  }
+
+  // ---- Revisión final: escrituras sobre proyectos no visibles dan 404 ----
+
+  private static final ProyectoValidationException SIN_PERMISO =
+      new ProyectoValidationException("No tienes permisos para modificar este proyecto.");
+
+  @Test
+  void apiUpdateProyectoAjenoDa404() throws Exception {
+    when(proyectoService.update(eq("ajeno"), any(), any(), any())).thenThrow(SIN_PERMISO);
+    mvc.perform(put("/api/proyectos/ajeno").session(authenticated())
+            .contentType(MediaType.APPLICATION_JSON).content("{\"nombre\":\"X\"}"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void apiDeleteProyectoAjenoDa404() throws Exception {
+    when(proyectoService.delete(eq("ajeno"), any(), any())).thenThrow(SIN_PERMISO);
+    mvc.perform(delete("/api/proyectos/ajeno").session(authenticated())).andExpect(status().isNotFound());
+  }
+
+  @Test
+  void apiEstadoProyectoAjenoDa404() throws Exception {
+    when(proyectoService.transicionarEstado(eq("ajeno"), any(), any(), any(), any(), any())).thenThrow(SIN_PERMISO);
+    mvc.perform(post("/api/proyectos/ajeno/estado").session(authenticated())
+            .contentType(MediaType.APPLICATION_JSON).content("{\"estado\":\"EN_CONSTRUCCION\"}"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void apiInvitarEnProyectoAjenoDa404() throws Exception {
+    when(proyectoService.invitar(eq("ajeno"), any(), any(), any(), any())).thenThrow(SIN_PERMISO);
+    mvc.perform(post("/api/proyectos/ajeno/miembros").session(authenticated())
+            .contentType(MediaType.APPLICATION_JSON).content("{\"email\":\"a@x.cl\",\"permiso\":\"LECTURA\"}"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void apiCambiarPermisoEnProyectoAjenoDa404() throws Exception {
+    when(proyectoService.cambiarPermisoMiembro(eq("ajeno"), any(), any(), any(), any())).thenThrow(SIN_PERMISO);
+    mvc.perform(put("/api/proyectos/ajeno/miembros/u2").session(authenticated())
+            .contentType(MediaType.APPLICATION_JSON).content("{\"permiso\":\"EDICION\"}"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void apiQuitarMiembroEnProyectoAjenoDa404() throws Exception {
+    when(proyectoService.quitarMiembro(eq("ajeno"), any(), any(), any())).thenThrow(SIN_PERMISO);
+    mvc.perform(delete("/api/proyectos/ajeno/miembros/u2").session(authenticated())).andExpect(status().isNotFound());
+  }
+
+  @Test
+  void apiLectorQueIntentaEditarRecibe403() throws Exception {
+    var p = new Proyecto();
+    p.setId("visible");
+    when(proyectoService.getVisible("visible", "user123", "USER")).thenReturn(p);
+    when(proyectoService.update(eq("visible"), any(), any(), any())).thenThrow(SIN_PERMISO);
+    mvc.perform(put("/api/proyectos/visible").session(authenticated())
+            .contentType(MediaType.APPLICATION_JSON).content("{\"nombre\":\"X\"}"))
+        .andExpect(status().isForbidden());
   }
 }

@@ -1,7 +1,9 @@
 package cl.grupo5.proyectominecraft.proyectos;
 
+import cl.grupo5.proyectominecraft.auditoria.AuditService;
 import cl.grupo5.proyectominecraft.items.Item;
 import cl.grupo5.proyectominecraft.items.ItemService;
+import cl.grupo5.proyectominecraft.mundos.MundoService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -10,18 +12,28 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 @Controller
 public class WebProyectoController {
+  private static final String NO_ENCONTRADO = "Proyecto no encontrado.";
+  private static final List<String> ESTADOS = List.of("PLANIFICACION", "EN_CONSTRUCCION", "COMPLETADO", "CANCELADO");
+
   private final ProyectoService proyectoService;
   private final ItemService itemService;
+  private final MundoService mundoService;
+  private final AuditService audit;
 
-  public WebProyectoController(ProyectoService proyectoService, ItemService itemService) {
+  public WebProyectoController(ProyectoService proyectoService, ItemService itemService, MundoService mundoService,
+                               AuditService audit) {
     this.proyectoService = proyectoService;
     this.itemService = itemService;
+    this.mundoService = mundoService;
+    this.audit = audit;
   }
 
   @GetMapping("/proyectos")
@@ -29,20 +41,16 @@ public class WebProyectoController {
                      @RequestParam(required = false) String estado,
                      @RequestParam(required = false) Boolean misProyectos,
                      Model m, HttpSession s) throws Exception {
-    String uid = (String) s.getAttribute("uid");
+    String uid = uid(s);
     if (uid == null) return "redirect:/login";
 
     String filterUid = Boolean.TRUE.equals(misProyectos) ? uid : null;
-    List<Proyecto> lista = proyectoService.list(q, estado, filterUid);
-    List<Item> catalog = itemService.list(null, null);
+    List<Proyecto> lista = proyectoService.list(q, estado, filterUid, uid, rol(s));
 
-    m.addAttribute("proyectos", lista);
-    m.addAttribute("catalogItems", catalog);
+    exponerLista(m, s, lista);
     m.addAttribute("q", q);
     m.addAttribute("estado", estado);
     m.addAttribute("misProyectos", misProyectos);
-    m.addAttribute("currentUid", uid);
-    m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
     return "proyectos";
   }
 
@@ -52,98 +60,83 @@ public class WebProyectoController {
                        @RequestParam(required = false) String estado,
                        @RequestParam(required = false) List<String> itemId,
                        @RequestParam(required = false) List<Integer> cantidad,
+                       @RequestParam(required = false) String mundoId,
+                       @RequestParam(required = false) Integer x,
+                       @RequestParam(required = false) Integer y,
+                       @RequestParam(required = false) Integer z,
                        Model m, HttpSession s, RedirectAttributes ra) throws Exception {
-    String uid = (String) s.getAttribute("uid");
+    String uid = uid(s);
     if (uid == null) return "redirect:/login";
-
-    String nombreUsuario = (String) s.getAttribute("nombre");
-    if (nombreUsuario == null) nombreUsuario = (String) s.getAttribute("usuario");
 
     Proyecto p = new Proyecto();
     p.setNombre(nombre);
     p.setDescripcion(descripcion);
     p.setEstado(estado != null && !estado.isBlank() ? estado : "PLANIFICACION");
     p.setItemsRequeridos(buildItemsRequeridos(itemId, cantidad));
+    aplicarUbicacion(p, mundoId, x, y, z);
 
     try {
-      proyectoService.create(p, uid, nombreUsuario);
+      proyectoService.create(p, uid, nombreUsuario(s));
     } catch (ProyectoAlreadyExistsException | ProyectoValidationException e) {
+      exponerLista(m, s, proyectoService.list(null, null, null, uid, rol(s)));
       m.addAttribute("error", e.getMessage());
       m.addAttribute("toastError", e.getMessage());
-      m.addAttribute("proyectos", proyectoService.list(null, null, null));
-      m.addAttribute("catalogItems", itemService.list(null, null));
-      m.addAttribute("currentUid", uid);
-      m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
       return "proyectos";
     }
 
+    audit.registrar(s, AuditService.CREAR, AuditService.PROYECTO, p.getId(), p.getNombre(), null);
     ra.addFlashAttribute("toastSuccess", "Proyecto creado correctamente");
     return "redirect:/proyectos";
   }
 
   @GetMapping("/proyectos/{id}")
-  public String detail(@PathVariable String id, Model m, HttpSession s) throws Exception {
-    String uid = (String) s.getAttribute("uid");
+  public String detail(@PathVariable String id, Model m, HttpSession s, RedirectAttributes ra) throws Exception {
+    String uid = uid(s);
     if (uid == null) return "redirect:/login";
 
-    Proyecto p = proyectoService.get(id);
-    if (p == null) return "redirect:/proyectos";
+    Proyecto p = proyectoService.getVisible(id, uid, rol(s));
+    if (p == null) return noEncontrado(ra);
 
-    // Build map of catalog items for displaying rich item details
-    List<Item> catalog = itemService.list(null, null);
     Map<String, Item> itemMap = new HashMap<>();
-    for (Item item : catalog) {
+    for (Item item : itemService.list(null, null)) {
       itemMap.put(item.getId(), item);
     }
 
-    boolean canEdit = ProyectoService.canUserModify(p, uid, (String) s.getAttribute("rol"));
-
+    var mundo = mundoService.get(p.getMundoId());
     m.addAttribute("proyecto", p);
     m.addAttribute("itemMap", itemMap);
-    m.addAttribute("canEdit", canEdit);
+    m.addAttribute("mundo", mundo);
+    m.addAttribute("mundoEsPropio", MundoService.puedeGestionar(mundo, uid, rol(s)));
+    m.addAttribute("canEdit", ProyectoService.canEdit(p, uid, rol(s)));
+    m.addAttribute("canManage", ProyectoService.canManage(p, uid, rol(s)));
+    m.addAttribute("permisos", List.of(ProyectoService.LECTURA, ProyectoService.EDICION));
     m.addAttribute("currentUid", uid);
-    m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
+    m.addAttribute("isAdmin", "ADMIN".equals(rol(s)));
     return "proyecto-detalle";
   }
 
   @GetMapping("/proyectos/{id}/edit")
-  public String editForm(@PathVariable String id, Model m, HttpSession s) throws Exception {
-    String uid = (String) s.getAttribute("uid");
+  public String editForm(@PathVariable String id, Model m, HttpSession s, RedirectAttributes ra) throws Exception {
+    String uid = uid(s);
     if (uid == null) return "redirect:/login";
 
-    Proyecto p = proyectoService.get(id);
-    if (p == null) return "redirect:/proyectos";
+    Proyecto p = proyectoService.getVisible(id, uid, rol(s));
+    if (p == null) return noEncontrado(ra);
+    if (!ProyectoService.canEdit(p, uid, rol(s))) return "redirect:/proyectos/" + id;
 
-    boolean canEdit = ProyectoService.canUserModify(p, uid, (String) s.getAttribute("rol"));
-    if (!canEdit) return "redirect:/proyectos/" + id;
-
-    List<Item> catalog = itemService.list(null, null);
-
-    m.addAttribute("proyecto", p);
-    m.addAttribute("catalogItems", catalog);
-    m.addAttribute("estados", List.of("PLANIFICACION", "EN_CONSTRUCCION", "COMPLETADO", "CANCELADO")); // Mantenemos para el select general por ahora o se quita, pero no es estados de transicion
+    exponerFormularioEdicion(m, s, p);
     return "proyecto-edit";
   }
 
   @GetMapping("/proyectos/{id}/estados")
-  public String estados(@PathVariable String id, Model m, HttpSession s) throws Exception {
-    String uid = (String) s.getAttribute("uid");
+  public String estados(@PathVariable String id, Model m, HttpSession s, RedirectAttributes ra) throws Exception {
+    String uid = uid(s);
     if (uid == null) return "redirect:/login";
 
-    Proyecto p = proyectoService.get(id);
-    if (p == null) return "redirect:/proyectos";
+    Proyecto p = proyectoService.getVisible(id, uid, rol(s));
+    if (p == null) return noEncontrado(ra);
 
-    boolean canEdit = ProyectoService.canUserModify(p, uid, (String) s.getAttribute("rol"));
-
-    String estadoActual = p.getEstado() != null ? p.getEstado() : "PLANIFICACION";
-    Set<String> transicionesDisponibles = EstadoProyecto.fromString(estadoActual).getTransicionesValidas();
-
-    m.addAttribute("proyecto", p);
-    m.addAttribute("canEdit", canEdit);
-    m.addAttribute("transicionesDisponibles", transicionesDisponibles);
-    m.addAttribute("historial", p.getHistorialEstados());
-    m.addAttribute("currentUid", uid);
-    m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
+    exponerEstados(m, s, p);
     return "proyecto-estados";
   }
 
@@ -152,27 +145,20 @@ public class WebProyectoController {
                              @RequestParam String nuevoEstado,
                              @RequestParam(required = false) String motivo,
                              Model m, HttpSession s, RedirectAttributes ra) throws Exception {
-    String uid = (String) s.getAttribute("uid");
+    String uid = uid(s);
     if (uid == null) return "redirect:/login";
-    String rol = (String) s.getAttribute("rol");
-    String nombre = (String) s.getAttribute("nombre");
-    if (nombre == null) nombre = (String) s.getAttribute("usuario");
 
     try {
-      proyectoService.transicionarEstado(id, nuevoEstado, motivo, uid, nombre, rol);
+      var actualizado = proyectoService.transicionarEstado(id, nuevoEstado, motivo, uid, nombreUsuario(s), rol(s));
+      if (actualizado == null) return noEncontrado(ra);
+      audit.registrar(s, AuditService.EDITAR, AuditService.PROYECTO, id, actualizado.getNombre(),
+          AuditDetalles.transicion(actualizado));
     } catch (ProyectoValidationException e) {
-      Proyecto p = proyectoService.get(id);
-      String estadoActual = p.getEstado() != null ? p.getEstado() : "PLANIFICACION";
-      Set<String> transicionesDisponibles = EstadoProyecto.fromString(estadoActual).getTransicionesValidas();
-
-      m.addAttribute("proyecto", p);
-      m.addAttribute("canEdit", ProyectoService.canUserModify(p, uid, rol));
-      m.addAttribute("transicionesDisponibles", transicionesDisponibles);
-      m.addAttribute("historial", p.getHistorialEstados());
+      Proyecto p = proyectoService.getVisible(id, uid, rol(s));
+      if (p == null) return noEncontrado(ra);
+      exponerEstados(m, s, p);
       m.addAttribute("error", e.getMessage());
       m.addAttribute("toastError", e.getMessage());
-      m.addAttribute("currentUid", uid);
-      m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
       return "proyecto-estados";
     }
 
@@ -187,49 +173,181 @@ public class WebProyectoController {
                        @RequestParam(required = false) String estado,
                        @RequestParam(required = false) List<String> itemId,
                        @RequestParam(required = false) List<Integer> cantidad,
+                       @RequestParam(required = false) String mundoId,
+                       @RequestParam(required = false) Integer x,
+                       @RequestParam(required = false) Integer y,
+                       @RequestParam(required = false) Integer z,
                        Model m, HttpSession s, RedirectAttributes ra) throws Exception {
-    String uid = (String) s.getAttribute("uid");
+    String uid = uid(s);
     if (uid == null) return "redirect:/login";
-    String rol = (String) s.getAttribute("rol");
 
-    Proyecto p = proyectoService.get(id);
-    if (p == null) return "redirect:/proyectos";
+    Proyecto p = proyectoService.getVisible(id, uid, rol(s));
+    if (p == null) return noEncontrado(ra);
 
     Proyecto updatePayload = new Proyecto();
     updatePayload.setNombre(nombre);
     updatePayload.setDescripcion(descripcion);
     updatePayload.setEstado(estado);
     updatePayload.setItemsRequeridos(buildItemsRequeridos(itemId, cantidad));
+    aplicarUbicacion(updatePayload, mundoId, x, y, z);
 
     try {
-      proyectoService.update(id, updatePayload, uid, rol);
-    } catch (ProyectoValidationException e) {
-      m.addAttribute("proyecto", p);
-      m.addAttribute("catalogItems", itemService.list(null, null));
-      m.addAttribute("estados", List.of("PLANIFICACION", "EN_CONSTRUCCION", "COMPLETADO", "CANCELADO"));
+      proyectoService.update(id, updatePayload, uid, rol(s));
+    } catch (ProyectoValidationException | ProyectoAlreadyExistsException e) {
+      exponerFormularioEdicion(m, s, p);
       m.addAttribute("error", e.getMessage());
       m.addAttribute("toastError", e.getMessage());
       return "proyecto-edit";
     }
 
+    audit.registrar(s, AuditService.EDITAR, AuditService.PROYECTO, id, nombre, null);
     ra.addFlashAttribute("toastSuccess", "Proyecto actualizado correctamente");
     return "redirect:/proyectos/" + id;
   }
 
   @PostMapping("/proyectos/{id}/delete")
   public String delete(@PathVariable String id, HttpSession s, RedirectAttributes ra) throws Exception {
-    String uid = (String) s.getAttribute("uid");
+    String uid = uid(s);
     if (uid == null) return "redirect:/login";
-    String rol = (String) s.getAttribute("rol");
 
+    var existente = proyectoService.getVisible(id, uid, rol(s));
     try {
-      proyectoService.delete(id, uid, rol);
+      if (!proyectoService.delete(id, uid, rol(s))) return noEncontrado(ra);
     } catch (ProyectoValidationException e) {
+      if (proyectoService.getVisible(id, uid, rol(s)) == null) return noEncontrado(ra);
       ra.addFlashAttribute("toastError", e.getMessage());
       return "redirect:/proyectos/" + id;
     }
+    audit.registrar(s, AuditService.ELIMINAR, AuditService.PROYECTO, id,
+        existente != null ? existente.getNombre() : id, null);
     ra.addFlashAttribute("toastSuccess", "Proyecto eliminado correctamente");
     return "redirect:/proyectos";
+  }
+
+  // ---- Miembros ----
+
+  @PostMapping("/proyectos/{id}/miembros")
+  public String invitar(@PathVariable String id,
+                        @RequestParam(required = false) String email,
+                        @RequestParam(required = false) String permiso,
+                        HttpSession s, RedirectAttributes ra) throws Exception {
+    String uid = uid(s);
+    if (uid == null) return "redirect:/login";
+    try {
+      var p = proyectoService.invitar(id, email, permiso, uid, rol(s));
+      if (p == null) return noEncontrado(ra);
+      audit.registrar(s, AuditService.EDITAR, AuditService.PROYECTO, id, p.getNombre(),
+          AuditDetalles.invitacion(email, permiso));
+    } catch (ProyectoValidationException e) {
+      if (proyectoService.getVisible(id, uid, rol(s)) == null) return noEncontrado(ra);
+      ra.addFlashAttribute("toastError", e.getMessage());
+      return "redirect:/proyectos/" + id;
+    }
+    ra.addFlashAttribute("toastSuccess", "Miembro agregado: " + email.trim());
+    return "redirect:/proyectos/" + id;
+  }
+
+  @PostMapping("/proyectos/{id}/miembros/{miembroUid}/permiso")
+  public String cambiarPermiso(@PathVariable String id, @PathVariable String miembroUid,
+                               @RequestParam(required = false) String permiso,
+                               HttpSession s, RedirectAttributes ra) throws Exception {
+    String uid = uid(s);
+    if (uid == null) return "redirect:/login";
+    try {
+      var p = proyectoService.cambiarPermisoMiembro(id, miembroUid, permiso, uid, rol(s));
+      if (p == null) return noEncontrado(ra);
+      audit.registrar(s, AuditService.EDITAR, AuditService.PROYECTO, id, p.getNombre(),
+          AuditDetalles.cambioPermiso(p, miembroUid, permiso));
+    } catch (ProyectoValidationException e) {
+      if (proyectoService.getVisible(id, uid, rol(s)) == null) return noEncontrado(ra);
+      ra.addFlashAttribute("toastError", e.getMessage());
+      return "redirect:/proyectos/" + id;
+    }
+    ra.addFlashAttribute("toastSuccess", "Permiso actualizado");
+    return "redirect:/proyectos/" + id;
+  }
+
+  @PostMapping("/proyectos/{id}/miembros/{miembroUid}/delete")
+  public String quitarMiembro(@PathVariable String id, @PathVariable String miembroUid,
+                              HttpSession s, RedirectAttributes ra) throws Exception {
+    String uid = uid(s);
+    if (uid == null) return "redirect:/login";
+    var antes = proyectoService.getVisible(id, uid, rol(s));
+    try {
+      var p = proyectoService.quitarMiembro(id, miembroUid, uid, rol(s));
+      if (p == null) return noEncontrado(ra);
+      audit.registrar(s, AuditService.EDITAR, AuditService.PROYECTO, id, p.getNombre(),
+          AuditDetalles.quitado(antes, miembroUid));
+    } catch (ProyectoValidationException e) {
+      if (proyectoService.getVisible(id, uid, rol(s)) == null) return noEncontrado(ra);
+      ra.addFlashAttribute("toastError", e.getMessage());
+      return "redirect:/proyectos/" + id;
+    }
+    ra.addFlashAttribute("toastSuccess", "Miembro quitado del proyecto");
+    return "redirect:/proyectos/" + id;
+  }
+
+  // ---- Helpers ----
+
+  private void exponerLista(Model m, HttpSession s, List<Proyecto> lista) throws Exception {
+    String uid = uid(s);
+    Set<String> editables = new LinkedHashSet<>();
+    Map<String, String> compartidos = new LinkedHashMap<>();
+    for (var p : lista) {
+      if (ProyectoService.canEdit(p, uid, rol(s))) editables.add(p.getId());
+      var permiso = ProyectoService.permisoDe(p, uid);
+      if (permiso != null) compartidos.put(p.getId(), permiso);
+    }
+    m.addAttribute("proyectos", lista);
+    m.addAttribute("editables", editables);
+    m.addAttribute("compartidos", compartidos);
+    m.addAttribute("catalogItems", itemService.list(null, null));
+    m.addAttribute("mundos", mundoService.listar(uid));
+    m.addAttribute("currentUid", uid);
+    m.addAttribute("isAdmin", "ADMIN".equals(rol(s)));
+  }
+
+  private void exponerFormularioEdicion(Model m, HttpSession s, Proyecto p) throws Exception {
+    m.addAttribute("proyecto", p);
+    m.addAttribute("catalogItems", itemService.list(null, null));
+    m.addAttribute("mundos", mundoService.listar(p.getCreadorUid()));
+    m.addAttribute("estados", ESTADOS);
+    m.addAttribute("isAdmin", "ADMIN".equals(rol(s)));
+  }
+
+  private void exponerEstados(Model m, HttpSession s, Proyecto p) {
+    String estadoActual = p.getEstado() != null ? p.getEstado() : "PLANIFICACION";
+    m.addAttribute("proyecto", p);
+    m.addAttribute("canEdit", ProyectoService.canEdit(p, uid(s), rol(s)));
+    m.addAttribute("transicionesDisponibles", EstadoProyecto.fromString(estadoActual).getTransicionesValidas());
+    m.addAttribute("historial", p.getHistorialEstados());
+    m.addAttribute("currentUid", uid(s));
+    m.addAttribute("isAdmin", "ADMIN".equals(rol(s)));
+  }
+
+  private static String noEncontrado(RedirectAttributes ra) {
+    ra.addFlashAttribute("toastError", NO_ENCONTRADO);
+    return "redirect:/proyectos";
+  }
+
+  private static String uid(HttpSession s) {
+    return (String) s.getAttribute("uid");
+  }
+
+  private static String rol(HttpSession s) {
+    return (String) s.getAttribute("rol");
+  }
+
+  private static String nombreUsuario(HttpSession s) {
+    String nombre = (String) s.getAttribute("nombre");
+    return nombre != null ? nombre : (String) s.getAttribute("usuario");
+  }
+
+  private static void aplicarUbicacion(Proyecto p, String mundoId, Integer x, Integer y, Integer z) {
+    p.setMundoId(mundoId);
+    p.setX(x);
+    p.setY(y);
+    p.setZ(z);
   }
 
   private static List<ItemRequerido> buildItemsRequeridos(List<String> itemIds, List<Integer> cantidades) {

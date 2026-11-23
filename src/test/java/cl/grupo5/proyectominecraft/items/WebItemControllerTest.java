@@ -1,6 +1,8 @@
 package cl.grupo5.proyectominecraft.items;
 
+import cl.grupo5.proyectominecraft.auditoria.AuditService;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.mock.web.MockHttpSession;
@@ -9,9 +11,13 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -26,6 +32,9 @@ class WebItemControllerTest {
 
   @Autowired
   private MockMvc mvc;
+
+  @MockitoBean
+  private AuditService audit;
 
   @MockitoBean
   private ItemService itemService;
@@ -336,5 +345,79 @@ class WebItemControllerTest {
         .andExpect(status().isOk())
         .andExpect(model().attribute("recetaMatriz", java.util.Arrays.asList(
             "lana", "lana", null, null, null, null, null, null, null)));
+  }
+
+  @Test
+  void crearItemHornoPasaTipoYEntradaAlServicio() throws Exception {
+    mvc.perform(post("/items").session(adminSession())
+            .param("nombre", "Lingote de hierro").param("fullId", "minecraft:iron_ingot")
+            .param("tipoReceta", "HORNO").param("entradaHorno", " hierro_crudo ")
+            .param("slot", "palo", "", "", "", "", "", "", "", ""))
+        .andExpect(redirectedUrl("/items"));
+    var captor = ArgumentCaptor.forClass(Item.class);
+    verify(itemService).create(captor.capture());
+    assertThat(captor.getValue().getTipoReceta()).isEqualTo("HORNO");
+    assertThat(captor.getValue().getRecetaHorno()).isEqualTo("hierro_crudo");
+    assertThat(captor.getValue().getRecetaMatriz()).isEmpty();
+  }
+
+  @Test
+  void actualizarItemACrafteoDescartaEntradaHorno() throws Exception {
+    var existing = new Item();
+    existing.setNombre("Antorcha");
+    existing.setTipoReceta("HORNO");
+    existing.setRecetaHorno("hierro_crudo");
+    when(itemService.get("antorcha")).thenReturn(existing);
+    mvc.perform(post("/items/antorcha/update").session(adminSession())
+            .param("nombre", "Antorcha").param("tipoReceta", "CRAFTEO").param("entradaHorno", "hierro_crudo")
+            .param("slot", "carbon", "", "", "palo", "", "", "", "", ""))
+        .andExpect(redirectedUrl("/items"));
+    var captor = ArgumentCaptor.forClass(Item.class);
+    verify(itemService).update(org.mockito.ArgumentMatchers.eq("antorcha"), captor.capture());
+    assertThat(captor.getValue().getTipoReceta()).isEqualTo("CRAFTEO");
+    assertThat(captor.getValue().getRecetaHorno()).isNull();
+    assertThat(captor.getValue().getRecetaMatriz()).startsWith("carbon");
+  }
+
+  @Test
+  void editarItemHornoExponeEntrada() throws Exception {
+    var existing = new Item();
+    existing.setId("lingote");
+    existing.setNombre("Lingote");
+    existing.setTipoReceta("HORNO");
+    existing.setRecetaHorno("hierro_crudo");
+    when(itemService.get("lingote")).thenReturn(existing);
+    mvc.perform(get("/items/lingote/edit").session(adminSession()))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("entradaHorno", "hierro_crudo"));
+  }
+
+  @Test
+  void crearItemRegistraAuditoria() throws Exception {
+    when(itemService.create(any())).thenAnswer(inv -> {
+      Item i = inv.getArgument(0);
+      i.setId("palo");
+      return i;
+    });
+    mvc.perform(post("/items").session(adminSession()).param("nombre", "Palo").param("fullId", "minecraft:stick"));
+    verify(audit).registrar(any(), eq("CREAR"), eq("ITEM"), eq("palo"), eq("Palo"), isNull());
+  }
+
+  @Test
+  void crearItemFallidoNoRegistra() throws Exception {
+    when(itemService.create(any())).thenThrow(new ItemAlreadyExistsException("palo"));
+    mvc.perform(post("/items").session(adminSession()).param("nombre", "Palo").param("fullId", "minecraft:stick"));
+    verify(audit, never()).registrar(any(), any(), any(), any(), any(), any());
+  }
+
+  @Test
+  void eliminarItemRegistraAuditoria() throws Exception {
+    var existente = new Item();
+    existente.setId("palo");
+    existente.setNombre("Palo");
+    when(itemService.get("palo")).thenReturn(existente);
+    when(itemService.delete("palo")).thenReturn(true);
+    mvc.perform(post("/items/palo/delete").session(adminSession()));
+    verify(audit).registrar(any(), eq("ELIMINAR"), eq("ITEM"), eq("palo"), eq("Palo"), isNull());
   }
 }

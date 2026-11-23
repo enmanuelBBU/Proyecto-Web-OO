@@ -1,7 +1,7 @@
 package cl.grupo5.proyectominecraft.proyectos;
 
 public class ProyectoAlreadyExistsException extends RuntimeException {
-  public ProyectoAlreadyExistsException(String id) {
-    super("Ya existe un proyecto con el ID '" + id + "'.");
+  public ProyectoAlreadyExistsException(String nombre) {
+    super("Ya tienes un proyecto llamado '" + nombre + "'.");
   }
 }

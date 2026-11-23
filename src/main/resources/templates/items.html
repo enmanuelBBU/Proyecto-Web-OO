@@ -26,7 +26,7 @@
       <img th:if="${i.fullId}" th:src="${'https://blocksitems.com/api/v1/items/' + i.fullId + '/icon?size=32'}"
            width="32" height="32" alt="" onerror="this.style.display='none'">
     </td>
-    <td th:text="${i.nombre}"></td>
+    <td><span th:text="${i.nombre}"></span> <span class="badge badge-horno" th:if="${i.tipoReceta == 'HORNO'}">Horno</span></td>
     <td><span class="badge badge-pendiente" th:text="${i.categoria}"></span></td>
     <td class="mono" th:text="${i.esMateriaPrima} ? 'Sí' : 'No'"></td>
     <td th:if="${isAdmin}">
@@ -75,7 +75,13 @@
     <input id="crear-fullId" name="fullId" data-preview="crear-preview" placeholder="minecraft:diamond_sword" required>
   </div>
   <br>
-  <span>Receta (grilla 3x3 — arrastra un item desde la lista):</span>
+  <label for="crear-tipo-receta">Tipo de receta</label><br>
+  <select id="crear-tipo-receta" name="tipoReceta" class="recipe-type-select">
+    <option value="CRAFTEO">Mesa de crafteo</option>
+    <option value="HORNO">Horno (fundición)</option>
+  </select><br><br>
+  <span class="recipe-grid-hint">Receta (grilla 3x3 — arrastra un item desde la lista):</span>
+  <span class="furnace-hint" style="display:none">Ítem de entrada del horno (arrastra un item desde la lista):</span>
   <div class="recipe-editor">
     <div class="recipe-grid">
       <div class="recipe-slot" th:each="i : ${#numbers.sequence(1, 9)}">
@@ -84,6 +90,15 @@
         <span class="recipe-slot-name"></span>
         <input type="hidden" name="slot" value="">
       </div>
+    </div>
+    <div class="furnace-slot" style="display:none">
+      <div class="recipe-slot">
+        <button type="button" class="recipe-slot-remove" style="display:none" title="Quitar" aria-label="Quitar item de la casilla">×</button>
+        <img class="recipe-slot-icon" alt="" style="display:none">
+        <span class="recipe-slot-name"></span>
+        <input type="hidden" name="entradaHorno" value="">
+      </div>
+      <span class="furnace-arrow" aria-hidden="true">🔥 →</span>
     </div>
     <div class="recipe-item-list"><p class="recipe-item-list-hint">Cargando items...</p></div>
   </div>
@@ -94,6 +109,7 @@
 <script src="/item-icon-suggest.js"></script>
 <script src="/category-select.js"></script>
 <script src="/recipe-item-list.js"></script>
+<script src="/recipe-type.js"></script>
 <script src="/items-search.js"></script>
 <div th:replace="~{fragments/toast :: toast}"></div>
 </body>

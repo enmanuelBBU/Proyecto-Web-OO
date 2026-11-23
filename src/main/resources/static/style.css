@@ -634,3 +634,9 @@ button, .btn, a { cursor: pointer; }
   gap: 8px;
   align-items: center;
 }
+
+/* Recetas de horno */
+.badge-horno { background: color-mix(in srgb, var(--amber) 18%, transparent); color: var(--amber); }
+.furnace-slot { display: flex; align-items: center; gap: 12px; }
+.furnace-slot .recipe-slot { width: 64px; height: 64px; }
+.furnace-arrow { font-size: 20px; }

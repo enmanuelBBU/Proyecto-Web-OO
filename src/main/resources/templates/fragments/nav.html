@@ -10,6 +10,7 @@
       <li><a href="/items">Catálogo de Items</a></li>
       <li><a href="/materiales">Gestión de Materiales</a></li>
       <li><a href="/calculadora">Calculadora de Crafteo</a></li>
+      <li><a href="/historial-crafteo">Historial de Crafteo</a></li>
       <li><a href="/modelo-3d">Modelo 3D</a></li>
     </ul>
   </details>
@@ -18,6 +19,7 @@
     <summary>Proyectos</summary>
     <ul>
       <li><a href="/proyectos">Proyectos de Construcción</a></li>
+      <li><a href="/mundos">Mis Mundos</a></li>
       <li><a href="/proyectos">Estados de Proyecto</a></li>
       <li><a href="/proyectos/reportes">📄 Exportar PDF</a></li>
     </ul>
@@ -29,6 +31,7 @@
       <li><a href="/perfil">Mi Perfil</a></li>
       <li><a href="/inventario">Gestión de Inventario</a></li>
       <li th:if="${isAdmin}"><a href="/admin/usuarios">Administrar Usuarios</a></li>
+      <li th:if="${isAdmin}"><a href="/admin/auditoria">Auditoría</a></li>
       <li><form method="post" action="/logout"><button class="btn-ghost btn">Salir</button></form></li>
     </ul>
   </details>

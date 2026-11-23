@@ -48,6 +48,13 @@
 
       var tdNombre = document.createElement('td');
       tdNombre.textContent = item.nombre;
+      if (item.tipoReceta === 'HORNO') {
+        var hornoBadge = document.createElement('span');
+        hornoBadge.className = 'badge badge-horno';
+        hornoBadge.textContent = 'Horno';
+        tdNombre.appendChild(document.createTextNode(' '));
+        tdNombre.appendChild(hornoBadge);
+      }
       tr.appendChild(tdNombre);
 
       var tdCategoria = document.createElement('td');

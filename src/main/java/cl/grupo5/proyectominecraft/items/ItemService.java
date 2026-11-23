@@ -54,9 +54,9 @@ public class ItemService {
     if (existing.exists()) {
       throw new ItemAlreadyExistsException(id);
     }
-    validateRecetaMatriz(item);
-    validarReferenciasYCiclos(id, item.getRecetaMatriz());
-    item.setIngredientesParaCalculo(computeIngredientes(item.getRecetaMatriz()));
+    normalizarReceta(item);
+    validarReferenciasYCiclos(id, idsIngredientes(item));
+    item.setIngredientesParaCalculo(computeIngredientesDe(item));
     item.setId(id);
     decorar(item);
     db.collection("items").document(id).set(item).get();
@@ -66,9 +66,9 @@ public class ItemService {
   public Item update(String id, Item item) throws Exception {
     var snap = db.collection("items").document(id).get().get();
     if (!snap.exists()) return null;
-    validateRecetaMatriz(item);
-    validarReferenciasYCiclos(id, item.getRecetaMatriz());
-    item.setIngredientesParaCalculo(computeIngredientes(item.getRecetaMatriz()));
+    normalizarReceta(item);
+    validarReferenciasYCiclos(id, idsIngredientes(item));
+    item.setIngredientesParaCalculo(computeIngredientesDe(item));
     item.setId(id);
     decorar(item);
     db.collection("items").document(id).set(item).get();
@@ -95,17 +95,68 @@ public class ItemService {
     }
   }
 
-  private void validarReferenciasYCiclos(String id, List<String> recetaMatriz) throws Exception {
-    if (recetaMatriz == null || recetaMatriz.isEmpty()) return;
-    var referenciados = recetaMatriz.stream().filter(s -> s != null && !s.isBlank()).distinct().toList();
+  private void validarReferenciasYCiclos(String id, List<String> referenciados) throws Exception {
     if (referenciados.isEmpty()) return;
     validarExistencia(referenciados, refId -> db.collection("items").document(refId).get().get().exists());
     validarCiclos(id, referenciados, refId -> {
       var snap = db.collection("items").document(refId).get().get();
       if (!snap.exists()) return List.of();
-      var it = snap.toObject(Item.class);
-      return it.getRecetaMatriz();
+      return idsIngredientes(snap.toObject(Item.class));
     });
+  }
+
+  static final String CRAFTEO = "CRAFTEO";
+  static final String HORNO = "HORNO";
+
+  /** Fija tipoReceta (null/vacío ⇒ CRAFTEO), valida la receta y limpia el campo que no corresponde. */
+  static void normalizarReceta(Item item) {
+    var tipo = item.getTipoReceta() == null || item.getTipoReceta().isBlank()
+        ? CRAFTEO : item.getTipoReceta().trim().toUpperCase();
+    if (!CRAFTEO.equals(tipo) && !HORNO.equals(tipo)) {
+      throw new RecipeValidationException("Tipo de receta inválido.");
+    }
+    item.setTipoReceta(tipo);
+    if (CRAFTEO.equals(tipo)) {
+      item.setRecetaHorno(null);
+      validateRecetaMatriz(item);
+      return;
+    }
+    var matriz = item.getRecetaMatriz();
+    if (matriz != null && matriz.stream().anyMatch(s -> s != null && !s.isBlank())) {
+      throw new RecipeValidationException("Una receta de horno no usa la grilla de crafteo.");
+    }
+    if (item.getRecetaHorno() == null || item.getRecetaHorno().isBlank()) {
+      throw new RecipeValidationException("Una receta de horno necesita un ítem de entrada.");
+    }
+    if (item.isEsMateriaPrima()) {
+      throw new RecipeValidationException("Una materia prima no puede tener receta.");
+    }
+    item.setRecetaHorno(item.getRecetaHorno().trim());
+    item.setRecetaMatriz(List.of());
+  }
+
+  static List<Ingrediente> computeIngredientesDe(Item item) {
+    if (HORNO.equals(item.getTipoReceta())) {
+      var ing = new Ingrediente();
+      ing.setItemId(item.getRecetaHorno());
+      ing.setCantidad(1);
+      return List.of(ing);
+    }
+    return computeIngredientes(item.getRecetaMatriz());
+  }
+
+  static List<String> idsIngredientes(Item item) {
+    if (item == null) return List.of();
+    if (HORNO.equals(item.getTipoReceta()) && item.getRecetaHorno() != null && !item.getRecetaHorno().isBlank()) {
+      return List.of(item.getRecetaHorno().trim());
+    }
+    var matriz = item.getRecetaMatriz();
+    if (matriz == null) return List.of();
+    return matriz.stream().filter(s -> s != null && !s.isBlank()).map(String::trim).distinct().toList();
+  }
+
+  public static String tipoRecetaDe(Item item) {
+    return item != null && HORNO.equals(item.getTipoReceta()) ? HORNO : CRAFTEO;
   }
 
   static void validarExistencia(List<String> referenciados, ExistenceChecker existe) throws Exception {

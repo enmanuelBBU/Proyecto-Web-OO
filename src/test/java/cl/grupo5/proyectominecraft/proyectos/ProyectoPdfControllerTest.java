@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -73,7 +74,7 @@ class ProyectoPdfControllerTest {
 
   @Test
   void reporteWithUnknownIdRedirectsToReportes() throws Exception {
-    when(proyectoService.get("no-existe")).thenReturn(null);
+    when(proyectoService.getVisible(eq("no-existe"), any(), any())).thenReturn(null);
 
     mvc.perform(get("/proyectos/reporte-pdf").param("id", "no-existe").session(session("uid-1")))
         .andExpect(status().is3xxRedirection())
@@ -83,7 +84,7 @@ class ProyectoPdfControllerTest {
 
   @Test
   void reportesWithoutProjectsRendersFriendlyEmptyState() throws Exception {
-    when(proyectoService.list(null, null, null)).thenReturn(List.of());
+    when(proyectoService.list(eq(null), eq(null), eq(null), any(), any())).thenReturn(List.of());
 
     mvc.perform(get("/proyectos/reportes").session(session("uid-1")))
         .andExpect(status().isOk())
@@ -98,7 +99,7 @@ class ProyectoPdfControllerTest {
     proyecto.setId("casa");
     proyecto.setNombre("Casa de Roble");
     proyecto.setEstado("PLANIFICACION");
-    when(proyectoService.list(null, null, null)).thenReturn(List.of(proyecto));
+    when(proyectoService.list(eq(null), eq(null), eq(null), any(), any())).thenReturn(List.of(proyecto));
 
     mvc.perform(get("/proyectos/reportes").session(session("uid-1")))
         .andExpect(status().isOk())
@@ -128,7 +129,7 @@ class ProyectoPdfControllerTest {
     tablones.setCategoria("Bloques de Construcción");
     when(itemService.list(null, null)).thenReturn(List.of(tablones));
 
-    when(proyectoService.get("casa")).thenReturn(proyecto);
+    when(proyectoService.getVisible(eq("casa"), any(), any())).thenReturn(proyecto);
     when(pdfService.generar(any())).thenReturn("%PDF-1.7\ncontenido".getBytes());
 
     mvc.perform(get("/proyectos/reporte-pdf").param("id", "casa").session(session("uid-1")))
@@ -155,7 +156,7 @@ class ProyectoPdfControllerTest {
     proyecto.setId("casa");
     proyecto.setNombre("Casa de Roble");
     proyecto.setCreadorUid("autor-1");
-    when(proyectoService.get("casa")).thenReturn(proyecto);
+    when(proyectoService.getVisible(eq("casa"), any(), any())).thenReturn(proyecto);
     when(pdfService.generar(any())).thenReturn("%PDF-1.7\ncontenido".getBytes());
 
     mvc.perform(get("/proyectos/reporte-pdf").param("id", "casa").session(session("uid-1")))
@@ -174,5 +175,14 @@ class ProyectoPdfControllerTest {
     assertThat(ProyectoPdfController.estadoLegible("CANCELADO")).isEqualTo("Cancelado");
     assertThat(ProyectoPdfController.estadoLegible(null)).isNull();
     assertThat(ProyectoPdfController.estadoLegible("DESCONOCIDO")).isEqualTo("DESCONOCIDO");
+  }
+
+  @Test
+  void pdfDeProyectoNoVisibleRedirige() throws Exception {
+    var session = new org.springframework.mock.web.MockHttpSession();
+    session.setAttribute("uid", "intruso");
+    mvc.perform(get("/proyectos/reporte-pdf").param("id", "casa").session(session))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("/proyectos/reportes"));
   }
 }

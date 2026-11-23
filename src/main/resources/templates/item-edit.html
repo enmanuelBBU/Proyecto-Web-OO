@@ -48,7 +48,13 @@
     <input id="editar-fullId" name="fullId" th:value="${item.fullId}" data-preview="editar-preview" placeholder="minecraft:diamond_sword" required>
   </div>
   <br>
-  <span>Receta (grilla 3x3 — arrastra un item desde la lista):</span>
+  <label for="editar-tipo-receta">Tipo de receta</label><br>
+  <select id="editar-tipo-receta" name="tipoReceta" class="recipe-type-select">
+    <option value="CRAFTEO" th:selected="${tipoReceta != 'HORNO'}">Mesa de crafteo</option>
+    <option value="HORNO" th:selected="${tipoReceta == 'HORNO'}">Horno (fundición)</option>
+  </select><br><br>
+  <span class="recipe-grid-hint">Receta (grilla 3x3 — arrastra un item desde la lista):</span>
+  <span class="furnace-hint" style="display:none">Ítem de entrada del horno (arrastra un item desde la lista):</span>
   <div class="recipe-editor">
     <div class="recipe-grid">
       <div class="recipe-slot" th:each="valor : ${recetaMatriz}">
@@ -58,6 +64,15 @@
         <input type="hidden" name="slot" th:value="${valor} ?: ''">
       </div>
     </div>
+    <div class="furnace-slot" style="display:none">
+      <div class="recipe-slot">
+        <button type="button" class="recipe-slot-remove" style="display:none" title="Quitar" aria-label="Quitar item de la casilla">×</button>
+        <img class="recipe-slot-icon" alt="" style="display:none">
+        <span class="recipe-slot-name"></span>
+        <input type="hidden" name="entradaHorno" th:value="${entradaHorno} ?: ''">
+      </div>
+      <span class="furnace-arrow" aria-hidden="true">🔥 →</span>
+    </div>
     <div class="recipe-item-list"><p class="recipe-item-list-hint">Cargando items...</p></div>
   </div>
   <button type="submit">Guardar</button>
@@ -65,6 +80,7 @@
 <script src="/item-icon-suggest.js"></script>
 <script src="/category-select.js"></script>
 <script src="/recipe-item-list.js"></script>
+<script src="/recipe-type.js"></script>
 <div th:replace="~{fragments/toast :: toast}"></div>
 </div>
 </body>

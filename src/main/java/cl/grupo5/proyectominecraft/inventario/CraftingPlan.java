@@ -10,4 +10,5 @@ public class CraftingPlan {
   private int cantidad;
   private List<MaterialRequirement> materiales;
   private boolean craftable;
+  private String tipoReceta;
 }

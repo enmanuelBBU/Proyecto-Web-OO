@@ -1,5 +1,6 @@
 package cl.grupo5.proyectominecraft.perfil;
 
+import cl.grupo5.proyectominecraft.auditoria.AuditService;
 import cl.grupo5.proyectominecraft.auth.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,8 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -25,6 +28,9 @@ class WebProfileControllerTest {
 
   @Autowired
   private MockMvc mvc;
+
+  @MockitoBean
+  private AuditService audit;
 
   @MockitoBean
   private UserProfileService profileService;
@@ -84,5 +90,14 @@ class WebProfileControllerTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl("/perfil"))
         .andExpect(flash().attribute("toastSuccess", "Perfil actualizado correctamente"));
+  }
+
+  @Test
+  void eliminarCuentaPropiaRegistraAuditoria() throws Exception {
+    var perfil = new UserProfile();
+    perfil.setEmail("steve@x.cl");
+    when(profileService.get("u1")).thenReturn(perfil);
+    mvc.perform(post("/perfil/eliminar").session(authenticated("u1")));
+    verify(audit).registrar(any(), eq("ELIMINAR"), eq("USUARIO"), eq("u1"), eq("steve@x.cl"), isNull());
   }
 }

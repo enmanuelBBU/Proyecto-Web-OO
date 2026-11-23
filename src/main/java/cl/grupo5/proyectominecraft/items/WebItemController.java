@@ -1,5 +1,6 @@
 package cl.grupo5.proyectominecraft.items;
 
+import cl.grupo5.proyectominecraft.auditoria.AuditService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,9 +18,11 @@ public class WebItemController {
       "Materias Primas", "Bloques de Construcción", "Utilidad", "Herramientas");
 
   private final ItemService items;
+  private final AuditService audit;
 
-  public WebItemController(ItemService items) {
+  public WebItemController(ItemService items, AuditService audit) {
     this.items = items;
+    this.audit = audit;
   }
 
   @GetMapping("/items")
@@ -42,6 +45,8 @@ public class WebItemController {
                        @RequestParam(required = false) String fullId,
                        @RequestParam(required = false) String tipoVisual,
                        @RequestParam(required = false) List<String> slot,
+                       @RequestParam(required = false) String tipoReceta,
+                       @RequestParam(required = false) String entradaHorno,
                        Model m, HttpSession s, RedirectAttributes ra) throws Exception {
     var guard = guardAdmin(s);
     if (guard != null) return guard;
@@ -58,7 +63,7 @@ public class WebItemController {
     it.setEsMateriaPrima(esMateriaPrima);
     it.setFullId(fullId);
     it.setTipoVisual(tipoVisual);
-    it.setRecetaMatriz(normalizeSlots(slot));
+    aplicarReceta(it, tipoReceta, slot, entradaHorno);
     try {
       items.create(it);
     } catch (ItemAlreadyExistsException | RecipeValidationException e) {
@@ -68,6 +73,7 @@ public class WebItemController {
       m.addAttribute("isAdmin", "ADMIN".equals(s.getAttribute("rol")));
       return "items";
     }
+    audit.registrar(s, AuditService.CREAR, AuditService.ITEM, it.getId(), it.getNombre(), null);
     ra.addFlashAttribute("toastSuccess", "Ítem creado correctamente");
     return "redirect:/items";
   }
@@ -91,6 +97,8 @@ public class WebItemController {
     m.addAttribute("recetaMatriz", nineSlots(it.getRecetaMatriz()));
     m.addAttribute("categoriaSeleccion", categoriaSeleccionFor(it.getCategoria()));
     m.addAttribute("categoriaOtra", categoriaOtraFor(it.getCategoria()));
+    m.addAttribute("tipoReceta", ItemService.tipoRecetaDe(it));
+    m.addAttribute("entradaHorno", it.getRecetaHorno());
     return "item-edit";
   }
 
@@ -102,6 +110,8 @@ public class WebItemController {
                        @RequestParam(required = false) String fullId,
                        @RequestParam(required = false) String tipoVisual,
                        @RequestParam(required = false) List<String> slot,
+                       @RequestParam(required = false) String tipoReceta,
+                       @RequestParam(required = false) String entradaHorno,
                        Model m, HttpSession s, RedirectAttributes ra) throws Exception {
     var guard = guardAdmin(s);
     if (guard != null) return guard;
@@ -112,6 +122,8 @@ public class WebItemController {
       m.addAttribute("recetaMatriz", nineSlots(it.getRecetaMatriz()));
       m.addAttribute("categoriaSeleccion", categoriaSeleccionFor(it.getCategoria()));
       m.addAttribute("categoriaOtra", categoriaOtraFor(it.getCategoria()));
+      m.addAttribute("tipoReceta", ItemService.tipoRecetaDe(it));
+      m.addAttribute("entradaHorno", it.getRecetaHorno());
       m.addAttribute("error", "El nombre del ítem es obligatorio.");
       m.addAttribute("toastError", "El nombre del ítem es obligatorio.");
       return "item-edit";
@@ -121,7 +133,7 @@ public class WebItemController {
     it.setEsMateriaPrima(esMateriaPrima);
     it.setFullId(fullId);
     it.setTipoVisual(tipoVisual);
-    it.setRecetaMatriz(normalizeSlots(slot));
+    aplicarReceta(it, tipoReceta, slot, entradaHorno);
     try {
       items.update(id, it);
     } catch (RecipeValidationException e) {
@@ -129,10 +141,14 @@ public class WebItemController {
       m.addAttribute("recetaMatriz", nineSlots(it.getRecetaMatriz()));
       m.addAttribute("categoriaSeleccion", categoriaSeleccionFor(it.getCategoria()));
       m.addAttribute("categoriaOtra", categoriaOtraFor(it.getCategoria()));
+      m.addAttribute("tipoReceta", ItemService.tipoRecetaDe(it));
+      m.addAttribute("entradaHorno", it.getRecetaHorno());
       m.addAttribute("error", e.getMessage());
       m.addAttribute("toastError", e.getMessage());
       return "item-edit";
     }
+    audit.registrar(s, AuditService.EDITAR, AuditService.ITEM, id, it.getNombre(),
+        "HORNO".equals(it.getTipoReceta()) ? "Receta: HORNO" : null);
     ra.addFlashAttribute("toastSuccess", "Ítem actualizado correctamente");
     return "redirect:/items";
   }
@@ -141,7 +157,11 @@ public class WebItemController {
   public String delete(@PathVariable String id, HttpSession s, RedirectAttributes ra) throws Exception {
     var guard = guardAdmin(s);
     if (guard != null) return guard;
-    items.delete(id);
+    var existente = items.get(id);
+    if (items.delete(id)) {
+      audit.registrar(s, AuditService.ELIMINAR, AuditService.ITEM, id,
+          existente != null ? existente.getNombre() : id, null);
+    }
     ra.addFlashAttribute("toastSuccess", "Ítem eliminado correctamente");
     return "redirect:/items";
   }
@@ -150,6 +170,17 @@ public class WebItemController {
     if (s.getAttribute("uid") == null) return "redirect:/login";
     if (!"ADMIN".equals(s.getAttribute("rol"))) return "redirect:/items";
     return null;
+  }
+
+  private static void aplicarReceta(Item it, String tipoReceta, List<String> slot, String entradaHorno) {
+    it.setTipoReceta(tipoReceta);
+    if (tipoReceta != null && "HORNO".equalsIgnoreCase(tipoReceta.trim())) {
+      it.setRecetaMatriz(List.of());
+      it.setRecetaHorno(entradaHorno == null || entradaHorno.isBlank() ? null : entradaHorno.trim());
+    } else {
+      it.setRecetaMatriz(normalizeSlots(slot));
+      it.setRecetaHorno(null);
+    }
   }
 
   private static List<String> normalizeSlots(List<String> slot) {

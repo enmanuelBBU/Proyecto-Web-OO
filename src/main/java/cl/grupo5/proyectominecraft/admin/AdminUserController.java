@@ -1,5 +1,6 @@
 package cl.grupo5.proyectominecraft.admin;
 
+import cl.grupo5.proyectominecraft.auditoria.AuditService;
 import cl.grupo5.proyectominecraft.auth.AuthService;
 import cl.grupo5.proyectominecraft.perfil.UserProfile;
 import cl.grupo5.proyectominecraft.perfil.UserProfileService;
@@ -17,10 +18,12 @@ public class AdminUserController {
 
   private final UserProfileService service;
   private final AuthService auth;
+  private final AuditService audit;
 
-  public AdminUserController(UserProfileService service, AuthService auth) {
+  public AdminUserController(UserProfileService service, AuthService auth, AuditService audit) {
     this.service = service;
     this.auth = auth;
+    this.audit = audit;
   }
 
   @GetMapping
@@ -44,10 +47,14 @@ public class AdminUserController {
     }
     var target = service.get(uid);
     if (target == null) return ResponseEntity.notFound().build();
+    String rolAnterior = target.getRol();
     target.setNombre(body.getNombre());
     target.setEmail(body.getEmail());
     target.setRol(body.getRol());
-    return ResponseEntity.ok(service.save(uid, target));
+    var guardado = service.save(uid, target);
+    audit.registrar(session, AuditService.EDITAR, AuditService.USUARIO, uid, body.getEmail(),
+        body.getRol().equals(rolAnterior) ? null : "Rol: " + rolAnterior + " → " + body.getRol());
+    return ResponseEntity.ok(guardado);
   }
 
   @DeleteMapping("/{uid}")
@@ -55,8 +62,10 @@ public class AdminUserController {
     if (uid.equals(self(session))) {
       return ResponseEntity.badRequest().body("No puedes eliminar tu propia cuenta desde el panel admin.");
     }
+    var target = service.get(uid);
     auth.deleteUser(uid);
     service.delete(uid);
+    audit.registrar(session, AuditService.ELIMINAR, AuditService.USUARIO, uid, target != null ? target.getEmail() : uid, null);
     return ResponseEntity.noContent().build();
   }
 

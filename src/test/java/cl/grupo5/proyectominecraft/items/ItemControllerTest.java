@@ -1,5 +1,6 @@
 package cl.grupo5.proyectominecraft.items;
 
+import cl.grupo5.proyectominecraft.auditoria.AuditService;
 import cl.grupo5.proyectominecraft.config.AdminAuthInterceptor;
 import cl.grupo5.proyectominecraft.config.ApiAuthInterceptor;
 import cl.grupo5.proyectominecraft.config.CorsConfig;
@@ -14,6 +15,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -28,6 +33,9 @@ class ItemControllerTest {
 
   @Autowired
   private MockMvc mvc;
+
+  @MockitoBean
+  private AuditService audit;
 
   @MockitoBean
   private ItemService itemService;
@@ -147,5 +155,16 @@ class ItemControllerTest {
     mvc.perform(get("/api/items/sugerencias-icono").param("nombre", "Tablones de Roble").session(authenticated()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].fullId").value("minecraft:oak_planks"));
+  }
+
+  @Test
+  void apiEliminarItemRegistra() throws Exception {
+    var existente = new Item();
+    existente.setId("palo");
+    existente.setNombre("Palo");
+    when(itemService.get("palo")).thenReturn(existente);
+    when(itemService.delete("palo")).thenReturn(true);
+    mvc.perform(delete("/api/items/palo").session(adminAuthenticated()));
+    verify(audit).registrar(any(), eq("ELIMINAR"), eq("ITEM"), eq("palo"), eq("Palo"), isNull());
   }
 }

@@ -178,4 +178,116 @@ class ItemServiceTest {
 
     ItemService.validarCiclos("a", List.of("b", "c"), id -> recetas.getOrDefault(id, List.of()));
   }
+  // ---- Recetas de horno ----
+
+  private Item crafteo(String id, List<String> matriz) {
+    var it = new Item();
+    it.setId(id);
+    it.setNombre(id);
+    it.setRecetaMatriz(matriz);
+    return it;
+  }
+
+  private Item horno(String id, String entrada) {
+    var it = new Item();
+    it.setId(id);
+    it.setNombre(id);
+    it.setTipoReceta("HORNO");
+    it.setRecetaHorno(entrada);
+    return it;
+  }
+
+  @Test
+  void tipoRecetaNullSeNormalizaACrafteo() {
+    var it = crafteo("palo", Arrays.asList("tablones", null, null, null, null, null, null, null, null));
+    ItemService.normalizarReceta(it);
+    assertThat(it.getTipoReceta()).isEqualTo("CRAFTEO");
+    assertThat(it.getRecetaHorno()).isNull();
+  }
+
+  @Test
+  void recetaHornoGeneraUnIngredienteDeCantidadUno() {
+    var it = horno("lingote_de_hierro", "hierro_crudo");
+    ItemService.normalizarReceta(it);
+    assertThat(ItemService.computeIngredientesDe(it))
+        .extracting(Ingrediente::getItemId, Ingrediente::getCantidad)
+        .containsExactly(tuple("hierro_crudo", 1));
+  }
+
+  @Test
+  void hornoSinEntradaSeRechaza() {
+    assertThatThrownBy(() -> ItemService.normalizarReceta(horno("lingote", null)))
+        .isInstanceOf(RecipeValidationException.class)
+        .hasMessage("Una receta de horno necesita un ítem de entrada.");
+    assertThatThrownBy(() -> ItemService.normalizarReceta(horno("lingote", "  ")))
+        .hasMessage("Una receta de horno necesita un ítem de entrada.");
+  }
+
+  @Test
+  void hornoConMatrizSeRechaza() {
+    var it = horno("lingote", "hierro_crudo");
+    it.setRecetaMatriz(List.of("a", "", "", "", "", "", "", "", ""));
+    assertThatThrownBy(() -> ItemService.normalizarReceta(it))
+        .isInstanceOf(RecipeValidationException.class)
+        .hasMessage("Una receta de horno no usa la grilla de crafteo.");
+  }
+
+  @Test
+  void materiaPrimaConHornoSeRechaza() {
+    var it = horno("hierro_crudo", "x");
+    it.setEsMateriaPrima(true);
+    assertThatThrownBy(() -> ItemService.normalizarReceta(it))
+        .isInstanceOf(RecipeValidationException.class)
+        .hasMessage("Una materia prima no puede tener receta.");
+  }
+
+  @Test
+  void tipoRecetaInvalidoSeRechaza() {
+    var it = crafteo("x", List.of());
+    it.setTipoReceta("TELAR");
+    assertThatThrownBy(() -> ItemService.normalizarReceta(it))
+        .isInstanceOf(RecipeValidationException.class)
+        .hasMessage("Tipo de receta inválido.");
+  }
+
+  @Test
+  void pasarDeHornoACrafteoLimpiaEntradaYRecalcula() {
+    var it = crafteo("antorcha", List.of("carbon", "", "", "palo", "", "", "", "", ""));
+    it.setTipoReceta("CRAFTEO");
+    it.setRecetaHorno("hierro_crudo");
+    ItemService.normalizarReceta(it);
+    assertThat(it.getRecetaHorno()).isNull();
+    assertThat(ItemService.computeIngredientesDe(it)).extracting(Ingrediente::getItemId)
+        .containsExactly("carbon", "palo");
+  }
+
+  @Test
+  void tipoRecetaSeNormalizaAMayusculas() {
+    var it = horno("lingote", "hierro_crudo");
+    it.setTipoReceta(" horno ");
+    ItemService.normalizarReceta(it);
+    assertThat(it.getTipoReceta()).isEqualTo("HORNO");
+    assertThat(it.getRecetaMatriz()).isEmpty();
+  }
+
+  @Test
+  void idsIngredientesCubreHornoYMatriz() {
+    assertThat(ItemService.idsIngredientes(horno("lingote", "hierro_crudo"))).containsExactly("hierro_crudo");
+    assertThat(ItemService.idsIngredientes(crafteo("x", List.of("a", "a", "b", "", "", "", "", "", ""))))
+        .containsExactly("a", "b");
+    assertThat(ItemService.idsIngredientes(crafteo("x", null))).isEmpty();
+  }
+
+  @Test
+  void cicloAtravesDeHornoSeDetecta() {
+    RecetaLookup lookup = id -> id.equals("mineral") ? List.of("lingote") : List.of();
+    assertThatThrownBy(() -> ItemService.validarCiclos("lingote", List.of("mineral"), lookup))
+        .isInstanceOf(RecipeValidationException.class);
+  }
+
+  @Test
+  void tipoRecetaDeTrataNullComoCrafteo() {
+    assertThat(ItemService.tipoRecetaDe(crafteo("x", List.of()))).isEqualTo("CRAFTEO");
+    assertThat(ItemService.tipoRecetaDe(horno("l", "h"))).isEqualTo("HORNO");
+  }
 }
