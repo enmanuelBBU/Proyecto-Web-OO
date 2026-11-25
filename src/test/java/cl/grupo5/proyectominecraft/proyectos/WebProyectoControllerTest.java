@@ -546,4 +546,49 @@ class WebProyectoControllerTest {
         .andExpect(status().isOk())
         .andExpect(content().string(containsString("Aún no hay comentarios")));
   }
+
+  // ---- Nether ----
+
+  @Test
+  void detailMuestraNetherYPortalCercano() throws Exception {
+    var p = new Proyecto();
+    p.setId("castillo");
+    p.setNombre("Castillo");
+    p.setCreadorUid("user123");
+    p.setMundoId("m1");
+    p.setX(-9);
+    p.setY(70);
+    p.setZ(100);
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
+    var mundo = new cl.grupo5.proyectominecraft.mundos.Mundo();
+    mundo.setId("m1");
+    mundo.setUid("user123");
+    mundo.setNombre("Survival");
+    var portal = new cl.grupo5.proyectominecraft.mundos.Portal();
+    portal.setId("pt");
+    portal.setNombre("Portal base");
+    portal.setDimension("OVERWORLD");
+    mundo.setPortales(new java.util.ArrayList<>(List.of(portal)));
+    when(mundoService.get("m1")).thenReturn(mundo);
+
+    mvc.perform(get("/proyectos/castillo").session(userSession("user123")))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("netherEquivalente", new cl.grupo5.proyectominecraft.mundos.Coordenadas("NETHER", -2, 70, 12)))
+        .andExpect(content().string(containsString("X -2 / Y 70 / Z 12")))
+        .andExpect(content().string(containsString("Portal base")))
+        .andExpect(content().string(containsString("a 100 bloques")));
+  }
+
+  @Test
+  void detailSinCoordenadasNoMuestraNether() throws Exception {
+    var p = new Proyecto();
+    p.setId("castillo");
+    p.setNombre("Castillo");
+    p.setCreadorUid("user123");
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
+
+    mvc.perform(get("/proyectos/castillo").session(userSession("user123")))
+        .andExpect(status().isOk())
+        .andExpect(model().attributeDoesNotExist("netherEquivalente"));
+  }
 }

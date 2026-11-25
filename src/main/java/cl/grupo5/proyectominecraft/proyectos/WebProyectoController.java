@@ -5,7 +5,12 @@ import cl.grupo5.proyectominecraft.inventario.CraftingCalculatorService;
 import cl.grupo5.proyectominecraft.inventario.InventoryException;
 import cl.grupo5.proyectominecraft.items.Item;
 import cl.grupo5.proyectominecraft.items.ItemService;
+import cl.grupo5.proyectominecraft.mundos.Dimension;
+import cl.grupo5.proyectominecraft.mundos.Mundo;
 import cl.grupo5.proyectominecraft.mundos.MundoService;
+import cl.grupo5.proyectominecraft.mundos.MundoValidationException;
+import cl.grupo5.proyectominecraft.mundos.NetherCalculator;
+import cl.grupo5.proyectominecraft.mundos.PortalService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -121,6 +126,7 @@ public class WebProyectoController {
     m.addAttribute("isAdmin", "ADMIN".equals(rol(s)));
     exponerFaltantes(m, p, uid);
     exponerComentarios(m, p, uid, rol(s));
+    exponerNether(m, p, mundo);
     return "proyecto-detalle";
   }
 
@@ -297,6 +303,19 @@ public class WebProyectoController {
   }
 
   // ---- Helpers ----
+
+  /** Coordenadas del proyecto (Overworld) en el Nether y el portal Overworld guardado más cercano del mundo. */
+  private static void exponerNether(Model m, Proyecto p, Mundo mundo) {
+    if (mundo == null || p.getX() == null || p.getZ() == null) return;
+    int y = p.getY() != null ? p.getY() : 64;
+    try {
+      m.addAttribute("netherEquivalente", NetherCalculator.convertir(Dimension.OVERWORLD, p.getX(), y, p.getZ()));
+    } catch (MundoValidationException e) {
+      return;
+    }
+    PortalService.masCercano(PortalService.portales(mundo), p.getX(), p.getZ())
+        .ifPresent(c -> m.addAttribute("portalCercano", c));
+  }
 
   private void exponerComentarios(Model m, Proyecto p, String uid, String rol) throws Exception {
     var lista = comentarioService.listar(p.getId());

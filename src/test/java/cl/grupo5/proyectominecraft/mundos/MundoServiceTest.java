@@ -82,4 +82,24 @@ class MundoServiceTest {
     assertThat(MundoService.delUsuario(List.of(a, b, c), "u1"))
         .extracting(Mundo::getNombre).containsExactly("Alfa", "zeta");
   }
+
+  @Test
+  void actualizarPreservaPortales() {
+    var actual = new Mundo();
+    actual.setUid("u1");
+    actual.setFechaCreacion("2026-11-01T00:00:00Z");
+    var portal = new Portal();
+    portal.setId("p1");
+    actual.setPortales(new java.util.ArrayList<>(java.util.List.of(portal)));
+    var cambios = new Mundo();
+    cambios.setNombre("Nuevo");
+    cambios.setPortales(null);
+
+    var r = MundoService.prepararActualizacion(actual, cambios, "m1");
+
+    assertThat(r.getId()).isEqualTo("m1");
+    assertThat(r.getUid()).isEqualTo("u1");
+    assertThat(r.getFechaCreacion()).isEqualTo("2026-11-01T00:00:00Z");
+    assertThat(r.getPortales()).containsExactly(portal);
+  }
 }

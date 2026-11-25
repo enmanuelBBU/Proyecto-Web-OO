@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Estadísticas')}"></head>
+<body>
+<header th:replace="~{fragments/nav :: nav(activo='estadisticas')}"></header>
+
+<main class="page">
+<header class="page-header">
+  <div>
+    <h1 class="page-title">Estadísticas</h1>
+    <p class="page-sub">Tus proyectos, las recetas del catálogo y lo que más te falta para construir.</p>
+  </div>
+</header>
+
+<div class="chart-grid">
+  <!-- 1. Proyectos por estado -->
+  <section class="card stack" aria-labelledby="est-estados">
+    <h2 class="section-title" id="est-estados">Proyectos por estado</h2>
+    <th:block th:if="${estadisticas.porEstado == null}">
+      <p class="kpi-value">—</p>
+      <p class="muted">No se pudo cargar esta fuente.</p>
+    </th:block>
+    <div class="empty-state" th:if="${estadisticas.porEstado != null and totalProyectos == 0}">
+      <svg th:replace="~{fragments/icons :: icon('hammer')}"></svg>
+      <p>Aún no tienes proyectos visibles.</p>
+      <a class="btn btn-secondary" href="/proyectos">Crear proyecto</a>
+    </div>
+    <th:block th:if="${estadisticas.porEstado != null and totalProyectos > 0}">
+      <div class="chart-box">
+        <canvas id="grafico-estados" role="img" aria-label="Gráfico de proyectos por estado; la tabla equivalente está a continuación."></canvas>
+      </div>
+      <details>
+        <summary>Ver tabla</summary>
+        <div class="table-wrap">
+        <table>
+          <thead><tr><th>Estado</th><th class="num">Proyectos</th></tr></thead>
+          <tbody>
+          <tr th:each="e : ${estadisticas.porEstado}">
+            <td><span th:replace="~{fragments/badge :: estado(${e.key})}"></span></td>
+            <td class="num" th:text="${e.value}">0</td>
+          </tr>
+          </tbody>
+        </table>
+        </div>
+      </details>
+    </th:block>
+  </section>
+
+  <!-- 2. Ítems más usados en recetas -->
+  <section class="card stack" aria-labelledby="est-usados">
+    <h2 class="section-title" id="est-usados">Ítems más usados en recetas</h2>
+    <th:block th:if="${estadisticas.masUsados == null}">
+      <p class="kpi-value">—</p>
+      <p class="muted">No se pudo cargar esta fuente.</p>
+    </th:block>
+    <div class="empty-state" th:if="${estadisticas.masUsados != null and #lists.isEmpty(estadisticas.masUsados)}">
+      <svg th:replace="~{fragments/icons :: icon('pickaxe')}"></svg>
+      <p>Ningún ítem del catálogo tiene receta todavía.</p>
+    </div>
+    <th:block th:if="${estadisticas.masUsados != null and !#lists.isEmpty(estadisticas.masUsados)}">
+      <p class="muted">Top 10 por cantidad de recetas distintas que usan el ítem como ingrediente.</p>
+      <div class="chart-box chart-box-tall">
+        <canvas id="grafico-usados" role="img" aria-label="Gráfico de ítems más usados en recetas; la tabla equivalente está a continuación."></canvas>
+      </div>
+      <details>
+        <summary>Ver tabla</summary>
+        <div class="table-wrap">
+        <table>
+          <thead><tr><th>Ítem</th><th class="num">Recetas</th><th class="num">Cantidad total</th></tr></thead>
+          <tbody>
+          <tr th:each="f : ${estadisticas.masUsados}">
+            <td th:text="${f.nombre}">Ítem</td>
+            <td class="num" th:text="${f.valor}">0</td>
+            <td class="num" th:text="${f.secundario}">0</td>
+          </tr>
+          </tbody>
+        </table>
+        </div>
+      </details>
+    </th:block>
+  </section>
+
+  <!-- 3. Materiales más escasos -->
+  <section class="card stack" aria-labelledby="est-escasos">
+    <h2 class="section-title" id="est-escasos">Materiales más escasos</h2>
+    <th:block th:if="${estadisticas.escasos == null}">
+      <p class="kpi-value">—</p>
+      <p class="muted">No se pudo cargar esta fuente.</p>
+    </th:block>
+    <div class="empty-state" th:if="${estadisticas.escasos != null and #lists.isEmpty(estadisticas.escasos)}">
+      <svg th:replace="~{fragments/icons :: icon('box')}"></svg>
+      <p>No te falta nada para tus proyectos activos.</p>
+    </div>
+    <th:block th:if="${estadisticas.escasos != null and !#lists.isEmpty(estadisticas.escasos)}">
+      <p class="muted">Materias primas que te faltan sumando tus proyectos en planificación y en construcción. Tu inventario se reparte una sola vez entre todos.</p>
+      <div class="chart-box chart-box-tall">
+        <canvas id="grafico-escasos" role="img" aria-label="Gráfico de materiales más escasos; la tabla equivalente está a continuación."></canvas>
+      </div>
+      <details>
+        <summary>Ver tabla</summary>
+        <div class="table-wrap">
+        <table>
+          <thead><tr><th>Materia prima</th><th class="num">Faltante</th><th class="num">Proyectos</th></tr></thead>
+          <tbody>
+          <tr th:each="f : ${estadisticas.escasos}">
+            <td th:text="${f.nombre}">Material</td>
+            <td class="num" th:text="${f.valor}">0</td>
+            <td class="num" th:text="${f.secundario}">0</td>
+          </tr>
+          </tbody>
+        </table>
+        </div>
+      </details>
+    </th:block>
+  </section>
+</div>
+</main>
+<div th:replace="~{fragments/toast :: toast}"></div>
+<script th:inline="javascript">
+  window.SGI_ESTADISTICAS = /*[[${datosGraficos}]]*/ {};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="/estadisticas.js"></script>
+</body>
+</html>

@@ -1130,3 +1130,17 @@ input:focus, select:focus, textarea:focus { border-color: var(--amber); }
 .comment-edit[open] {
   flex-basis: 100%;
 }
+
+/* estadísticas */
+.chart-grid {
+  display: grid;
+  gap: var(--space-5);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+}
+.chart-box {
+  position: relative;
+  height: 260px;
+}
+.chart-box-tall {
+  height: 340px;
+}

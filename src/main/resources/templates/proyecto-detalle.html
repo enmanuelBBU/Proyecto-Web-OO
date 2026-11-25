@@ -47,6 +47,18 @@
               th:text="${'· X ' + (proyecto.x ?: '—') + ' / Y ' + (proyecto.y ?: '—') + ' / Z ' + (proyecto.z ?: '—')}"></span>
       </dd>
     </div>
+    <div th:if="${netherEquivalente != null}">
+      <dt>Equivalente en el Nether</dt>
+      <dd class="mono" th:text="${'X ' + netherEquivalente.x + ' / Y ' + (proyecto.y != null ? netherEquivalente.y : '—') + ' / Z ' + netherEquivalente.z}">X 0 / Y 0 / Z 0</dd>
+    </div>
+    <div th:if="${netherEquivalente != null}">
+      <dt>Portal más cercano</dt>
+      <dd th:if="${portalCercano != null}">
+        <span th:text="${portalCercano.portal.nombre}">Portal</span>
+        <span class="mono muted" th:text="${'a ' + portalCercano.distancia + ' bloques (X ' + portalCercano.portal.x + ' / Z ' + portalCercano.portal.z + ')'}"></span>
+      </dd>
+      <dd th:if="${portalCercano == null}" class="muted">No hay portales del Overworld guardados en este mundo.</dd>
+    </div>
     <div th:if="${proyecto.fechaCreacion != null}">
       <dt>Fecha de creación</dt>
       <dd class="mono" th:text="${proyecto.fechaCreacion}">Fecha</dd>

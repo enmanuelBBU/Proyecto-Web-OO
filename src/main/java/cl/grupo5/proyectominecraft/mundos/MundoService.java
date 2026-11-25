@@ -4,6 +4,7 @@ import com.google.cloud.firestore.Firestore;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -51,11 +52,25 @@ public class MundoService {
     if (actual == null) return null;
     if (!puedeGestionar(actual, uid, rol)) throw new MundoValidationException(PERMISO_DENEGADO);
     validar(cambios);
+    var aGuardar = prepararActualizacion(actual, cambios, id);
+    db.collection("mundos").document(id).set(aGuardar).get();
+    return aGuardar;
+  }
+
+  /** Datos editables de {@code cambios}; dueño, fecha y portales de {@code actual} (el formulario no los trae). */
+  static Mundo prepararActualizacion(Mundo actual, Mundo cambios, String id) {
     cambios.setId(id);
     cambios.setUid(actual.getUid());
     cambios.setFechaCreacion(actual.getFechaCreacion());
-    db.collection("mundos").document(id).set(cambios).get();
+    cambios.setPortales(actual.getPortales() != null ? actual.getPortales() : new ArrayList<>());
     return cambios;
+  }
+
+  /** Persiste el mundo completo tras modificar sus portales con {@link PortalService}. */
+  public Mundo guardarPortales(Mundo m) throws Exception {
+    if (m.getPortales() == null) m.setPortales(new ArrayList<>());
+    db.collection("mundos").document(m.getId()).set(m).get();
+    return m;
   }
 
   public boolean eliminar(String id, String uid, String rol) throws Exception {

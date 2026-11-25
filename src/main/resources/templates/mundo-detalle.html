@@ -30,6 +30,116 @@
 </div>
 
 <div class="card">
+  <h2 class="section-title">Calculadora Nether</h2>
+  <div th:replace="~{fragments/nether :: calculadora(@{/mundos/{id}(id=${mundo.id})})}"></div>
+</div>
+
+<section class="card stack" id="portales" aria-labelledby="portales-titulo">
+  <h2 class="section-title" id="portales-titulo">Portales</h2>
+  <p class="muted" th:if="${#lists.isEmpty(portales)}">Aún no hay portales guardados en este mundo.</p>
+  <div class="table-wrap" th:unless="${#lists.isEmpty(portales)}">
+  <table>
+    <thead><tr><th>Portal</th><th>Dimensión</th><th class="num">X</th><th class="num">Y</th><th class="num">Z</th><th>Enlazado con</th><th>Acciones</th></tr></thead>
+    <tbody>
+    <tr th:each="pt : ${portales}">
+      <td><strong th:text="${pt.nombre}">Portal</strong></td>
+      <td><span th:class="${pt.dimension == 'NETHER'} ? 'badge badge-cancelado' : 'badge badge-completado'"><span class="badge-dot" aria-hidden="true"></span><span th:text="${pt.dimension == 'NETHER' ? 'Nether' : 'Overworld'}">Overworld</span></span></td>
+      <td class="num" th:text="${pt.x}"></td>
+      <td class="num" th:text="${pt.y}"></td>
+      <td class="num" th:text="${pt.z}"></td>
+      <td>
+        <th:block th:with="par=${pt.enlazadoId != null ? portalesPorId[pt.enlazadoId] : null}">
+          <span th:if="${par != null}" th:text="${par.nombre + ' (X ' + par.x + ' / Y ' + par.y + ' / Z ' + par.z + ')'}">Par</span>
+          <span th:if="${par == null}" class="muted">Sin enlazar</span>
+        </th:block>
+      </td>
+      <td>
+        <div class="row">
+          <form th:if="${pt.enlazadoId == null}" method="post" class="inline-form"
+                th:action="@{/mundos/{id}/portales/{pid}/pareado(id=${mundo.id}, pid=${pt.id})}">
+            <button type="submit" class="btn btn-secondary btn-sm">Crear portal pareado</button>
+          </form>
+          <details class="comment-edit">
+            <summary class="btn btn-ghost btn-sm">Editar</summary>
+            <form method="post" class="form-grid" th:action="@{/mundos/{id}/portales/{pid}/update(id=${mundo.id}, pid=${pt.id})}">
+              <div class="field">
+                <label th:for="${'portal-nombre-' + pt.id}">Nombre</label>
+                <input th:id="${'portal-nombre-' + pt.id}" name="nombre" required maxlength="60" th:value="${pt.nombre}">
+              </div>
+              <div class="field">
+                <label th:for="${'portal-dim-' + pt.id}">Dimensión</label>
+                <select th:id="${'portal-dim-' + pt.id}" name="dimension">
+                  <option value="OVERWORLD" th:selected="${pt.dimension == 'OVERWORLD'}">Overworld</option>
+                  <option value="NETHER" th:selected="${pt.dimension == 'NETHER'}">Nether</option>
+                </select>
+              </div>
+              <div class="field">
+                <label th:for="${'portal-x-' + pt.id}">X</label>
+                <input th:id="${'portal-x-' + pt.id}" type="number" name="x" required th:value="${pt.x}">
+              </div>
+              <div class="field">
+                <label th:for="${'portal-y-' + pt.id}">Y</label>
+                <input th:id="${'portal-y-' + pt.id}" type="number" name="y" required th:value="${pt.y}">
+              </div>
+              <div class="field">
+                <label th:for="${'portal-z-' + pt.id}">Z</label>
+                <input th:id="${'portal-z-' + pt.id}" type="number" name="z" required th:value="${pt.z}">
+              </div>
+              <div class="field">
+                <label th:for="${'portal-par-' + pt.id}">Enlazado con</label>
+                <select th:id="${'portal-par-' + pt.id}" name="enlazadoId">
+                  <option value="">Sin enlazar</option>
+                  <option th:each="o : ${portales}" th:if="${o.dimension != pt.dimension}"
+                          th:value="${o.id}" th:text="${o.nombre}" th:selected="${o.id == pt.enlazadoId}"></option>
+                </select>
+              </div>
+              <div class="actions field-full"><button type="submit" class="btn btn-secondary btn-sm">Guardar portal</button></div>
+            </form>
+          </details>
+          <form method="post" class="inline-form" th:action="@{/mundos/{id}/portales/{pid}/delete(id=${mundo.id}, pid=${pt.id})}"
+                onsubmit="return confirm('¿Eliminar este portal? Su par quedará sin enlazar.');">
+            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+          </form>
+        </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 class="section-title">Nuevo portal</h3>
+  <form method="post" th:action="@{/mundos/{id}/portales(id=${mundo.id})}" class="form-grid">
+    <div class="field">
+      <label for="portal-nombre">Nombre</label>
+      <input id="portal-nombre" name="nombre" required maxlength="60" placeholder="Portal de la base">
+    </div>
+    <div class="field">
+      <label for="portal-dimension">Dimensión</label>
+      <select id="portal-dimension" name="dimension">
+        <option value="OVERWORLD">Overworld</option>
+        <option value="NETHER">Nether</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="portal-x">X</label>
+      <input id="portal-x" type="number" name="x" required>
+    </div>
+    <div class="field">
+      <label for="portal-y">Y</label>
+      <input id="portal-y" type="number" name="y" required>
+    </div>
+    <div class="field">
+      <label for="portal-z">Z</label>
+      <input id="portal-z" type="number" name="z" required>
+    </div>
+    <div class="actions field-full">
+      <button type="submit" class="btn btn-secondary">Guardar portal</button>
+      <button type="submit" name="pareado" value="true" class="btn btn-primary">Guardar y crear pareado</button>
+    </div>
+  </form>
+</section>
+
+<div class="card">
   <h2 class="section-title">Proyectos en este mundo</h2>
   <div class="empty-state" th:if="${#lists.isEmpty(proyectos)}">
     <svg th:replace="~{fragments/icons :: icon('hammer')}"></svg>

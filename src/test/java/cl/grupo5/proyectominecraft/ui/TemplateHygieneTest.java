@@ -32,7 +32,7 @@ class TemplateHygieneTest {
         "proyectos", "proyecto-detalle", "proyecto-edit", "proyecto-estados", "reportes",
         "mundos", "mundo-detalle", "mundo-edit",
         // Funcionalidades encima
-        "calculadora-nether");
+        "calculadora-nether", "estadisticas");
   }
 
   static Stream<String> fragmentos() throws IOException {
