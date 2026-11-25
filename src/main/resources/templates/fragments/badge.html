@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Badge de estado de proyecto. Uso: <span th:replace="~{fragments/badge :: estado(${p.estado})}"></span> -->
+<span th:fragment="estado(valor)"
+      th:with="v=${valor == null ? 'PLANIFICACION' : valor},
+               conocido=${#lists.contains({'PLANIFICACION','EN_CONSTRUCCION','COMPLETADO','CANCELADO'}, v)}"
+      th:class="${conocido} ? 'badge badge-' + ${#strings.toLowerCase(v)} : 'badge badge-neutral'"><span class="badge-dot" aria-hidden="true"></span><th:block th:switch="${v}"><th:block th:case="'PLANIFICACION'">Planificación</th:block><th:block th:case="'EN_CONSTRUCCION'">En construcción</th:block><th:block th:case="'COMPLETADO'">Completado</th:block><th:block th:case="'CANCELADO'">Cancelado</th:block><th:block th:case="*" th:text="${v}"></th:block></th:block></span>
+</body>
+</html>

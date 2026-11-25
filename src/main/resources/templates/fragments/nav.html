@@ -1,40 +1,76 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<nav th:fragment="nav" class="main-nav">
-  <a href="/inicio" class="nav-home">Inicio</a>
+<!--
+  Topbar. Uso: <header th:replace="~{fragments/nav :: nav(activo='items')}"></header>
+  La variable local "activo" es opcional; sin ella no se marca ningún ítem.
+-->
+<header th:fragment="nav" class="topbar">
+  <div class="topbar-inner">
+    <a class="topbar-brand" href="/inicio">
+      <svg th:replace="~{fragments/icons :: icon('gem')}"></svg>
+      <span>SGI Minecraft</span>
+    </a>
 
-  <details class="nav-group">
-    <summary>Items</summary>
-    <ul>
-      <li><a href="/items">Catálogo de Items</a></li>
-      <li><a href="/materiales">Gestión de Materiales</a></li>
-      <li><a href="/calculadora">Calculadora de Crafteo</a></li>
-      <li><a href="/historial-crafteo">Historial de Crafteo</a></li>
-      <li><a href="/modelo-3d">Modelo 3D</a></li>
-    </ul>
-  </details>
+    <button type="button" class="topbar-toggle" aria-controls="topbar-nav" aria-expanded="false" aria-label="Abrir menú">
+      <svg th:replace="~{fragments/icons :: icon('menu')}"></svg>
+    </button>
 
-  <details class="nav-group">
-    <summary>Proyectos</summary>
-    <ul>
-      <li><a href="/proyectos">Proyectos de Construcción</a></li>
-      <li><a href="/mundos">Mis Mundos</a></li>
-      <li><a href="/proyectos">Estados de Proyecto</a></li>
-      <li><a href="/proyectos/reportes">📄 Exportar PDF</a></li>
-    </ul>
-  </details>
+    <nav class="topbar-nav" id="topbar-nav" aria-label="Principal">
+      <a class="topbar-link" href="/inicio" th:attr="aria-current=${activo == 'inicio'} ? 'page' : null">Inicio</a>
 
-  <details class="nav-group">
-    <summary>Usuario</summary>
-    <ul>
-      <li><a href="/perfil">Mi Perfil</a></li>
-      <li><a href="/inventario">Gestión de Inventario</a></li>
-      <li th:if="${isAdmin}"><a href="/admin/usuarios">Administrar Usuarios</a></li>
-      <li th:if="${isAdmin}"><a href="/admin/auditoria">Auditoría</a></li>
-      <li><form method="post" action="/logout"><button class="btn-ghost btn">Salir</button></form></li>
-    </ul>
-  </details>
-</nav>
+      <details class="menu">
+        <summary class="menu-trigger"
+                 th:classappend="${#lists.contains({'items','materiales','calculadora','historial','modelo3d'}, activo)} ? 'is-active'">
+          Items <svg th:replace="~{fragments/icons :: icon('chevron-down')}"></svg>
+        </summary>
+        <ul class="menu-panel">
+          <li><a class="menu-item" href="/items" th:attr="aria-current=${activo == 'items'} ? 'page' : null">Catálogo</a></li>
+          <li><a class="menu-item" href="/materiales" th:attr="aria-current=${activo == 'materiales'} ? 'page' : null">Materiales</a></li>
+          <li><a class="menu-item" href="/calculadora" th:attr="aria-current=${activo == 'calculadora'} ? 'page' : null">Calculadora</a></li>
+          <li><a class="menu-item" href="/historial-crafteo" th:attr="aria-current=${activo == 'historial'} ? 'page' : null">Historial de crafteo</a></li>
+          <li><a class="menu-item" href="/modelo-3d" th:attr="aria-current=${activo == 'modelo3d'} ? 'page' : null">Modelo 3D</a></li>
+        </ul>
+      </details>
+
+      <details class="menu">
+        <summary class="menu-trigger"
+                 th:classappend="${#lists.contains({'proyectos','mundos','reportes'}, activo)} ? 'is-active'">
+          Proyectos <svg th:replace="~{fragments/icons :: icon('chevron-down')}"></svg>
+        </summary>
+        <ul class="menu-panel">
+          <li><a class="menu-item" href="/proyectos" th:attr="aria-current=${activo == 'proyectos'} ? 'page' : null">Proyectos</a></li>
+          <li><a class="menu-item" href="/mundos" th:attr="aria-current=${activo == 'mundos'} ? 'page' : null">Mis mundos</a></li>
+          <li><a class="menu-item" href="/proyectos/reportes" th:attr="aria-current=${activo == 'reportes'} ? 'page' : null"><svg th:replace="~{fragments/icons :: icon('file')}"></svg> Exportar PDF</a></li>
+        </ul>
+      </details>
+
+      <details class="menu" th:if="${isAdmin}">
+        <summary class="menu-trigger"
+                 th:classappend="${#lists.contains({'admin-usuarios','admin-auditoria'}, activo)} ? 'is-active'">
+          Admin <svg th:replace="~{fragments/icons :: icon('chevron-down')}"></svg>
+        </summary>
+        <ul class="menu-panel">
+          <li><a class="menu-item" href="/admin/usuarios" th:attr="aria-current=${activo == 'admin-usuarios'} ? 'page' : null">Usuarios</a></li>
+          <li><a class="menu-item" href="/admin/auditoria" th:attr="aria-current=${activo == 'admin-auditoria'} ? 'page' : null">Auditoría</a></li>
+        </ul>
+      </details>
+
+      <details class="menu menu-user">
+        <summary class="menu-trigger"
+                 th:classappend="${#lists.contains({'perfil','inventario'}, activo)} ? 'is-active'">
+          <svg th:replace="~{fragments/icons :: icon('user')}"></svg>
+          <span class="user-name" th:text="${nombreUsuario != null ? nombreUsuario : 'Constructor'}">Constructor</span>
+          <svg th:replace="~{fragments/icons :: icon('chevron-down')}"></svg>
+        </summary>
+        <ul class="menu-panel">
+          <li><a class="menu-item" href="/perfil" th:attr="aria-current=${activo == 'perfil'} ? 'page' : null">Mi perfil</a></li>
+          <li><a class="menu-item" href="/inventario" th:attr="aria-current=${activo == 'inventario'} ? 'page' : null">Inventario</a></li>
+          <li><form method="post" action="/logout"><button type="submit" class="menu-item">Salir</button></form></li>
+        </ul>
+      </details>
+    </nav>
+  </div>
+</header>
 </body>
 </html>

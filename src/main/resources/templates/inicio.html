@@ -1,12 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Inicio · SGI Minecraft</title>
-<link rel="stylesheet" href="/style.css">
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
-</head>
+<head th:replace="~{fragments/head :: head('Inicio')}"></head>
 <body>
 <h1>Inicio</h1>
-<nav th:replace="~{fragments/nav :: nav}"></nav>
+<header th:replace="~{fragments/nav :: nav(activo='inicio')}"></header>
 
 <div class="home-grid">
   <details class="card home-card-group">
