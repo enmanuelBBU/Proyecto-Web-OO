@@ -1,6 +1,8 @@
 package cl.grupo5.proyectominecraft.proyectos;
 
 import cl.grupo5.proyectominecraft.auditoria.AuditService;
+import cl.grupo5.proyectominecraft.inventario.CraftingCalculatorService;
+import cl.grupo5.proyectominecraft.inventario.InventoryException;
 import cl.grupo5.proyectominecraft.items.Item;
 import cl.grupo5.proyectominecraft.items.ItemService;
 import cl.grupo5.proyectominecraft.mundos.MundoService;
@@ -27,13 +29,18 @@ public class WebProyectoController {
   private final ItemService itemService;
   private final MundoService mundoService;
   private final AuditService audit;
+  private final CraftingCalculatorService calculator;
+  private final ComentarioService comentarioService;
 
   public WebProyectoController(ProyectoService proyectoService, ItemService itemService, MundoService mundoService,
-                               AuditService audit) {
+                               AuditService audit, CraftingCalculatorService calculator,
+                               ComentarioService comentarioService) {
+    this.comentarioService = comentarioService;
     this.proyectoService = proyectoService;
     this.itemService = itemService;
     this.mundoService = mundoService;
     this.audit = audit;
+    this.calculator = calculator;
   }
 
   @GetMapping("/proyectos")
@@ -112,6 +119,8 @@ public class WebProyectoController {
     m.addAttribute("permisos", List.of(ProyectoService.LECTURA, ProyectoService.EDICION));
     m.addAttribute("currentUid", uid);
     m.addAttribute("isAdmin", "ADMIN".equals(rol(s)));
+    exponerFaltantes(m, p, uid);
+    exponerComentarios(m, p, uid, rol(s));
     return "proyecto-detalle";
   }
 
@@ -288,6 +297,34 @@ public class WebProyectoController {
   }
 
   // ---- Helpers ----
+
+  private void exponerComentarios(Model m, Proyecto p, String uid, String rol) throws Exception {
+    var lista = comentarioService.listar(p.getId());
+    if (lista == null) lista = List.of();
+    Set<String> editables = new LinkedHashSet<>();
+    Set<String> borrables = new LinkedHashSet<>();
+    for (var c : lista) {
+      if (ComentarioService.puedeEditar(c, uid)) editables.add(c.getId());
+      if (ComentarioService.puedeBorrar(c, p, uid, rol)) borrables.add(c.getId());
+    }
+    m.addAttribute("comentarios", lista);
+    m.addAttribute("comentariosEditables", editables);
+    m.addAttribute("comentariosBorrables", borrables);
+    m.addAttribute("comentarioMax", ComentarioService.MAX_LARGO);
+  }
+
+  /** Faltantes contra el inventario de quien mira. Un error del cálculo se muestra en la sección, no rompe la página. */
+  private void exponerFaltantes(Model m, Proyecto p, String uid) {
+    if (CraftingCalculatorService.demandasDe(p).isEmpty()) return;
+    try {
+      var r = calculator.faltantesProyecto(p, uid);
+      if (r != null) m.addAttribute("faltantes", r);
+    } catch (InventoryException e) {
+      m.addAttribute("faltantesError", e.getMessage());
+    } catch (Exception e) {
+      m.addAttribute("faltantesError", "No se pudieron calcular los faltantes en este momento.");
+    }
+  }
 
   private void exponerLista(Model m, HttpSession s, List<Proyecto> lista) throws Exception {
     String uid = uid(s);

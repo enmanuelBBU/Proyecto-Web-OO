@@ -18,6 +18,7 @@ public class AuditService {
   public static final String ITEM = "ITEM";
   public static final String PROYECTO = "PROYECTO";
   public static final String USUARIO = "USUARIO";
+  public static final String COMENTARIO = "COMENTARIO";
 
   private static final Logger log = LoggerFactory.getLogger(AuditService.class);
   private static final String COLECCION = "auditoria";

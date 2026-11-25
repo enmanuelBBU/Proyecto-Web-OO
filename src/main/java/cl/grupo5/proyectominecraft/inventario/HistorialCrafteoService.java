@@ -35,11 +35,11 @@ public class HistorialCrafteoService {
     r.setTipoReceta(plan.getTipoReceta());
     r.setCantidad(plan.getCantidad());
     r.setFecha(fecha);
-    r.setMateriales(plan.getMateriales().stream().map(m -> {
+    r.setMateriales(plan.getConsumidos().stream().map(m -> {
       var mc = new MaterialConsumido();
       mc.setItemId(m.getItemId());
       mc.setNombre(m.getNombre());
-      mc.setCantidad(m.getRequerido());
+      mc.setCantidad(m.getCantidad());
       return mc;
     }).toList());
     return r;

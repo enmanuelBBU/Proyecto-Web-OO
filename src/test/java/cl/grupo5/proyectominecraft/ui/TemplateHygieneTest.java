@@ -30,7 +30,9 @@ class TemplateHygieneTest {
         "login", "register",
         // Task 5
         "proyectos", "proyecto-detalle", "proyecto-edit", "proyecto-estados", "reportes",
-        "mundos", "mundo-detalle", "mundo-edit");
+        "mundos", "mundo-detalle", "mundo-edit",
+        // Funcionalidades encima
+        "calculadora-nether");
   }
 
   static Stream<String> fragmentos() throws IOException {

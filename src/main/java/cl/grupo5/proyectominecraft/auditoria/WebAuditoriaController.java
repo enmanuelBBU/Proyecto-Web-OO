@@ -27,7 +27,7 @@ public class WebAuditoriaController {
     m.addAttribute("entidad", entidad);
     m.addAttribute("accion", accion);
     m.addAttribute("q", q);
-    m.addAttribute("entidades", List.of(AuditService.ITEM, AuditService.PROYECTO, AuditService.USUARIO));
+    m.addAttribute("entidades", List.of(AuditService.ITEM, AuditService.PROYECTO, AuditService.USUARIO, AuditService.COMENTARIO));
     m.addAttribute("acciones", List.of(AuditService.CREAR, AuditService.EDITAR, AuditService.ELIMINAR));
     m.addAttribute("isAdmin", true);
     return "admin-auditoria";

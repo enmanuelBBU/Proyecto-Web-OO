@@ -36,6 +36,9 @@ class ProyectoControllerTest {
   @MockitoBean
   private ProyectoService proyectoService;
 
+  @MockitoBean
+  private cl.grupo5.proyectominecraft.inventario.CraftingCalculatorService calculator;
+
   private MockHttpSession authenticated() {
     var session = new MockHttpSession();
     session.setAttribute("uid", "user123");
@@ -262,5 +265,42 @@ class ProyectoControllerTest {
     mvc.perform(put("/api/proyectos/visible").session(authenticated())
             .contentType(MediaType.APPLICATION_JSON).content("{\"nombre\":\"X\"}"))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void faltantesDeProyectoNoVisibleEs404() throws Exception {
+    when(proyectoService.getVisible(eq("ajeno"), any(), any())).thenReturn(null);
+    mvc.perform(get("/api/proyectos/ajeno/faltantes").session(authenticated()))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void faltantesDeProyectoVisibleDevuelveArbol() throws Exception {
+    var p = new Proyecto();
+    p.setId("castillo");
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
+    var n = new cl.grupo5.proyectominecraft.inventario.NodoCrafteo();
+    n.setItemId("pala");
+    n.setAFabricar(2);
+    var r = new cl.grupo5.proyectominecraft.inventario.ResultadoFaltantes();
+    r.setArbol(List.of(n));
+    r.setFaltantes(List.of(new cl.grupo5.proyectominecraft.inventario.MaterialCantidad("tronco", "Tronco", 3)));
+    when(calculator.faltantesProyecto(p, "user123")).thenReturn(r);
+
+    mvc.perform(get("/api/proyectos/castillo/faltantes").session(authenticated()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.arbol[0].aFabricar").value(2))
+        .andExpect(jsonPath("$.faltantes[0].itemId").value("tronco"));
+  }
+
+  @Test
+  void faltantesConItemRotoEs400() throws Exception {
+    var p = new Proyecto();
+    p.setId("castillo");
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
+    when(calculator.faltantesProyecto(p, "user123"))
+        .thenThrow(new cl.grupo5.proyectominecraft.inventario.InventoryException("El ítem 'x' no existe en el catálogo."));
+    mvc.perform(get("/api/proyectos/castillo/faltantes").session(authenticated()))
+        .andExpect(status().isBadRequest());
   }
 }

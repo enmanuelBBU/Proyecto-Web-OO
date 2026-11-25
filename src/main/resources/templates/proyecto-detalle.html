@@ -94,6 +94,35 @@
   </div>
 </div>
 
+<section class="card stack" aria-labelledby="faltantes-titulo">
+  <h2 class="section-title" id="faltantes-titulo">Faltantes</h2>
+  <div class="empty-state" th:if="${proyecto.itemsRequeridos == null or #lists.isEmpty(proyecto.itemsRequeridos)}">
+    <svg th:replace="~{fragments/icons :: icon('box')}"></svg>
+    <p>Agrega ítems al proyecto para calcular qué te falta.</p>
+  </div>
+  <p class="alert-error" role="alert" th:if="${faltantesError}" th:text="${'No se pudieron calcular los faltantes: ' + faltantesError}"></p>
+  <th:block th:if="${faltantes != null}">
+    <p class="alert-info" role="note">Se descuenta primero lo que ya tienes en tu inventario, incluidos ítems intermedios.</p>
+    <p class="muted" th:if="${faltantes.usaIntermedios}">En este cálculo se usan ítems intermedios de tu inventario.</p>
+    <ul class="tree tree-root">
+      <th:block th:each="n : ${faltantes.arbol}"><li th:replace="~{fragments/arbol :: nodo(${n})}"></li></th:block>
+    </ul>
+    <p class="alert-ok" th:if="${#lists.isEmpty(faltantes.faltantes)}">Tienes todo lo necesario en tu inventario para este proyecto.</p>
+    <div class="table-wrap" th:unless="${#lists.isEmpty(faltantes.faltantes)}">
+    <table>
+      <caption class="muted">Materias primas que te faltan</caption>
+      <thead><tr><th>Materia prima</th><th class="num">Faltante</th></tr></thead>
+      <tbody>
+      <tr th:each="f : ${faltantes.faltantes}">
+        <td th:text="${f.nombre}"></td>
+        <td class="num" th:text="${f.cantidad}"></td>
+      </tr>
+      </tbody>
+    </table>
+    </div>
+  </th:block>
+</section>
+
 <div class="card stack">
   <h2 class="section-title">Miembros</h2>
   <p>
@@ -147,6 +176,48 @@
     <button class="btn btn-secondary" type="submit">Invitar</button>
   </form>
 </div>
+<section class="card stack" id="comentarios" aria-labelledby="comentarios-titulo">
+  <h2 class="section-title" id="comentarios-titulo">Comentarios</h2>
+  <p class="muted" th:if="${#lists.isEmpty(comentarios)}">Aún no hay comentarios. Deja el primero.</p>
+  <ol class="comment-list" th:unless="${#lists.isEmpty(comentarios)}">
+    <li class="comment" th:each="c : ${comentarios}">
+      <div class="comment-meta">
+        <strong th:text="${c.autorNombre}">Autor</strong>
+        <span class="mono muted" th:text="${c.fechaCreacion}">fecha</span>
+        <span class="muted" th:if="${c.fechaEdicion != null}" th:title="${c.fechaEdicion}">(editado)</span>
+      </div>
+      <p class="comment-text" th:text="${c.texto}">Texto</p>
+      <div class="row" th:if="${#sets.contains(comentariosEditables, c.id) or #sets.contains(comentariosBorrables, c.id)}">
+        <details th:if="${#sets.contains(comentariosEditables, c.id)}" class="comment-edit">
+          <summary class="btn btn-ghost btn-sm">Editar</summary>
+          <form method="post" class="stack" th:action="@{/proyectos/{id}/comentarios/{cid}/update(id=${proyecto.id}, cid=${c.id})}">
+            <div class="field">
+              <label th:for="${'comentario-edit-' + c.id}">Editar comentario</label>
+              <textarea th:id="${'comentario-edit-' + c.id}" name="texto" rows="3" required
+                        th:attr="maxlength=${comentarioMax}" th:text="${c.texto}"></textarea>
+            </div>
+            <div class="actions"><button type="submit" class="btn btn-secondary btn-sm">Guardar cambios</button></div>
+          </form>
+        </details>
+        <form th:if="${#sets.contains(comentariosBorrables, c.id)}" method="post" class="inline-form"
+              th:action="@{/proyectos/{id}/comentarios/{cid}/delete(id=${proyecto.id}, cid=${c.id})}"
+              onsubmit="return confirm('¿Eliminar este comentario?');">
+          <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+        </form>
+      </div>
+    </li>
+  </ol>
+
+  <form method="post" th:action="@{/proyectos/{id}/comentarios(id=${proyecto.id})}" class="stack">
+    <div class="field">
+      <label for="comentario-nuevo">Nuevo comentario</label>
+      <textarea id="comentario-nuevo" name="texto" rows="3" required th:attr="maxlength=${comentarioMax}"
+                placeholder="Escribe una nota para el equipo"></textarea>
+      <p class="field-hint muted" th:text="${'Máximo ' + comentarioMax + ' caracteres.'}">Máximo 1000 caracteres.</p>
+    </div>
+    <div class="actions"><button type="submit" class="btn btn-secondary">Comentar</button></div>
+  </form>
+</section>
 </main>
 <div th:replace="~{fragments/toast :: toast}"></div>
 </body>

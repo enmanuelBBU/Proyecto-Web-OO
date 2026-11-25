@@ -199,7 +199,14 @@ public class ProyectoService {
       throw new ProyectoValidationException("No tienes permisos para eliminar este proyecto.");
     }
 
-    db.collection("proyectos").document(id).delete().get();
+    // El proyecto y sus comentarios se borran juntos (Firestore no borra subcolecciones por sí solo).
+    var ref = db.collection("proyectos").document(id);
+    var batch = db.batch();
+    for (var c : ref.collection(ComentarioService.SUBCOLECCION).get().get().getDocuments()) {
+      batch.delete(c.getReference());
+    }
+    batch.delete(ref);
+    batch.commit().get();
     return true;
   }
 

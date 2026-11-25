@@ -1,6 +1,8 @@
 package cl.grupo5.proyectominecraft.proyectos;
 
 import cl.grupo5.proyectominecraft.auditoria.AuditService;
+import cl.grupo5.proyectominecraft.inventario.CraftingCalculatorService;
+import cl.grupo5.proyectominecraft.inventario.InventoryException;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -15,10 +17,23 @@ import java.util.Set;
 public class ProyectoController {
   private final ProyectoService service;
   private final AuditService audit;
+  private final CraftingCalculatorService calculator;
 
-  public ProyectoController(ProyectoService service, AuditService audit) {
+  public ProyectoController(ProyectoService service, AuditService audit, CraftingCalculatorService calculator) {
     this.service = service;
     this.audit = audit;
+    this.calculator = calculator;
+  }
+
+  @GetMapping("/{id}/faltantes")
+  public ResponseEntity<?> faltantes(@PathVariable String id, HttpSession session) throws Exception {
+    var proyecto = service.getVisible(id, uid(session), rol(session));
+    if (proyecto == null) return ResponseEntity.notFound().build();
+    try {
+      return ResponseEntity.ok(calculator.faltantesProyecto(proyecto, uid(session)));
+    } catch (InventoryException e) {
+      return ResponseEntity.badRequest().body(e.getMessage());
+    }
   }
 
   @GetMapping

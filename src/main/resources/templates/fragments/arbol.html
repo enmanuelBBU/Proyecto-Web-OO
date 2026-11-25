@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  Árbol de desglose (NodoCrafteo). Uso:
+  <ul class="tree"><th:block th:each="n : ${arbol}"><li th:replace="~{fragments/arbol :: nodo(${n})}"></li></th:block></ul>
+-->
+<li th:fragment="nodo(n)" class="tree-node">
+  <details th:if="${!#lists.isEmpty(n.hijos)}" open>
+    <summary th:insert="~{fragments/arbol :: etiqueta(${n})}"></summary>
+    <ul class="tree">
+      <th:block th:each="h : ${n.hijos}"><li th:replace="~{fragments/arbol :: nodo(${h})}"></li></th:block>
+    </ul>
+  </details>
+  <div th:if="${#lists.isEmpty(n.hijos)}" class="tree-leaf" th:insert="~{fragments/arbol :: etiqueta(${n})}"></div>
+</li>
+
+<th:block th:fragment="etiqueta(n)">
+  <span th:if="${n.tipo == 'HORNO'}" class="badge badge-horno"><span class="badge-dot" aria-hidden="true"></span>Horno</span>
+  <strong th:text="${n.nombre}">Ítem</strong>
+  <span class="mono" th:text="${'×' + n.requerido}">×1</span>
+  <span th:if="${n.usadoDeInventario > 0}" class="tree-usado" th:text="${'· usando ' + n.usadoDeInventario + ' de tu inventario'}"></span>
+  <span th:if="${n.tipo == 'CRAFTEO' and n.aFabricar > 0}" th:text="${'· fabricar ' + n.aFabricar}"></span>
+  <span th:if="${n.tipo == 'HORNO' and n.aFabricar > 0}"
+        th:text="${'· Fundir ' + n.aFabricar + ' ' + (#lists.isEmpty(n.hijos) ? '' : n.hijos[0].nombre) + ' → ' + n.aFabricar + ' ' + n.nombre}"></span>
+  <span th:if="${n.tipo == 'MATERIA_PRIMA' and n.faltante > 0}" class="tree-falta" th:text="${'· faltan ' + n.faltante}"></span>
+</th:block>
+</body>
+</html>

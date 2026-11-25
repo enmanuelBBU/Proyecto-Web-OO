@@ -97,4 +97,45 @@ class WebCraftingControllerTest {
         .andExpect(status().isOk())
         .andExpect(content().string(containsString(">Fundir<")));
   }
+
+  private static NodoCrafteo nodo(String id, String nombre, String tipo, long req, long usado, long fabricar, long falta,
+                                  NodoCrafteo... hijos) {
+    var n = new NodoCrafteo();
+    n.setItemId(id);
+    n.setNombre(nombre);
+    n.setTipo(tipo);
+    n.setRequerido(req);
+    n.setUsadoDeInventario(usado);
+    n.setAFabricar(fabricar);
+    n.setFaltante(falta);
+    n.setHijos(new java.util.ArrayList<>(List.of(hijos)));
+    return n;
+  }
+
+  @Test
+  void calculadoraMuestraArbolConIntermediosYHorno() throws Exception {
+    var crudo = nodo("hierro_crudo", "Hierro crudo", NodoCrafteo.MATERIA_PRIMA, 3, 1, 0, 2);
+    var lingote = nodo("lingote", "Lingote de hierro", NodoCrafteo.HORNO, 3, 0, 3, 0, crudo);
+    var tablones = nodo("tablones", "Tablones", NodoCrafteo.CRAFTEO, 8, 4, 4, 0);
+    var raiz = nodo("cubeta", "Cubeta", NodoCrafteo.CRAFTEO, 1, 0, 1, 0, lingote, tablones);
+    var plan = new CraftingPlan();
+    plan.setTargetItemId("cubeta");
+    plan.setCantidad(1);
+    plan.setArbol(List.of(raiz));
+    plan.setConsumidos(List.of(new MaterialCantidad("tablones", "Tablones", 4)));
+    plan.setFaltantes(List.of(new MaterialCantidad("hierro_crudo", "Hierro crudo", 2)));
+    plan.setUsaIntermedios(true);
+    plan.setTipoReceta("CRAFTEO");
+    when(itemService.list(null, false)).thenReturn(List.of());
+    when(calculator.plan("someuid", "cubeta", 1)).thenReturn(plan);
+
+    mvc.perform(get("/calculadora").param("targetId", "cubeta").session(authenticated()))
+        .andExpect(status().isOk())
+        .andExpect(content().string(containsString("usando 4 de tu inventario")))
+        .andExpect(content().string(containsString("fabricar 4")))
+        .andExpect(content().string(containsString("Fundir 3 Hierro crudo → 3 Lingote de hierro")))
+        .andExpect(content().string(containsString("badge-horno")))
+        .andExpect(content().string(containsString("incluidos ítems intermedios")))
+        .andExpect(content().string(containsString("faltan 2")));
+  }
 }

@@ -35,12 +35,13 @@
 
       <details class="menu">
         <summary class="menu-trigger"
-                 th:classappend="${#lists.contains({'proyectos','mundos','reportes'}, activo)} ? 'is-active'">
+                 th:classappend="${#lists.contains({'proyectos','mundos','nether','reportes'}, activo)} ? 'is-active'">
           Proyectos <svg th:replace="~{fragments/icons :: icon('chevron-down')}"></svg>
         </summary>
         <ul class="menu-panel">
           <li><a class="menu-item" href="/proyectos" th:attr="aria-current=${activo == 'proyectos'} ? 'page' : null">Proyectos</a></li>
           <li><a class="menu-item" href="/mundos" th:attr="aria-current=${activo == 'mundos'} ? 'page' : null">Mis mundos</a></li>
+          <li><a class="menu-item" href="/calculadora-nether" th:attr="aria-current=${activo == 'nether'} ? 'page' : null">Calculadora Nether</a></li>
           <li><a class="menu-item" href="/proyectos/reportes" th:attr="aria-current=${activo == 'reportes'} ? 'page' : null"><svg th:replace="~{fragments/icons :: icon('file')}"></svg> Exportar PDF</a></li>
         </ul>
       </details>

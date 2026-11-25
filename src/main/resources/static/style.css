@@ -1051,3 +1051,82 @@ input:focus, select:focus, textarea:focus { border-color: var(--amber); }
 .timeline-meta { font-size: 13px; color: var(--muted); }
 .timeline-fecha { font-family: var(--font-mono); color: var(--muted); }
 .timeline-motivo { margin: 0; font-size: 14px; }
+
+/* alerta informativa (lapis) */
+.alert-info {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 4px solid var(--blue);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--blue) 10%, transparent);
+  color: var(--fg);
+}
+
+/* árbol de desglose */
+.tree {
+  list-style: none;
+  margin: 0;
+  padding-left: var(--space-5);
+  border-left: 1px solid var(--border);
+}
+.tree-root {
+  padding-left: 0;
+  border-left: 0;
+}
+.tree-node {
+  margin: var(--space-1) 0;
+}
+.tree-leaf {
+  padding: var(--space-1) 0 var(--space-1) var(--space-4);
+}
+.tree-node > details > summary {
+  padding: var(--space-1) 0;
+  cursor: pointer;
+}
+.tree-node > details > summary > *,
+.tree-leaf > * {
+  margin-right: var(--space-1);
+}
+.tree-usado {
+  color: var(--blue-ink);
+}
+.tree-falta {
+  color: var(--red-ink);
+  font-weight: 700;
+}
+
+/* comentarios */
+.comment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+.comment {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+.comment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  font-size: 13px;
+}
+.comment-text {
+  margin: var(--space-2) 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.comment-edit > summary {
+  list-style: none;
+}
+.comment-edit > summary::-webkit-details-marker {
+  display: none;
+}
+.comment-edit[open] {
+  flex-basis: 100%;
+}

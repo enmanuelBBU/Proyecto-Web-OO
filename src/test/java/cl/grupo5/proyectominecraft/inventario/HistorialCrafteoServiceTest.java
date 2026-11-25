@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.tuple;
 class HistorialCrafteoServiceTest {
 
   @Test
-  void crearRegistroCopiaMaterialesDelPlan() {
+  void crearRegistroCopiaConsumidosDelPlanIncluidosIntermedios() {
     var target = new Item();
     target.setId("antorcha");
     target.setNombre("Antorcha");
@@ -19,11 +19,7 @@ class HistorialCrafteoServiceTest {
     plan.setTargetItemId("antorcha");
     plan.setCantidad(4);
     plan.setTipoReceta("CRAFTEO");
-    var m = new MaterialRequirement();
-    m.setItemId("carbon");
-    m.setNombre("Carbón");
-    m.setRequerido(4);
-    plan.setMateriales(List.of(m));
+    plan.setConsumidos(List.of(new MaterialCantidad("carbon", "Carbón", 4), new MaterialCantidad("palos", "Palos", 2)));
 
     var r = HistorialCrafteoService.crearRegistro("u1", target, plan, "2026-11-23T10:00:00Z");
 
@@ -35,7 +31,7 @@ class HistorialCrafteoServiceTest {
     assertThat(r.getFecha()).isEqualTo("2026-11-23T10:00:00Z");
     assertThat(r.getMateriales())
         .extracting(MaterialConsumido::getItemId, MaterialConsumido::getNombre, MaterialConsumido::getCantidad)
-        .containsExactly(tuple("carbon", "Carbón", 4L));
+        .containsExactly(tuple("carbon", "Carbón", 4L), tuple("palos", "Palos", 2L));
   }
 
   @Test

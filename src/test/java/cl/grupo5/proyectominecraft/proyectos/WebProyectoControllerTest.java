@@ -1,6 +1,11 @@
 package cl.grupo5.proyectominecraft.proyectos;
 
 import cl.grupo5.proyectominecraft.auditoria.AuditService;
+import cl.grupo5.proyectominecraft.inventario.CraftingCalculatorService;
+import cl.grupo5.proyectominecraft.inventario.InventoryException;
+import cl.grupo5.proyectominecraft.inventario.MaterialCantidad;
+import cl.grupo5.proyectominecraft.inventario.NodoCrafteo;
+import cl.grupo5.proyectominecraft.inventario.ResultadoFaltantes;
 import cl.grupo5.proyectominecraft.items.ItemService;
 import cl.grupo5.proyectominecraft.mundos.MundoService;
 import org.junit.jupiter.api.Test;
@@ -14,6 +19,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.Mockito.never;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -42,6 +49,12 @@ class WebProyectoControllerTest {
 
   @MockitoBean
   private MundoService mundoService;
+
+  @MockitoBean
+  private CraftingCalculatorService calculator;
+
+  @MockitoBean
+  private ComentarioService comentarioService;
 
   private MockHttpSession userSession(String uid) {
     var session = new MockHttpSession();
@@ -392,5 +405,145 @@ class WebProyectoControllerTest {
     mvc.perform(post("/proyectos/ajeno/delete").session(userSession("user123")))
         .andExpect(redirectedUrl("/proyectos"))
         .andExpect(flash().attribute("toastError", "Proyecto no encontrado."));
+  }
+
+  // ---- Faltantes ----
+
+  private Proyecto proyectoConItems(String uid) {
+    var p = new Proyecto();
+    p.setId("castillo");
+    p.setNombre("Castillo");
+    p.setCreadorUid(uid);
+    p.setItemsRequeridos(List.of(new ItemRequerido("pala", 1)));
+    return p;
+  }
+
+  private static ResultadoFaltantes resultado(boolean conFaltantes) {
+    var n = new NodoCrafteo();
+    n.setItemId("pala");
+    n.setNombre("Pala");
+    n.setTipo(NodoCrafteo.CRAFTEO);
+    n.setRequerido(1);
+    n.setAFabricar(1);
+    var r = new ResultadoFaltantes();
+    r.setArbol(List.of(n));
+    if (conFaltantes) r.setFaltantes(List.of(new MaterialCantidad("tronco", "Tronco", 3)));
+    return r;
+  }
+
+  @Test
+  void detailExponeFaltantesDelQueMira() throws Exception {
+    var p = proyectoConItems("user123");
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
+    when(calculator.faltantesProyecto(p, "user123")).thenReturn(resultado(true));
+
+    mvc.perform(get("/proyectos/castillo").session(userSession("user123")))
+        .andExpect(status().isOk())
+        .andExpect(model().attributeExists("faltantes"))
+        .andExpect(content().string(containsString("Se descuenta primero lo que ya tienes en tu inventario, incluidos ítems intermedios")))
+        .andExpect(content().string(containsString("Tronco")))
+        .andExpect(content().string(not(containsString("Tienes todo"))));
+  }
+
+  @Test
+  void detailMuestraTienesTodoSinFaltantes() throws Exception {
+    var p = proyectoConItems("user123");
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
+    when(calculator.faltantesProyecto(p, "user123")).thenReturn(resultado(false));
+
+    mvc.perform(get("/proyectos/castillo").session(userSession("user123")))
+        .andExpect(status().isOk())
+        .andExpect(content().string(containsString("Tienes todo")));
+  }
+
+  @Test
+  void detailMuestraErrorDeFaltantesSinRomper() throws Exception {
+    var p = proyectoConItems("user123");
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
+    when(calculator.faltantesProyecto(p, "user123"))
+        .thenThrow(new InventoryException("El ítem 'pala' no existe en el catálogo."));
+
+    mvc.perform(get("/proyectos/castillo").session(userSession("user123")))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("faltantesError", "El ítem 'pala' no existe en el catálogo."))
+        .andExpect(content().string(containsString("no existe en el catálogo")));
+  }
+
+  @Test
+  void detailSinItemsNoCalculaFaltantes() throws Exception {
+    var p = new Proyecto();
+    p.setId("castillo");
+    p.setNombre("Castillo");
+    p.setCreadorUid("user123");
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
+
+    mvc.perform(get("/proyectos/castillo").session(userSession("user123")))
+        .andExpect(status().isOk())
+        .andExpect(model().attributeDoesNotExist("faltantes"));
+    verify(calculator, never()).faltantesProyecto(any(), any());
+  }
+
+  // ---- Comentarios ----
+
+  private static Comentario comentario(String id, String autor, String texto, String edicion) {
+    var c = new Comentario();
+    c.setId(id);
+    c.setAutorUid(autor);
+    c.setAutorNombre(autor + "-nombre");
+    c.setTexto(texto);
+    c.setFechaCreacion("2026-11-25T10:00:00Z");
+    c.setFechaEdicion(edicion);
+    return c;
+  }
+
+  @Test
+  void detailListaComentariosConPermisosPorComentario() throws Exception {
+    var p = new Proyecto();
+    p.setId("castillo");
+    p.setNombre("Castillo");
+    p.setCreadorUid("creador");
+    p.setMiembros(List.of(new Miembro("lector", "Le", "l@x", ProyectoService.LECTURA, "t")));
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
+    when(comentarioService.listar("castillo")).thenReturn(List.of(
+        comentario("c1", "lector", "Mío <b>", "2026-11-25T11:00:00Z"),
+        comentario("c2", "otro", "Ajeno", null)));
+
+    mvc.perform(get("/proyectos/castillo").session(userSession("lector")))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("comentariosEditables", java.util.Set.of("c1")))
+        .andExpect(model().attribute("comentariosBorrables", java.util.Set.of("c1")))
+        .andExpect(content().string(containsString("Mío &lt;b&gt;")))
+        .andExpect(content().string(containsString("(editado)")))
+        .andExpect(content().string(containsString("/proyectos/castillo/comentarios/c1/update")))
+        .andExpect(content().string(not(containsString("/proyectos/castillo/comentarios/c2/delete"))))
+        .andExpect(content().string(containsString("action=\"/proyectos/castillo/comentarios\"")));
+  }
+
+  @Test
+  void detailCreadorPuedeBorrarComentarioAjenoPeroNoEditarlo() throws Exception {
+    var p = new Proyecto();
+    p.setId("castillo");
+    p.setNombre("Castillo");
+    p.setCreadorUid("user123");
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
+    when(comentarioService.listar("castillo")).thenReturn(List.of(comentario("c2", "otro", "Ajeno", null)));
+
+    mvc.perform(get("/proyectos/castillo").session(userSession("user123")))
+        .andExpect(status().isOk())
+        .andExpect(content().string(containsString("/proyectos/castillo/comentarios/c2/delete")))
+        .andExpect(content().string(not(containsString("/proyectos/castillo/comentarios/c2/update"))));
+  }
+
+  @Test
+  void detailSinComentariosMuestraEstadoVacio() throws Exception {
+    var p = new Proyecto();
+    p.setId("castillo");
+    p.setNombre("Castillo");
+    p.setCreadorUid("user123");
+    when(proyectoService.getVisible(eq("castillo"), any(), any())).thenReturn(p);
+
+    mvc.perform(get("/proyectos/castillo").session(userSession("user123")))
+        .andExpect(status().isOk())
+        .andExpect(content().string(containsString("Aún no hay comentarios")));
   }
 }

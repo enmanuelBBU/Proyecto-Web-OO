@@ -34,22 +34,43 @@
 </div>
 
 <div class="card stack" th:if="${plan}">
-<h2 class="section-title">Materiales necesarios</h2>
+<h2 class="section-title">Desglose</h2>
 <p th:if="${plan.craftable}" class="badge badge-completado"><span class="badge-dot" aria-hidden="true"></span><span th:text="${plan.tipoReceta == 'HORNO'} ? 'Puedes fundirlo' : 'Puedes craftearlo'">Puedes craftearlo</span></p>
 <p th:unless="${plan.craftable}" class="badge badge-pendiente">Te faltan materiales</p>
-<div class="table-wrap">
+<p class="alert-info" role="note">Se descuenta primero lo que ya tienes en tu inventario, incluidos ítems intermedios.</p>
+<p class="muted" th:if="${plan.usaIntermedios}">En este cálculo se usan ítems intermedios de tu inventario.</p>
+<ul class="tree tree-root">
+  <th:block th:each="n : ${plan.arbol}"><li th:replace="~{fragments/arbol :: nodo(${n})}"></li></th:block>
+</ul>
+
+<h3 class="section-title">Se descontará de tu inventario</h3>
+<p class="muted" th:if="${#lists.isEmpty(plan.consumidos)}">Nada: no tienes ninguno de los materiales en tu inventario.</p>
+<div class="table-wrap" th:unless="${#lists.isEmpty(plan.consumidos)}">
 <table>
-  <thead><tr><th>Material</th><th class="num">Requerido</th><th class="num">Disponible</th><th class="num">Faltante</th></tr></thead>
+  <thead><tr><th>Material</th><th class="num">Cantidad</th></tr></thead>
   <tbody>
-  <tr th:each="f : ${plan.materiales}">
-    <td th:text="${f.nombre}"></td>
-    <td class="num" th:text="${f.requerido}"></td>
-    <td class="num" th:text="${f.disponible}"></td>
-    <td class="num" th:text="${f.faltante}"></td>
+  <tr th:each="c : ${plan.consumidos}">
+    <td th:text="${c.nombre}"></td>
+    <td class="num" th:text="${c.cantidad}"></td>
   </tr>
   </tbody>
 </table>
 </div>
+
+<th:block th:unless="${#lists.isEmpty(plan.faltantes)}">
+<h3 class="section-title">Faltantes</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Materia prima</th><th class="num">Faltante</th></tr></thead>
+  <tbody>
+  <tr th:each="f : ${plan.faltantes}">
+    <td th:text="${f.nombre}"></td>
+    <td class="num" th:text="${f.cantidad}"></td>
+  </tr>
+  </tbody>
+</table>
+</div>
+</th:block>
 <form method="post" action="/calculadora/craftear" th:if="${plan.craftable}" class="actions">
   <input type="hidden" name="itemId" th:value="${plan.targetItemId}">
   <input type="hidden" name="cantidad" th:value="${plan.cantidad}">

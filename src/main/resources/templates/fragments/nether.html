@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Calculadora Overworld ↔ Nether. Uso: <div th:replace="~{fragments/nether :: calculadora(@{/calculadora-nether})}"></div> -->
+<div th:fragment="calculadora(accion)" class="stack">
+  <form method="get" th:action="${accion}" class="toolbar">
+    <div class="field">
+      <label for="nether-dimension">Estoy en</label>
+      <select id="nether-dimension" name="dimension">
+        <option th:each="d : ${dimensiones}" th:value="${d.name()}" th:selected="${d.name() == netherDimension}"
+                th:text="${d.name() == 'NETHER' ? 'Nether' : 'Overworld'}">Overworld</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="nether-x">X</label>
+      <input id="nether-x" type="number" name="x" required class="qty-input" th:value="${netherX}">
+    </div>
+    <div class="field">
+      <label for="nether-y">Y</label>
+      <input id="nether-y" type="number" name="y" required class="qty-input" th:value="${netherY}">
+    </div>
+    <div class="field">
+      <label for="nether-z">Z</label>
+      <input id="nether-z" type="number" name="z" required class="qty-input" th:value="${netherZ}">
+    </div>
+    <button type="submit" class="btn btn-secondary">Convertir</button>
+  </form>
+  <p class="field-hint muted">Overworld: Y entre -64 y 320. Nether: Y entre 0 y 255. Overworld → Nether divide X y Z por 8 (redondeando hacia abajo); Nether → Overworld multiplica por 8. Y no cambia.</p>
+  <p class="alert-error" role="alert" th:if="${netherError}" th:text="${netherError}"></p>
+  <p class="alert-ok" th:if="${conversion != null}" role="status">
+    <span th:text="${conversion.dimension == 'NETHER' ? 'En el Nether:' : 'En el Overworld:'}">En el Nether:</span>
+    <strong class="mono" th:text="${'X ' + conversion.x + ' / Y ' + conversion.y + ' / Z ' + conversion.z}">X 0 / Y 0 / Z 0</strong>
+  </p>
+</div>
+</body>
+</html>
