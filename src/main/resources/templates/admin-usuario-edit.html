@@ -1,25 +1,47 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Editar usuario · SGI Minecraft</title>
-<link rel="stylesheet" href="/style.css">
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
-</head>
+<head th:replace="~{fragments/head :: head('Editar usuario')}"></head>
 <body>
-<h1>Editar usuario</h1>
-<nav><a href="/admin/usuarios">Volver</a></nav>
+<header th:replace="~{fragments/nav :: nav(activo='admin-usuarios')}"></header>
+
+<main class="page">
+<header class="page-header">
+  <div>
+    <h1 class="page-title">Editar usuario</h1>
+    <p class="page-sub">Nombre, email y rol de la cuenta.</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-secondary" href="/admin/usuarios">Volver</a>
+  </div>
+</header>
+
 <div class="card">
-<p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
-<form method="post" th:action="@{/admin/usuarios/{uid}/update(uid=${usuario.uid})}">
-  Nombre:<br><input name="nombre" th:value="${usuario.nombre}" required><br><br>
-  Email:<br><input type="email" name="email" th:value="${usuario.email}" required><br><br>
-  Rol:<br>
-  <select name="rol">
-    <option value="USUARIO" th:selected="${usuario.rol == 'USUARIO'}">USUARIO</option>
-    <option value="ADMIN" th:selected="${usuario.rol == 'ADMIN'}">ADMIN</option>
-  </select><br><br>
-  <button type="submit">Guardar</button>
+<p class="alert-error" th:if="${error}" th:text="${error}" role="alert"></p>
+<form method="post" th:action="@{/admin/usuarios/{uid}/update(uid=${usuario.uid})}" class="stack">
+  <div class="form-grid">
+    <div class="field">
+      <label for="usuario-nombre">Nombre</label>
+      <input id="usuario-nombre" name="nombre" th:value="${usuario.nombre}" required>
+    </div>
+    <div class="field">
+      <label for="usuario-email">Email</label>
+      <input id="usuario-email" type="email" name="email" th:value="${usuario.email}" required>
+    </div>
+    <div class="field">
+      <label for="usuario-rol">Rol</label>
+      <select id="usuario-rol" name="rol">
+        <option value="USUARIO" th:selected="${usuario.rol == 'USUARIO'}">USUARIO</option>
+        <option value="ADMIN" th:selected="${usuario.rol == 'ADMIN'}">ADMIN</option>
+      </select>
+    </div>
+  </div>
+  <div class="actions">
+    <a class="btn btn-secondary" href="/admin/usuarios">Cancelar</a>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+  </div>
 </form>
 </div>
+</main>
 <div th:replace="~{fragments/toast :: toast}"></div>
 </body>
 </html>

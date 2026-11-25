@@ -1,45 +1,56 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <title th:text="${mundo.nombre + ' · Mundos'}">Mundo · SGI Minecraft</title>
-  <link rel="stylesheet" href="/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
-</head>
+<head th:replace="~{fragments/head :: head(${mundo.nombre + ' · Mundos'})}"></head>
 <body>
-<h1>🌍 Detalle del mundo</h1>
-<nav th:replace="~{fragments/nav :: nav}"></nav>
+<header th:replace="~{fragments/nav :: nav(activo='mundos')}"></header>
 
-<div class="card">
-  <h2 th:text="${mundo.nombre}">Nombre</h2>
-  <p style="margin: 4px 0;"><strong>Versión:</strong> <span class="mono" th:text="${mundo.version}"></span></p>
-  <p style="margin: 4px 0;"><strong>Modo de juego:</strong> <span class="badge badge-pendiente" th:text="${mundo.modoJuego}"></span></p>
-  <p style="margin: 4px 0;"><strong>Semilla:</strong> <span class="mono" th:text="${mundo.semilla != null ? mundo.semilla : '—'}"></span></p>
-  <p style="margin: 4px 0;" th:if="${mundo.fechaCreacion != null}"><strong>Registrado:</strong> <span th:text="${mundo.fechaCreacion}"></span></p>
-  <div style="margin-top: 12px; display: flex; gap: 8px;">
-    <a class="btn btn-ghost" th:href="@{/mundos/{id}/edit(id=${mundo.id})}">Editar</a>
-    <form method="post" th:action="@{/mundos/{id}/delete(id=${mundo.id})}" style="display:inline"
+<main class="page">
+<header class="page-header">
+  <div>
+    <h1 class="page-title" th:text="${mundo.nombre}">Nombre</h1>
+    <p class="page-sub">Detalle del mundo</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-ghost" href="/mundos">Volver</a>
+    <a class="btn btn-secondary" th:href="@{/mundos/{id}/edit(id=${mundo.id})}">Editar</a>
+    <form method="post" th:action="@{/mundos/{id}/delete(id=${mundo.id})}"
           onsubmit="return confirm('¿Eliminar este mundo?');">
       <button class="btn btn-danger">Eliminar</button>
     </form>
-    <a class="btn btn-ghost" href="/mundos">Volver</a>
   </div>
+</header>
+
+<div class="card">
+  <dl class="meta-grid">
+    <div><dt>Versión</dt><dd class="mono" th:text="${mundo.version}"></dd></div>
+    <div><dt>Modo de juego</dt><dd><span class="badge badge-pendiente" th:text="${mundo.modoJuego}"></span></dd></div>
+    <div><dt>Semilla</dt><dd class="mono" th:text="${mundo.semilla != null ? mundo.semilla : '—'}"></dd></div>
+    <div th:if="${mundo.fechaCreacion != null}"><dt>Registrado</dt><dd class="mono" th:text="${mundo.fechaCreacion}"></dd></div>
+  </dl>
 </div>
 
 <div class="card">
-  <h2>Proyectos en este mundo</h2>
-  <p th:if="${#lists.isEmpty(proyectos)}">Todavía no hay proyectos asignados a este mundo.</p>
-  <table th:unless="${#lists.isEmpty(proyectos)}">
-    <tr><th>Proyecto</th><th>Estado</th><th>X</th><th>Y</th><th>Z</th></tr>
+  <h2 class="section-title">Proyectos en este mundo</h2>
+  <div class="empty-state" th:if="${#lists.isEmpty(proyectos)}">
+    <svg th:replace="~{fragments/icons :: icon('hammer')}"></svg>
+    <p>Todavía no hay proyectos asignados a este mundo.</p>
+  </div>
+  <div class="table-wrap" th:unless="${#lists.isEmpty(proyectos)}">
+  <table>
+    <thead><tr><th>Proyecto</th><th>Estado</th><th class="num">X</th><th class="num">Y</th><th class="num">Z</th></tr></thead>
+    <tbody>
     <tr th:each="p : ${proyectos}">
       <td><a th:href="@{/proyectos/{id}(id=${p.id})}" th:text="${p.nombre}"></a></td>
-      <td><span th:class="'badge badge-' + ${#strings.toLowerCase(p.estado != null ? p.estado : 'PLANIFICACION')}" th:text="${p.estado}"></span></td>
-      <td class="mono" th:text="${p.x != null ? p.x : '—'}"></td>
-      <td class="mono" th:text="${p.y != null ? p.y : '—'}"></td>
-      <td class="mono" th:text="${p.z != null ? p.z : '—'}"></td>
+      <td><span th:replace="~{fragments/badge :: estado(${p.estado})}"></span></td>
+      <td class="num" th:text="${p.x != null ? p.x : '—'}"></td>
+      <td class="num" th:text="${p.y != null ? p.y : '—'}"></td>
+      <td class="num" th:text="${p.z != null ? p.z : '—'}"></td>
     </tr>
+    </tbody>
   </table>
+  </div>
 </div>
+</main>
 <div th:replace="~{fragments/toast :: toast}"></div>
 </body>
 </html>

@@ -8,7 +8,7 @@
       el.style.display = horno ? 'none' : '';
     });
     form.querySelectorAll('.furnace-slot, .furnace-hint').forEach(function (el) {
-      el.style.display = horno ? '' : 'none';
+      el.hidden = !horno;
     });
   }
 

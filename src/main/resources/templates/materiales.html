@@ -1,22 +1,30 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Materiales · SGI Minecraft</title>
-<link rel="stylesheet" href="/style.css">
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
-</head>
+<head th:replace="~{fragments/head :: head('Materiales')}"></head>
 <body>
-<h1>Materiales</h1>
-<nav th:replace="~{fragments/nav :: nav}"></nav>
+<header th:replace="~{fragments/nav :: nav(activo='materiales')}"></header>
+
+<main class="page">
+<header class="page-header">
+  <div>
+    <h1 class="page-title">Materiales</h1>
+    <p class="page-sub">Materias primas del catálogo.</p>
+  </div>
+</header>
 
 <div class="card">
-<form method="get" action="/materiales">
-  <input type="text" name="q" th:value="${q}" placeholder="Buscar por nombre o categoría">
-  <button class="btn-info btn" type="submit">Buscar</button>
+<form method="get" action="/materiales" class="toolbar">
+  <div class="toolbar-grow">
+    <input type="text" name="q" th:value="${q}" placeholder="Buscar por nombre o categoría" aria-label="Buscar material">
+  </div>
+  <button class="btn btn-secondary" type="submit">Buscar</button>
 </form>
 </div>
 
+<div class="table-wrap">
 <table>
-  <tr><th>Ícono</th><th>Nombre</th><th>Categoría</th><th>Acciones</th></tr>
+  <thead><tr><th>Ícono</th><th>Nombre</th><th>Categoría</th><th>Acciones</th></tr></thead>
+  <tbody>
   <tr th:each="i : ${materiales}">
     <td>
       <img th:if="${i.fullId}" th:src="${'https://blocksitems.com/api/v1/items/' + i.fullId + '/icon?size=32'}"
@@ -29,7 +37,10 @@
     </td>
     <td th:unless="${isAdmin}"></td>
   </tr>
+  </tbody>
 </table>
+</div>
+</main>
 <div th:replace="~{fragments/toast :: toast}"></div>
 </body>
 </html>

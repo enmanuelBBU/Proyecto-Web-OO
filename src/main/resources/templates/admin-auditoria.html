@@ -1,47 +1,52 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <title>Auditoría · SGI Minecraft</title>
-  <link rel="stylesheet" href="/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
-</head>
+<head th:replace="~{fragments/head :: head('Auditoría')}"></head>
 <body>
-<h1>🛡️ Log de Auditoría</h1>
-<nav th:replace="~{fragments/nav :: nav}"></nav>
+<header th:replace="~{fragments/nav :: nav(activo='admin-auditoria')}"></header>
+
+<main class="page">
+<header class="page-header">
+  <div>
+    <h1 class="page-title">Log de auditoría</h1>
+    <p class="page-sub">Eventos de creación, edición y eliminación.</p>
+  </div>
+</header>
 
 <div class="card">
-  <h2>Filtrar eventos</h2>
-  <form method="get" action="/admin/auditoria" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
-    <div class="field" style="margin: 0;">
+  <h2 class="section-title">Filtrar eventos</h2>
+  <form method="get" action="/admin/auditoria" class="toolbar">
+    <div class="field">
       <label for="aud-entidad">Entidad</label>
       <select id="aud-entidad" name="entidad">
         <option value="">Todas</option>
         <option th:each="en : ${entidades}" th:value="${en}" th:text="${en}" th:selected="${en == entidad}"></option>
       </select>
     </div>
-    <div class="field" style="margin: 0;">
+    <div class="field">
       <label for="aud-accion">Acción</label>
       <select id="aud-accion" name="accion">
         <option value="">Todas</option>
         <option th:each="ac : ${acciones}" th:value="${ac}" th:text="${ac}" th:selected="${ac == accion}"></option>
       </select>
     </div>
-    <div class="field" style="margin: 0; flex: 1; min-width: 180px;">
+    <div class="field toolbar-grow">
       <label for="aud-q">Buscar</label>
       <input id="aud-q" name="q" th:value="${q}" placeholder="Usuario, nombre o id">
     </div>
-    <button class="btn btn-info" type="submit">Filtrar</button>
+    <button class="btn btn-secondary" type="submit">Filtrar</button>
     <a class="btn btn-ghost" href="/admin/auditoria">Limpiar</a>
   </form>
 </div>
 
-<div class="card" th:if="${#lists.isEmpty(eventos)}">
+<div class="card empty-state" th:if="${#lists.isEmpty(eventos)}">
+  <svg th:replace="~{fragments/icons :: icon('shield')}"></svg>
   <p>No hay eventos registrados con esos filtros.</p>
 </div>
 
-<table th:unless="${#lists.isEmpty(eventos)}">
-  <tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>Nombre</th><th>Detalle</th></tr>
+<div class="table-wrap" th:unless="${#lists.isEmpty(eventos)}">
+<table>
+  <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>Nombre</th><th>Detalle</th></tr></thead>
+  <tbody>
   <tr th:each="e : ${eventos}">
     <td class="mono" th:text="${e.fecha != null and e.fecha.length() >= 16 ? #strings.replace(#strings.substring(e.fecha, 0, 16), 'T', ' ') : e.fecha}"></td>
     <td th:text="${e.actorNombre != null ? e.actorNombre : e.actorUid}"></td>
@@ -52,11 +57,14 @@
     <td class="mono" th:text="${e.entidad}"></td>
     <td>
       <span th:text="${e.entidadNombre}"></span>
-      <div class="mono" style="font-size: 11px;" th:text="${e.entidadId}"></div>
+      <div class="mono id-sub" th:text="${e.entidadId}"></div>
     </td>
     <td th:text="${e.detalle != null ? e.detalle : '—'}"></td>
   </tr>
+  </tbody>
 </table>
+</div>
+</main>
 <div th:replace="~{fragments/toast :: toast}"></div>
 </body>
 </html>

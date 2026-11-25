@@ -1,27 +1,36 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Administrar usuarios · SGI Minecraft</title>
-<link rel="stylesheet" href="/style.css">
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
-</head>
+<head th:replace="~{fragments/head :: head('Administrar usuarios')}"></head>
 <body>
-<h1>Administrar usuarios</h1>
-<nav th:replace="~{fragments/nav :: nav}"></nav>
+<header th:replace="~{fragments/nav :: nav(activo='admin-usuarios')}"></header>
 
+<main class="page">
+<header class="page-header">
+  <div>
+    <h1 class="page-title">Administrar usuarios</h1>
+    <p class="page-sub">Cuentas registradas y sus roles.</p>
+  </div>
+</header>
+
+<div class="table-wrap">
 <table>
-  <tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Acciones</th></tr>
+  <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Acciones</th></tr></thead>
+  <tbody>
   <tr th:each="u : ${usuarios}">
     <td th:text="${u.nombre}"></td>
     <td th:text="${u.email}"></td>
-    <td><span class="badge" th:text="${u.rol}"></span></td>
+    <td><span class="badge badge-neutral" th:text="${u.rol}"></span></td>
     <td>
       <a th:href="@{/admin/usuarios/{uid}/edit(uid=${u.uid})}">Editar</a>
-      <form method="post" th:action="@{/admin/usuarios/{uid}/delete(uid=${u.uid})}" style="display:inline" onsubmit="return confirm('¿Eliminar este usuario de forma permanente? Esta acción no se puede deshacer.');">
-        <button class="btn-danger btn">Eliminar</button>
+      <form method="post" th:action="@{/admin/usuarios/{uid}/delete(uid=${u.uid})}" class="inline-form" onsubmit="return confirm('¿Eliminar este usuario de forma permanente? Esta acción no se puede deshacer.');">
+        <button class="btn btn-danger btn-sm">Eliminar</button>
       </form>
     </td>
   </tr>
+  </tbody>
 </table>
+</div>
+</main>
 <div th:replace="~{fragments/toast :: toast}"></div>
 </body>
 </html>

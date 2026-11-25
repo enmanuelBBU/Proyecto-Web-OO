@@ -2,47 +2,85 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('Inicio')}"></head>
 <body>
-<h1>Inicio</h1>
 <header th:replace="~{fragments/nav :: nav(activo='inicio')}"></header>
 
-<div class="home-grid">
-  <details class="card home-card-group">
-    <summary>
-      <h2>Items</h2>
-      <p>Catálogo de items, materiales y recetas de crafteo.</p>
-    </summary>
-    <ul>
-      <li><a class="btn btn-info" href="/items">Catálogo de Items</a></li>
-      <li><a class="btn btn-info" href="/materiales">Gestión de Materiales</a></li>
-      <li><a class="btn btn-info" href="/calculadora">Calculadora de Crafteo</a></li>
-      <li><a class="btn btn-info" href="/modelo-3d">Modelo 3D</a></li>
-    </ul>
-  </details>
+<main class="page" th:with="r=${resumen}">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Hola, [[${nombreUsuario != null ? nombreUsuario : 'Constructor'}]]</h1>
+      <p class="page-sub">Resumen de tu actividad</p>
+    </div>
+  </div>
 
-  <details class="card home-card-group">
-    <summary>
-      <h2>Proyectos</h2>
-      <p>Gestión de proyectos de construcción.</p>
-    </summary>
-    <ul>
-      <li><a class="btn btn-info" href="/proyectos">Proyectos de Construcción</a></li>
-      <li><a class="btn btn-info" href="/proyectos">Estados de Proyecto</a></li>
-      <li><a class="btn btn-info" href="/proyectos/reportes">📄 Exportar PDF</a></li>
-    </ul>
-  </details>
+  <section class="kpi-grid" aria-label="Indicadores">
+    <a class="card card-link kpi" href="/proyectos">
+      <span class="kpi-label">Proyectos activos</span>
+      <span class="kpi-value" th:text="${r.proyectosActivos != null ? r.proyectosActivos : '—'}">0</span>
+      <span class="kpi-sub" th:text="'de ' + ${r.proyectosTotal != null ? r.proyectosTotal : '—'} + ' en total'">de 0 en total</span>
+    </a>
+    <a class="card card-link kpi" href="/inventario">
+      <span class="kpi-label">Ítems en inventario</span>
+      <span class="kpi-value" th:text="${r.unidadesInventario != null ? r.unidadesInventario : '—'}">0</span>
+      <span class="kpi-sub" th:text="${r.tiposInventario != null ? r.tiposInventario : '—'} + ' tipos distintos'">0 tipos distintos</span>
+    </a>
+    <a class="card card-link kpi" href="/historial-crafteo">
+      <span class="kpi-label">Crafteos</span>
+      <span class="kpi-value" th:text="${r.crafteos != null ? r.crafteos : '—'}">0</span>
+      <span class="kpi-sub">registrados</span>
+    </a>
+    <a class="card card-link kpi" href="/mundos">
+      <span class="kpi-label">Mundos</span>
+      <span class="kpi-value" th:text="${r.mundos != null ? r.mundos : '—'}">0</span>
+      <span class="kpi-sub">creados</span>
+    </a>
+  </section>
 
-  <details class="card home-card-group">
-    <summary>
-      <h2>Usuario</h2>
-      <p>Tu perfil, inventario y cuenta.</p>
-    </summary>
-    <ul>
-      <li><a class="btn btn-info" href="/perfil">Mi Perfil</a></li>
-      <li><a class="btn btn-info" href="/inventario">Gestión de Inventario</a></li>
-      <li th:if="${isAdmin}"><a class="btn btn-info" href="/admin/usuarios">Administrar Usuarios</a></li>
+  <section>
+    <h2 class="section-title">Accesos rápidos</h2>
+    <div class="quick-grid">
+      <a class="card card-link quick-card" href="/items">
+        <svg th:replace="~{fragments/icons :: icon('pickaxe')}"></svg>
+        <div><h3>Catálogo de ítems</h3><p>Ítems, materiales y recetas.</p></div>
+      </a>
+      <a class="card card-link quick-card" href="/calculadora">
+        <svg th:replace="~{fragments/icons :: icon('calculator')}"></svg>
+        <div><h3>Calculadora</h3><p>Materiales necesarios para craftear.</p></div>
+      </a>
+      <a class="card card-link quick-card" href="/inventario">
+        <svg th:replace="~{fragments/icons :: icon('box')}"></svg>
+        <div><h3>Inventario</h3><p>Lo que tienes guardado.</p></div>
+      </a>
+      <a class="card card-link quick-card" href="/proyectos">
+        <svg th:replace="~{fragments/icons :: icon('hammer')}"></svg>
+        <div><h3>Proyectos</h3><p>Tus construcciones y su estado.</p></div>
+      </a>
+      <a class="card card-link quick-card" href="/mundos">
+        <svg th:replace="~{fragments/icons :: icon('globe')}"></svg>
+        <div><h3>Mis mundos</h3><p>Mundos y ubicaciones.</p></div>
+      </a>
+      <a class="card card-link quick-card" href="/proyectos/reportes">
+        <svg th:replace="~{fragments/icons :: icon('file')}"></svg>
+        <div><h3>Exportar PDF</h3><p>Reporte de tus proyectos.</p></div>
+      </a>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="section-title">Proyectos recientes</h2>
+    <ul class="recent-list" th:if="${!#lists.isEmpty(r.recientes)}">
+      <li th:each="p : ${r.recientes}">
+        <a th:href="@{/proyectos/{id}(id=${p.id})}" th:text="${p.nombre}">Proyecto</a>
+        <span th:replace="~{fragments/badge :: estado(${p.estado})}"></span>
+        <span class="muted" th:text="${p.creadorNombre}">Creador</span>
+      </li>
     </ul>
-  </details>
-</div>
+    <div class="empty-state" th:if="${#lists.isEmpty(r.recientes)}">
+      <svg th:replace="~{fragments/icons :: icon('hammer')}"></svg>
+      <p>Aún no tienes proyectos.</p>
+      <a class="btn btn-primary" href="/proyectos">Crear proyecto</a>
+    </div>
+  </section>
+</main>
 <div th:replace="~{fragments/toast :: toast}"></div>
 </body>
 </html>

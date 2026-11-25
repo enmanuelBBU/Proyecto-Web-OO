@@ -1,21 +1,27 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Modelo 3D · SGI Minecraft</title>
-<link rel="stylesheet" href="/style.css">
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
-</head>
+<head th:replace="~{fragments/head :: head('Modelo 3D')}"></head>
 <body>
-<h1>Modelo 3D</h1>
-<nav th:replace="~{fragments/nav :: nav}"></nav>
+<header th:replace="~{fragments/nav :: nav(activo='modelo3d')}"></header>
+
+<main class="page">
+<header class="page-header">
+  <div>
+    <h1 class="page-title">Modelo 3D</h1>
+    <p class="page-sub">Visualiza un ítem del catálogo en 3D.</p>
+  </div>
+</header>
 
 <div class="card">
-  <label for="m3d-selector">Ítem a visualizar</label>
-  <select id="m3d-selector">
-    <option value="">Selecciona un ítem...</option>
-    <option th:each="i : ${items}" th:value="${i.id}"
-            th:attr="data-nombre=${i.nombre},data-categoria=${i.categoria},data-tipo=${i.tipoVisual},data-textura=${i.textura},data-fullid=${i.fullId},data-imagen=${i.fullId != null ? 'https://blocksitems.com/api/v1/items/' + i.fullId + '/icon?size=128' : ''}"
-            th:text="${i.nombre}"></option>
-  </select>
+  <div class="field">
+    <label for="m3d-selector">Ítem a visualizar</label>
+    <select id="m3d-selector">
+      <option value="">Selecciona un ítem...</option>
+      <option th:each="i : ${items}" th:value="${i.id}"
+              th:attr="data-nombre=${i.nombre},data-categoria=${i.categoria},data-tipo=${i.tipoVisual},data-textura=${i.textura},data-fullid=${i.fullId},data-imagen=${i.fullId != null ? 'https://blocksitems.com/api/v1/items/' + i.fullId + '/icon?size=128' : ''}"
+              th:text="${i.nombre}"></option>
+    </select>
+  </div>
 </div>
 
 <div class="card">
@@ -28,6 +34,7 @@
     <span class="mono" id="m3d-info-categoria"></span>
   </div>
 </div>
+</main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>

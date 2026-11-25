@@ -10,13 +10,13 @@
             th:text="${mu.nombre + ' (' + mu.version + ')'}"
             th:selected="${p != null and mu.id == p.mundoId}"></option>
   </select>
-  <p th:if="${#lists.isEmpty(mundos)}" style="font-size: 12px; margin: 4px 0;">
+  <p th:if="${#lists.isEmpty(mundos)}" class="field-hint muted">
     No hay mundos registrados. <a href="/mundos">Registra uno</a> para ubicar el proyecto.
   </p>
-  <div style="display: flex; gap: 8px; margin-top: 8px;">
-    <label style="flex: 1;">X <input type="number" name="x" min="-30000000" max="30000000" th:value="${p != null ? p.x : ''}"></label>
-    <label style="flex: 1;">Y <input type="number" name="y" min="-64" max="320" th:value="${p != null ? p.y : ''}"></label>
-    <label style="flex: 1;">Z <input type="number" name="z" min="-30000000" max="30000000" th:value="${p != null ? p.z : ''}"></label>
+  <div class="coord-row">
+    <label>X <input type="number" name="x" min="-30000000" max="30000000" th:value="${p != null ? p.x : ''}"></label>
+    <label>Y <input type="number" name="y" min="-64" max="320" th:value="${p != null ? p.y : ''}"></label>
+    <label>Z <input type="number" name="z" min="-30000000" max="30000000" th:value="${p != null ? p.z : ''}"></label>
   </div>
 </div>
 </body>

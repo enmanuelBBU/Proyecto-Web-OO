@@ -1,13 +1,20 @@
 package cl.grupo5.proyectominecraft.home;
 
+import cl.grupo5.proyectominecraft.proyectos.Proyecto;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -20,6 +27,18 @@ class WebHomeControllerTest {
 
   @Autowired
   private MockMvc mvc;
+
+  @MockitoBean
+  private DashboardService dashboard;
+
+  @BeforeEach
+  void stubVacio() {
+    stub(new DashboardResumen(0, 0, 0L, 0, 0, 0, List.of()));
+  }
+
+  private void stub(DashboardResumen r) {
+    when(dashboard.resumen(any(), any())).thenReturn(r);
+  }
 
   @Test
   void withoutSessionRedirectsToLogin() throws Exception {
@@ -102,5 +121,54 @@ class WebHomeControllerTest {
     mvc.perform(get("/inicio").session(sesion("user-1", "USUARIO", "Steve")))
         .andExpect(status().isOk())
         .andExpect(content().string(containsString("Steve")));
+  }
+
+  @Test
+  void inicioExponeResumen() throws Exception {
+    var r = new DashboardResumen(2, 5, 40L, 3, 7, 1, List.of());
+    stub(r);
+    mvc.perform(get("/inicio").session(sesion("user-1", "USUARIO", "Steve")))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("resumen", r))
+        .andExpect(content().string(containsString("40")))
+        .andExpect(content().string(containsString("de 5 en total")));
+  }
+
+  @Test
+  void inicioMuestraGuionCuandoKpiNulo() throws Exception {
+    stub(new DashboardResumen(2, 5, null, null, 7, 1, List.of()));
+    mvc.perform(get("/inicio").session(sesion("user-1", "USUARIO", "Steve")))
+        .andExpect(status().isOk())
+        .andExpect(content().string(containsString("—")));
+  }
+
+  @Test
+  void inicioSinProyectosMuestraEstadoVacio() throws Exception {
+    mvc.perform(get("/inicio").session(sesion("user-1", "USUARIO", "Steve")))
+        .andExpect(status().isOk())
+        .andExpect(content().string(containsString("Crear proyecto")));
+  }
+
+  @Test
+  void inicioListaRecientesConBadge() throws Exception {
+    var p = new Proyecto();
+    p.setId("p1");
+    p.setNombre("Granja de hierro");
+    p.setEstado("EN_CONSTRUCCION");
+    p.setCreadorNombre("Steve");
+    stub(new DashboardResumen(1, 1, 0L, 0, 0, 0, List.of(p)));
+    mvc.perform(get("/inicio").session(sesion("user-1", "USUARIO", "Steve")))
+        .andExpect(status().isOk())
+        .andExpect(content().string(containsString("Granja de hierro")))
+        .andExpect(content().string(containsString("/proyectos/p1")))
+        .andExpect(content().string(containsString("En construcción")));
+  }
+
+  @Test
+  void inicioNoUsaAcordeon() throws Exception {
+    mvc.perform(get("/inicio").session(sesion("user-1", "USUARIO", "Steve")))
+        .andExpect(status().isOk())
+        .andExpect(content().string(not(containsString("home-card-group"))))
+        .andExpect(content().string(not(containsString("Estados de Proyecto"))));
   }
 }

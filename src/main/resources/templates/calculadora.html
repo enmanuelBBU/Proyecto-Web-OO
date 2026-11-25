@@ -1,47 +1,62 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Calculadora · SGI Minecraft</title>
-<link rel="stylesheet" href="/style.css">
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
-</head>
+<head th:replace="~{fragments/head :: head('Calculadora')}"></head>
 <body>
-<h1>🧮 Calculadora de Crafteo</h1>
-<nav th:replace="~{fragments/nav :: nav}"></nav>
+<header th:replace="~{fragments/nav :: nav(activo='calculadora')}"></header>
+
+<main class="page">
+<header class="page-header">
+  <div>
+    <h1 class="page-title">Calculadora de crafteo</h1>
+    <p class="page-sub">Calcula los materiales que necesitas y craftea desde tu inventario.</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-ghost" href="/historial-crafteo">Ver historial de crafteo</a>
+  </div>
+</header>
 
 <div class="card">
-<h2>¿Qué quieres craftear?</h2>
-<p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
-<form method="get" action="/calculadora">
-  <label for="calc-target">Item</label><br>
-  <select id="calc-target" name="targetId">
-    <option th:each="i : ${catalogo}" th:value="${i.id}" th:text="${i.nombre}" th:selected="${i.id == targetId}"></option>
-  </select><br><br>
-  <label for="calc-cantidad">Cantidad</label><br>
-  <input id="calc-cantidad" type="number" name="cantidad" min="1" th:value="${cantidad}"><br><br>
-  <button class="btn-info btn" type="submit">Calcular</button>
-  <a class="btn btn-ghost" href="/historial-crafteo">Ver historial de crafteo</a>
+<h2 class="section-title">¿Qué quieres craftear?</h2>
+<p class="alert-error" th:if="${error}" th:text="${error}" role="alert"></p>
+<form method="get" action="/calculadora" class="toolbar">
+  <div class="field toolbar-grow">
+    <label for="calc-target">Item</label>
+    <select id="calc-target" name="targetId">
+      <option th:each="i : ${catalogo}" th:value="${i.id}" th:text="${i.nombre}" th:selected="${i.id == targetId}"></option>
+    </select>
+  </div>
+  <div class="field">
+    <label for="calc-cantidad">Cantidad</label>
+    <input id="calc-cantidad" type="number" name="cantidad" min="1" th:value="${cantidad}" class="qty-input">
+  </div>
+  <button class="btn btn-secondary" type="submit">Calcular</button>
 </form>
 </div>
 
-<div class="card" th:if="${plan}">
-<h2>Materiales necesarios</h2>
-<p th:if="${plan.craftable}" class="badge" th:text="${plan.tipoReceta == 'HORNO'} ? 'Puedes fundirlo ✓' : 'Puedes craftearlo ✓'">Puedes craftearlo ✓</p>
+<div class="card stack" th:if="${plan}">
+<h2 class="section-title">Materiales necesarios</h2>
+<p th:if="${plan.craftable}" class="badge badge-completado"><span class="badge-dot" aria-hidden="true"></span><span th:text="${plan.tipoReceta == 'HORNO'} ? 'Puedes fundirlo' : 'Puedes craftearlo'">Puedes craftearlo</span></p>
 <p th:unless="${plan.craftable}" class="badge badge-pendiente">Te faltan materiales</p>
+<div class="table-wrap">
 <table>
-  <tr><th>Material</th><th>Requerido</th><th>Disponible</th><th>Faltante</th></tr>
+  <thead><tr><th>Material</th><th class="num">Requerido</th><th class="num">Disponible</th><th class="num">Faltante</th></tr></thead>
+  <tbody>
   <tr th:each="f : ${plan.materiales}">
     <td th:text="${f.nombre}"></td>
-    <td class="mono" th:text="${f.requerido}"></td>
-    <td class="mono" th:text="${f.disponible}"></td>
-    <td class="mono" th:text="${f.faltante}"></td>
+    <td class="num" th:text="${f.requerido}"></td>
+    <td class="num" th:text="${f.disponible}"></td>
+    <td class="num" th:text="${f.faltante}"></td>
   </tr>
+  </tbody>
 </table>
-<form method="post" action="/calculadora/craftear" th:if="${plan.craftable}">
+</div>
+<form method="post" action="/calculadora/craftear" th:if="${plan.craftable}" class="actions">
   <input type="hidden" name="itemId" th:value="${plan.targetItemId}">
   <input type="hidden" name="cantidad" th:value="${plan.cantidad}">
-  <button type="submit" th:text="${plan.tipoReceta == 'HORNO'} ? 'Fundir' : 'Craftear'">Craftear</button>
+  <button type="submit" class="btn btn-primary" th:text="${plan.tipoReceta == 'HORNO'} ? 'Fundir' : 'Craftear'">Craftear</button>
 </form>
 </div>
+</main>
 <div th:replace="~{fragments/toast :: toast}"></div>
 </body>
 </html>

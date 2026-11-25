@@ -1,12 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Login · SGI Minecraft</title>
-<link rel="stylesheet" href="/style.css">
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
-</head>
+<head th:replace="~{fragments/head :: head('Login')}"></head>
 <body>
 <div class="auth-shell">
   <div class="auth-brand">
@@ -20,7 +14,7 @@
       </div>
       <p class="tagline">Gestión de crafteo, inventario y construcción para tu servidor.</p>
     </div>
-    <ul class="stock" style="flex-direction:column; gap:6px; list-style:none; padding:0; margin:0;">
+    <ul class="stock">
       <li>Inventario de ítems en tiempo real</li>
       <li>Perfil de constructor por cuenta</li>
       <li>Búsqueda rápida de recetas y bloques</li>
@@ -30,7 +24,7 @@
   <div class="auth-form-panel">
     <h2>Entrar</h2>
     <p class="sub">Accede con tu cuenta para gestionar tu inventario.</p>
-    <p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
+    <p class="alert-error" th:if="${error}" th:text="${error}" role="alert"></p>
 
     <form method="post" action="/login" id="login-form" autocomplete="on">
       <div class="field">

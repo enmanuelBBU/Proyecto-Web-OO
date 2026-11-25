@@ -1,49 +1,65 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Inventario · SGI Minecraft</title>
-<link rel="stylesheet" href="/style.css">
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700&family=Karla:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
-</head>
+<head th:replace="~{fragments/head :: head('Inventario')}"></head>
 <body>
-<h1>🎒 Inventario</h1>
-<nav th:replace="~{fragments/nav :: nav}"></nav>
+<header th:replace="~{fragments/nav :: nav(activo='inventario')}"></header>
 
-<div class="card">
-<h2>Mis items</h2>
-<p class="error" th:if="${error}" th:text="${error}" role="alert"></p>
-<table th:if="${not #lists.isEmpty(entries)}">
-  <tr><th>Item</th><th>Cantidad</th><th>Acciones</th></tr>
+<main class="page">
+<header class="page-header">
+  <div>
+    <h1 class="page-title">Inventario</h1>
+    <p class="page-sub">Los ítems que tienes y sus cantidades.</p>
+  </div>
+</header>
+
+<div class="card stack">
+<h2 class="section-title">Mis items</h2>
+<p class="alert-error" th:if="${error}" th:text="${error}" role="alert"></p>
+<div class="table-wrap" th:if="${not #lists.isEmpty(entries)}">
+<table>
+  <thead><tr><th>Item</th><th class="num">Cantidad</th><th>Acciones</th></tr></thead>
+  <tbody>
   <tr th:each="e : ${entries}">
     <td th:text="${e.nombre}"></td>
-    <td class="mono" th:text="${e.cantidad}"></td>
+    <td class="num" th:text="${e.cantidad}"></td>
     <td>
-      <form method="post" action="/inventario/actualizar" style="display:inline">
+      <form method="post" action="/inventario/actualizar" class="inline-form">
         <input type="hidden" name="itemId" th:value="${e.itemId}">
-        <input type="number" name="cantidad" min="0" th:value="${e.cantidad}" style="width:5em">
-        <button class="btn-info btn" type="submit">Guardar</button>
+        <input type="number" name="cantidad" min="0" th:value="${e.cantidad}" class="qty-input" aria-label="Cantidad">
+        <button class="btn btn-secondary btn-sm" type="submit">Guardar</button>
       </form>
-      <form method="post" action="/inventario/eliminar" style="display:inline">
+      <form method="post" action="/inventario/eliminar" class="inline-form">
         <input type="hidden" name="itemId" th:value="${e.itemId}">
-        <button class="btn-danger btn" type="submit">Quitar</button>
+        <button class="btn btn-danger btn-sm" type="submit">Quitar</button>
       </form>
     </td>
   </tr>
+  </tbody>
 </table>
-<p th:if="${#lists.isEmpty(entries)}">Tu inventario está vacío. Agrega items abajo.</p>
+</div>
+<div class="empty-state" th:if="${#lists.isEmpty(entries)}">
+  <svg th:replace="~{fragments/icons :: icon('box')}"></svg>
+  <p>Tu inventario está vacío. Agrega items abajo.</p>
+</div>
 </div>
 
 <div class="card">
-<h2>Agregar items</h2>
-<form method="post" action="/inventario/agregar">
-  <label for="agregar-item">Item</label><br>
-  <select id="agregar-item" name="itemId">
-    <option th:each="i : ${catalogo}" th:value="${i.id}" th:text="${i.nombre}"></option>
-  </select><br><br>
-  <label for="agregar-cantidad">Cantidad</label><br>
-  <input id="agregar-cantidad" type="number" name="cantidad" min="1" value="1"><br><br>
-  <button type="submit">Agregar</button>
+<h2 class="section-title">Agregar items</h2>
+<form method="post" action="/inventario/agregar" class="toolbar">
+  <div class="field toolbar-grow">
+    <label for="agregar-item">Item</label>
+    <select id="agregar-item" name="itemId">
+      <option th:each="i : ${catalogo}" th:value="${i.id}" th:text="${i.nombre}"></option>
+    </select>
+  </div>
+  <div class="field">
+    <label for="agregar-cantidad">Cantidad</label>
+    <input id="agregar-cantidad" type="number" name="cantidad" min="1" value="1" class="qty-input">
+  </div>
+  <button type="submit" class="btn btn-primary">Agregar</button>
 </form>
 </div>
+</main>
 <div th:replace="~{fragments/toast :: toast}"></div>
 </body>
 </html>
